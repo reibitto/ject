@@ -1,4 +1,4 @@
-package ject.lucene.schema
+package ject.lucene.field
 
 import enumeratum.EnumEntry
 import enumeratum.EnumEntry.LowerCamelcase

@@ -2,7 +2,7 @@ package ject.lucene
 
 import java.nio.file.Path
 
-import ject.lucene.schema.LuceneField
+import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.index.{ DirectoryReader, IndexWriter, IndexWriterConfig }

@@ -5,9 +5,7 @@ import sbtwelcome._
 
 lazy val root = project
   .in(file("."))
-  .aggregate(
-    core
-  )
+  .aggregate(core)
   .settings(
     addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll"),
     addCommandAlias("fmtCheck", "all root/scalafmtSbtCheck root/scalafmtCheckAll"),
@@ -55,3 +53,6 @@ lazy val core = module("ject", Some("core"))
 def module(projectId: String, moduleFile: Option[String] = None): Project =
   Project(id = projectId, base = file(moduleFile.getOrElse(projectId)))
     .settings(Build.defaultSettings(projectId))
+
+ThisBuild / organization := "com.github.reibitto"
+ThisBuild / version := Build.JectVersion

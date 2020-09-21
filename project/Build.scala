@@ -49,8 +49,6 @@ object Build {
   def defaultSettings(projectName: String) =
     Seq(
       name := projectName,
-      version := JectVersion,
-      organization := "com.github.reibitto",
       javaOptions in Test += "-Duser.timezone=UTC",
       scalacOptions := ScalacOptions,
       scalaVersion in ThisBuild := ScalaVersion,

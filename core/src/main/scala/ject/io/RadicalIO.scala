@@ -13,21 +13,20 @@ object RadicalIO {
       .fromFile(file)
       .transduce(ZTransducer.utf8Decode >>> ZTransducer.splitLines)
       .zipWithIndex
-      .map {
-        case (line, index) =>
-          val tokens  = line.split("\t")
-          val radical = tokens(0)
+      .map { case (line, index) =>
+        val tokens  = line.split("\t")
+        val radical = tokens(0)
 
-          (
+        (
+          radical,
+          Radical(
+            index.toInt + 1,
             radical,
-            Radical(
-              index.toInt + 1,
-              radical,
-              tokens(1).map(_.toString).toSet,
-              tokens(2),
-              tokens.lift(4).getOrElse("").map(_.toString).toSet
-            )
+            tokens(1).map(_.toString).toSet,
+            tokens(2),
+            tokens.lift(4).getOrElse("").map(_.toString).toSet
           )
+        )
       }
       .runCollect
       .map(_.toMap)

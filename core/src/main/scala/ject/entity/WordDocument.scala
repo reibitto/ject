@@ -1,7 +1,7 @@
 package ject.entity
 
 import ject.lucene.DocumentDecoder
-import ject.lucene.schema.WordField
+import ject.lucene.field.WordField
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.analysis.en.EnglishAnalyzer
 import org.apache.lucene.analysis.ja.JapaneseAnalyzer

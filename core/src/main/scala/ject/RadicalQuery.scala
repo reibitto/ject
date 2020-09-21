@@ -30,9 +30,8 @@ object RadicalQuery {
     Seq('き', 'キ') -> '扌',
     Seq('ね', 'ネ') -> '礻',
     Seq('#', '＃') -> '井'
-  ).flatMap {
-    case (ks, v) =>
-      ks.map(k => (k, v))
+  ).flatMap { case (ks, v) =>
+    ks.map(k => (k, v))
   }.toMap
 
   def normalize(s: String): String =

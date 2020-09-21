@@ -1,18 +1,34 @@
 package ject.io
 
 import java.io.File
+import java.net.URL
+import java.nio.file.Path
+import java.util.zip.GZIPInputStream
 
 import ject.entity.{ KanjiDocument, Radical }
-import zio.Task
-import zio.stream.ZStream
+import zio.blocking.Blocking
+import zio.{ Task, UIO, ZIO, ZManaged }
+import zio.console.{ putStrLn, Console }
+import zio.stream.{ ZSink, ZStream }
 
 import scala.xml.XML
 
 object KanjidicIO {
-  def load(file: File, radicals: Map[String, Radical]): ZStream[Any, Throwable, KanjiDocument] =
+
+  /** Downloads the latest kanjidic file and extracts it. */
+  def download(destination: Path): ZIO[Blocking with Console, Throwable, Long] = {
+    val url = new URL("http://www.edrdg.org/kanjidic/kanjidic2.xml.gz")
+
+    ZManaged.fromAutoCloseable(UIO(new GZIPInputStream(url.openStream()))).use { stream =>
+      putStrLn(s"Downloading and extracting kanjidic file to $destination") *>
+        ZStream.fromInputStream(stream).run(ZSink.fromFile(destination))
+    }
+  }
+
+  def load(file: Path, radicals: Map[String, Radical]): ZStream[Any, Throwable, KanjiDocument] =
     ZStream.fromIteratorEffect {
       for {
-        xml           <- Task(XML.loadFile(file))
+        xml           <- Task(XML.loadFile(file.toFile))
         characterNodes = xml \ "character"
       } yield characterNodes.iterator.map { n =>
         val kanji = (n \ "literal").text

@@ -5,7 +5,7 @@ import java.nio.file.Path
 import ject.SearchPattern
 import ject.entity.WordDocument
 import ject.locale.JapaneseText
-import ject.lucene.schema.WordField
+import ject.lucene.field.WordField
 import org.apache.lucene.document.{ Document, Field, StringField, TextField }
 import org.apache.lucene.index.IndexWriter
 import org.apache.lucene.search.{ BooleanClause, BooleanQuery }
@@ -46,7 +46,7 @@ class WordIndex(directory: Path) extends LuceneIndex[WordDocument](directory) {
     }
 
   def search(pattern: SearchPattern): Task[IndexedSeq[WordDocument]] = {
-    import ject.lucene.schema.WordField._
+    import ject.lucene.field.WordField._
 
     val searchType =
       if (pattern.text.exists(JapaneseText.isKanji))
@@ -57,10 +57,10 @@ class WordIndex(directory: Path) extends LuceneIndex[WordDocument](directory) {
         SearchType.Definition
 
     (pattern, searchType) match {
-      case (SearchPattern.Unspecified(text), SearchType.Kanji)      =>
+      case (SearchPattern.Unspecified(text), SearchType.Kanji) =>
         searchRaw(s"${KanjiTerm.entryName}:$text* OR ${KanjiTermFuzzy.entryName}:$text")
 
-      case (SearchPattern.Unspecified(text), SearchType.Reading)    =>
+      case (SearchPattern.Unspecified(text), SearchType.Reading) =>
         searchRaw(s"${ReadingTerm.entryName}:$text* OR ${ReadingTermFuzzy.entryName}:$text")
 
       case (SearchPattern.Unspecified(text), SearchType.Definition) =>
@@ -73,43 +73,43 @@ class WordIndex(directory: Path) extends LuceneIndex[WordDocument](directory) {
 
         searchQuery(query.build())
 
-      case (SearchPattern.Exact(text), SearchType.Kanji)            =>
+      case (SearchPattern.Exact(text), SearchType.Kanji) =>
         searchRaw(s"${KanjiTerm.entryName}:$text")
 
-      case (SearchPattern.Exact(text), SearchType.Reading)          =>
+      case (SearchPattern.Exact(text), SearchType.Reading) =>
         searchRaw(s"${ReadingTerm.entryName}:$text")
 
-      case (SearchPattern.Exact(text), SearchType.Definition)       =>
+      case (SearchPattern.Exact(text), SearchType.Definition) =>
         searchRaw(s"${Definition.entryName}:$text")
 
-      case (SearchPattern.Contains(text), SearchType.Kanji)         =>
+      case (SearchPattern.Contains(text), SearchType.Kanji) =>
         searchRaw(s"${KanjiTerm.entryName}:*$text*")
 
-      case (SearchPattern.Contains(text), SearchType.Reading)       =>
+      case (SearchPattern.Contains(text), SearchType.Reading) =>
         searchRaw(s"${ReadingTerm.entryName}:*$text*")
 
-      case (SearchPattern.Contains(text), SearchType.Definition)    =>
+      case (SearchPattern.Contains(text), SearchType.Definition) =>
         searchRaw(s"${Definition.entryName}:*$text*")
 
-      case (SearchPattern.Prefix(text), SearchType.Kanji)           =>
+      case (SearchPattern.Prefix(text), SearchType.Kanji) =>
         searchRaw(s"${KanjiTerm.entryName}:$text*")
 
-      case (SearchPattern.Prefix(text), SearchType.Reading)         =>
+      case (SearchPattern.Prefix(text), SearchType.Reading) =>
         searchRaw(s"${ReadingTerm.entryName}:$text*")
 
-      case (SearchPattern.Prefix(text), SearchType.Definition)      =>
+      case (SearchPattern.Prefix(text), SearchType.Definition) =>
         searchRaw(s"${Definition.entryName}:$text*")
 
-      case (SearchPattern.Suffix(text), SearchType.Kanji)           =>
+      case (SearchPattern.Suffix(text), SearchType.Kanji) =>
         searchRaw(s"${KanjiTerm.entryName}:*$text")
 
-      case (SearchPattern.Suffix(text), SearchType.Reading)         =>
+      case (SearchPattern.Suffix(text), SearchType.Reading) =>
         searchRaw(s"${ReadingTerm.entryName}:*$text")
 
-      case (SearchPattern.Suffix(text), SearchType.Definition)      =>
+      case (SearchPattern.Suffix(text), SearchType.Definition) =>
         searchRaw(s"${Definition.entryName}:*$text")
 
-      case (SearchPattern.Raw(text), _)                             => searchRaw(text)
+      case (SearchPattern.Raw(text), _) => searchRaw(text)
 
     }
   }
