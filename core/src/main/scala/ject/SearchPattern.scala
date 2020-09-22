@@ -10,27 +10,27 @@ sealed trait SearchPattern {
 }
 
 object SearchPattern {
-  case class Unspecified(text: String) extends SearchPattern {
+  final case class Unspecified(text: String) extends SearchPattern {
     def patternText: String = s"$text"
   }
 
-  case class Exact(text: String) extends SearchPattern {
+  final case class Exact(text: String) extends SearchPattern {
     def patternText: String = s""""$text""""
   }
 
-  case class Contains(text: String) extends SearchPattern {
+  final case class Contains(text: String) extends SearchPattern {
     def patternText: String = s"*$text*"
   }
 
-  case class Prefix(text: String) extends SearchPattern {
+  final case class Prefix(text: String) extends SearchPattern {
     def patternText: String = s"$text*"
   }
 
-  case class Suffix(text: String) extends SearchPattern {
+  final case class Suffix(text: String) extends SearchPattern {
     def patternText: String = s"*$text"
   }
 
-  case class Raw(text: String) extends SearchPattern {
+  final case class Raw(text: String) extends SearchPattern {
     def patternText: String = s"$text"
   }
 
