@@ -97,4 +97,10 @@ object Syllabary {
       d             <- Dan.valuesToIndex.get(dan)
       katakanaOffset = if (JapaneseText.isHiragana(c)) 0 else Gyo.values.length
     } yield table(g + katakanaOffset)(d)
+
+  def danOf(c: Char): Option[Dan] =
+    indices.get(c).map(_._1)
+
+  def gyoOf(c: Char): Option[Gyo] =
+    indices.get(c).map(_._2)
 }

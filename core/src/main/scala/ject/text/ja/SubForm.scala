@@ -6,6 +6,9 @@ final case class Form(subForms: Set[SubForm], modifiers: Set[FormModifier] = Set
   def polite: Form   = Form(subForms, modifiers + FormModifier.Polite)
   def negative: Form = Form(subForms, modifiers + FormModifier.Negative)
 
+  def render: String =
+    (subForms.map(_.entryName) ++ modifiers.map(_.entryName)).mkString(" | ")
+
   def +(that: SubForm): Form = copy(subForms = subForms + that)
 }
 

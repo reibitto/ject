@@ -27,4 +27,12 @@ object JapaneseText {
   def isKanji(c: Char): Boolean = c >= 0x4e00 && c <= 0x9fcc
 
   def isJapanese(c: Char): Boolean = isKana(c) || isKanji(c)
+
+  def hasDakuten(c: Char): Boolean =
+    c match {
+      case 'が' | 'ぎ' | 'ぐ' | 'げ' | 'ご' | 'ざ' | 'じ' | 'ず' | 'ぜ' | 'ぞ' | 'だ' | 'ぢ' | 'づ' | 'で' | 'ど' | 'ば' | 'び' | 'ぶ' |
+          'べ' | 'ぼ' =>
+        true
+      case _ => false
+    }
 }

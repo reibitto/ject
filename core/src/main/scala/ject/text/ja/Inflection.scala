@@ -1,9 +1,10 @@
 package ject.text.ja
 
 import ject.text.ja.inflection.{ Godan, Ichidan }
+import zio.NonEmptyChunk
 
 object Inflection {
-  def inflect(word: String, wordType: WordType, targetForm: Form): Either[String, String] = {
+  def inflect(word: String, wordType: WordType, targetForm: Form): Either[String, NonEmptyChunk[String]] = {
     val inflections = wordType match {
       case WordType.VerbIchidan => Ichidan.inflections
       case WordType.VerbGodan   => Godan.inflections
@@ -12,9 +13,7 @@ object Inflection {
 
     for {
       transforms <- inflections.get(targetForm).toRight(s"Invalid inflection form: $targetForm")
-      result     <- transforms.foldLeft(Right(word): Either[String, String]) { case (acc, transformFn) =>
-                      acc.flatMap(transformFn)
-                    }
+      result     <- transforms(word)
     } yield result
   }
 }
