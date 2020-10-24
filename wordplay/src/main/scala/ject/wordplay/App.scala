@@ -75,7 +75,7 @@ object QuizState {
         )
       ),
       div(id := "quiz-selection")(
-        div(className := "quiz-header")("Quiz:"),
+        div(className := "quiz-header")("クイズ"),
         Fragment(
           props.quizzes.indices.map { i =>
             button(
