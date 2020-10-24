@@ -3,6 +3,7 @@ target
 .idea_modules
 .bloop
 .metals
+.bsp
 /.classpath
 /.project
 /.settings
@@ -27,3 +28,4 @@ local.conf
 /data/dictionary
 /data/lucene
 publish.sbt
+/wordplay/build

@@ -8,8 +8,8 @@ object Build {
   val JectVersion = "0.0.1"
 
   object Version {
-    val zio    = "1.0.1"
-    val lucene = "8.6.2"
+    val zio    = "1.0.3"
+    val lucene = "8.6.3"
   }
 
   lazy val ScalacOptions = Seq(
