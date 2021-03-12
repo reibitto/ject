@@ -79,7 +79,7 @@ object QuizState {
         Fragment(
           props.quizzes.indices.map { i =>
             button(
-              className := s"quiz-number ${if(i == state.quizIndex) "selected" else ""}",
+              className := s"quiz-number ${if (i == state.quizIndex) "selected" else ""}",
               onClick := { e =>
                 document.getElementById("input").asInstanceOf[HTMLInputElement].focus()
                 setState(State(i, QuizState.Init, ""))

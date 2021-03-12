@@ -3,12 +3,12 @@ import Keys._
 import scala.Console
 
 object Build {
-  val ScalaVersion = "2.13.3"
+  val ScalaVersion = "2.13.5"
 
   val JectVersion = "0.0.1"
 
   object Version {
-    val zio    = "1.0.3"
+    val zio    = "1.0.5"
     val lucene = "8.6.3"
   }
 

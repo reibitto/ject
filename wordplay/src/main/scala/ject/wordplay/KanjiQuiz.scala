@@ -7,7 +7,7 @@ final case class KanjiQuiz(top: String, left: String, bottom: String, right: Str
 
 object KanjiQuiz {
   def apply(front: String, back: String, answers: String): KanjiQuiz = {
-    val IndexedSeq(top, left) = Random.shuffle(front.toIndexedSeq)
+    val IndexedSeq(top, left)     = Random.shuffle(front.toIndexedSeq)
     val IndexedSeq(bottom, right) = Random.shuffle(back.toIndexedSeq)
 
     KanjiQuiz(top.toString, left.toString, bottom.toString, right.toString, answers.map(_.toString).toSet)
@@ -33,6 +33,16 @@ object KanjiQuiz {
     KanjiQuiz("会余", "算画", "計"),
     KanjiQuiz("初悪", "中幻", "夢"),
     KanjiQuiz("機過", "速感", "敏"),
-    KanjiQuiz("特発", "意入", "注")
+    KanjiQuiz("特発", "意入", "注"),
+    KanjiQuiz("続思", "番国", "出"),
+    KanjiQuiz("防本", "符色", "音"),
+    KanjiQuiz("内安", "理配", "心"),
+    KanjiQuiz("音道", "団天", "楽"),
+    KanjiQuiz("色弱", "絶品", "気"),
+    KanjiQuiz("完万", "国部", "全"),
+    KanjiQuiz("成少", "末金", "年"),
+    KanjiQuiz("調昭", "牛服", "和"),
+    KanjiQuiz("駅代", "解当", "弁"),
+    KanjiQuiz("欠頂", "滴検", "点")
   )
 }

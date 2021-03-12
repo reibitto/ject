@@ -58,8 +58,8 @@ lazy val wordplay = module("wordplay")
     fork := true,
     baseDirectory in run := file("."),
     libraryDependencies ++= Seq(
-      "me.shadaj" %%% "slinky-web" % "0.6.6",
-      "me.shadaj" %%% "slinky-hot" % "0.6.6"
+      "me.shadaj" %%% "slinky-web" % "0.6.7",
+      "me.shadaj" %%% "slinky-hot" % "0.6.7"
     ),
     npmDependencies in Compile ++= Seq(
       "react"       -> "16.13.1",
