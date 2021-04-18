@@ -36,12 +36,12 @@ lazy val root = project
 lazy val core = module("ject", Some("core"))
   .settings(
     fork := true,
-    baseDirectory in run := file("."),
+    run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
       "dev.zio"                %% "zio"                       % Version.zio,
       "dev.zio"                %% "zio-streams"               % Version.zio,
-      "dev.zio"                %% "zio-process"               % "0.2.0",
-      "dev.zio"                %% "zio-logging"               % "0.5.3",
+      "dev.zio"                %% "zio-process"               % "0.3.0",
+      "dev.zio"                %% "zio-logging"               % "0.5.8",
       "org.scala-lang.modules" %% "scala-xml"                 % "1.3.0",
       "com.beachape"           %% "enumeratum"                % "1.6.1",
       "org.apache.lucene"       % "lucene-core"               % Version.lucene,
@@ -56,17 +56,17 @@ lazy val core = module("ject", Some("core"))
 lazy val wordplay = module("wordplay")
   .settings(
     fork := true,
-    baseDirectory in run := file("."),
+    run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
       "me.shadaj" %%% "slinky-web" % "0.6.7",
       "me.shadaj" %%% "slinky-hot" % "0.6.7"
     ),
-    npmDependencies in Compile ++= Seq(
+    Compile / npmDependencies ++= Seq(
       "react"       -> "16.13.1",
       "react-dom"   -> "16.13.1",
       "react-proxy" -> "1.1.8"
     ),
-    npmDevDependencies in Compile ++= Seq(
+    Compile / npmDevDependencies ++= Seq(
       "file-loader"         -> "6.0.0",
       "style-loader"        -> "1.2.1",
       "css-loader"          -> "3.5.3",
@@ -74,15 +74,15 @@ lazy val wordplay = module("wordplay")
       "copy-webpack-plugin" -> "5.1.1",
       "webpack-merge"       -> "4.2.2"
     ),
-    version in webpack := "4.43.0",
-    version in startWebpackDevServer := "3.11.0",
+    webpack / version := "4.43.0",
+    startWebpackDevServer / version := "3.11.0",
     webpackResources := baseDirectory.value / "webpack" * "*",
-    webpackConfigFile in fastOptJS := Some(baseDirectory.value / "webpack" / "webpack-fastopt.config.js"),
-    webpackConfigFile in fullOptJS := Some(baseDirectory.value / "webpack" / "webpack-opt.config.js"),
-    webpackConfigFile in Test := Some(baseDirectory.value / "webpack" / "webpack-core.config.js"),
-    webpackDevServerExtraArgs in fastOptJS := Seq("--inline", "--hot"),
-    webpackBundlingMode in fastOptJS := BundlingMode.LibraryOnly(),
-    requireJsDomEnv in Test := true
+    fastOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack" / "webpack-fastopt.config.js"),
+    fullOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack" / "webpack-opt.config.js"),
+    Test / webpackConfigFile := Some(baseDirectory.value / "webpack" / "webpack-core.config.js"),
+    fastOptJS / webpackDevServerExtraArgs := Seq("--inline", "--hot"),
+    fastOptJS / webpackBundlingMode := BundlingMode.LibraryOnly(),
+    Test / requireJsDomEnv := true
   )
   .enablePlugins(ScalaJSBundlerPlugin)
 

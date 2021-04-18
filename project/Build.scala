@@ -8,8 +8,8 @@ object Build {
   val JectVersion = "0.0.1"
 
   object Version {
-    val zio    = "1.0.5"
-    val lucene = "8.6.3"
+    val zio    = "1.0.6"
+    val lucene = "8.8.2"
   }
 
   lazy val ScalacOptions = Seq(
@@ -49,16 +49,16 @@ object Build {
   def defaultSettings(projectName: String) =
     Seq(
       name := projectName,
-      javaOptions in Test += "-Duser.timezone=UTC",
+      Test / javaOptions += "-Duser.timezone=UTC",
       scalacOptions := ScalacOptions,
-      scalaVersion in ThisBuild := ScalaVersion,
+      ThisBuild / scalaVersion := ScalaVersion,
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
       incOptions ~= (_.withLogRecompileOnMacro(false)),
       autoAPIMappings := true,
       resolvers := Resolvers,
       testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
-      fork in Test := true,
-      logBuffered in Test := false
+      Test / fork := true,
+      Test / logBuffered := false
     )
 
   lazy val Resolvers = Seq(
