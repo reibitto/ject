@@ -17,7 +17,7 @@ object JMDictIO {
 
   /** Downloads the latest JMDict file (with English definitions only) and extracts it. */
   def download(destination: Path): ZIO[Blocking with Console, Throwable, Long] = {
-    val url = new URL("http://ftp.monash.edu/pub/nihongo/JMdict_e.gz")
+    val url = new URL("http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz")
 
     ZManaged.fromAutoCloseable(UIO(new GZIPInputStream(url.openStream()))).use { stream =>
       putStrLn(s"Downloading and extracting JMDict file to $destination") *>

@@ -7,6 +7,7 @@ lazy val root = project
   .in(file("."))
   .aggregate(core, wordplay)
   .settings(
+    name := "ject",
     addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll"),
     addCommandAlias("fmtCheck", "all root/scalafmtSbtCheck root/scalafmtCheckAll"),
     addCommandAlias("wordplay-dev", ";wordplay/fastOptJS::startWebpackDevServer;~wordplay/fastOptJS"),
