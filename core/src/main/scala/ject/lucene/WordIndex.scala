@@ -1,7 +1,6 @@
 package ject.lucene
 
 import java.nio.file.Path
-
 import ject.SearchPattern
 import ject.entity.WordDocument
 import ject.locale.JapaneseText
@@ -9,6 +8,7 @@ import ject.lucene.field.WordField
 import org.apache.lucene.document.{ Document, Field, StringField, TextField }
 import org.apache.lucene.index.IndexWriter
 import org.apache.lucene.search.{ BooleanClause, BooleanQuery }
+import zio.stream.ZStream
 import zio.{ Task, TaskManaged, ZManaged }
 
 class WordIndex(directory: Path) extends LuceneIndex[WordDocument](directory) {
@@ -45,7 +45,7 @@ class WordIndex(directory: Path) extends LuceneIndex[WordDocument](directory) {
       ()
     }
 
-  def search(pattern: SearchPattern): Task[IndexedSeq[WordDocument]] = {
+  def search(pattern: SearchPattern): ZStream[Any, Throwable, WordDocument] = {
     import ject.lucene.field.WordField._
 
     val searchType =
