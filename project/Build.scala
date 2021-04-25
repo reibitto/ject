@@ -5,10 +5,10 @@ import scala.Console
 object Build {
   val ScalaVersion = "2.13.5"
 
-  val JectVersion = "0.0.1"
+  val JectVersion = "0.1.0"
 
   object Version {
-    val zio    = "1.0.6"
+    val zio    = "1.0.7"
     val lucene = "8.8.2"
   }
 

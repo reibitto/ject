@@ -57,8 +57,8 @@ object JMDictIO {
           (n \ "k_ele" \ "keb").map(_.text),
           (n \ "r_ele" \ "reb").map(_.text),
           (n \ "sense").map(s => (s \ "gloss").map(_.text).mkString("; ")),
-          (n \ "sense" \ "dial").map(_.text),
-          (n \ "sense" \ "pos").map(_.text)
+          (n \ "sense" \ "dial").map(_.text).distinct,
+          (n \ "sense" \ "pos").map(_.text).distinct
         )
       }
     }

@@ -11,7 +11,6 @@ object WordField extends Enum[WordField] {
   case object Definition   extends WordField
   case object Tags         extends WordField
   case object PartOfSpeech extends WordField
-
   case object KanjiTermFuzzy   extends WordField
   case object ReadingTermFuzzy extends WordField
   case object DefinitionOther  extends WordField

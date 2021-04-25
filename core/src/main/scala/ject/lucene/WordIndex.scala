@@ -66,7 +66,7 @@ class WordIndex(directory: Path) extends LuceneIndex[WordDocument](directory) {
       case (SearchPattern.Unspecified(text), SearchType.Definition) =>
         val query = new BooleanQuery.Builder()
 
-        text.split("\\s+]").foreach { term =>
+        text.split("\\s+").foreach { term =>
           query.add(buildQuery(term, Definition), BooleanClause.Occur.SHOULD)
           query.add(buildQuery(term, DefinitionOther), BooleanClause.Occur.SHOULD)
         }
@@ -108,6 +108,15 @@ class WordIndex(directory: Path) extends LuceneIndex[WordDocument](directory) {
 
       case (SearchPattern.Suffix(text), SearchType.Definition) =>
         searchRaw(s"${Definition.entryName}:*$text")
+
+      case (SearchPattern.Wildcard(text), SearchType.Kanji) =>
+        searchRaw(s"${KanjiTerm.entryName}:$text")
+
+      case (SearchPattern.Wildcard(text), SearchType.Reading) =>
+        searchRaw(s"${ReadingTerm.entryName}:$text")
+
+      case (SearchPattern.Wildcard(text), SearchType.Definition) =>
+        searchRaw(s"${Definition.entryName}:$text")
 
       case (SearchPattern.Raw(text), _) => searchRaw(text)
 

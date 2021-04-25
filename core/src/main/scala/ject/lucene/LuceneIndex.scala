@@ -1,7 +1,5 @@
 package ject.lucene
 
-import java.nio.file.Path
-
 import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.Document
@@ -10,6 +8,8 @@ import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.{ IndexSearcher, Query }
 import org.apache.lucene.store.MMapDirectory
 import zio.{ Task, TaskManaged, ZManaged }
+
+import java.nio.file.Path
 
 class LuceneIndex[A: DocumentDecoder](directory: Path) {
   // TODO: Properly capture these in ZManaged
@@ -38,11 +38,15 @@ class LuceneIndex[A: DocumentDecoder](directory: Path) {
     queryString: String,
     defaultField: LuceneField = LuceneField.none,
     hitsPerPage: Int = 10
-  ): Task[IndexedSeq[A]] =
+  ): Task[IndexedSeq[A]] = {
+    val queryParser = new QueryParser(defaultField.entryName, analyzer)
+    queryParser.setAllowLeadingWildcard(true)
+
     for {
-      query   <- Task(new QueryParser(defaultField.entryName, analyzer).parse(queryString))
+      query   <- Task(queryParser.parse(queryString))
       results <- searchQuery(query, hitsPerPage)
     } yield results
+  }
 
   def buildQuery(queryString: String, defaultField: LuceneField = LuceneField.none): Query =
     new QueryParser(defaultField.entryName, analyzer).parse(queryString)
