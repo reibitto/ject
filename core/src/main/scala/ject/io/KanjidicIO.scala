@@ -1,16 +1,14 @@
 package ject.io
 
-import java.io.File
+import ject.entity.{ KanjiDocument, Radical }
+import zio.blocking.Blocking
+import zio.console.{ putStrLn, Console }
+import zio.stream.{ ZSink, ZStream }
+import zio.{ Task, UIO, ZIO, ZManaged }
+
 import java.net.URL
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
-
-import ject.entity.{ KanjiDocument, Radical }
-import zio.blocking.Blocking
-import zio.{ Task, UIO, ZIO, ZManaged }
-import zio.console.{ putStrLn, Console }
-import zio.stream.{ ZSink, ZStream }
-
 import scala.xml.XML
 
 object KanjidicIO {
