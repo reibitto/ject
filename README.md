@@ -1,6 +1,6 @@
 # Ject
 
-![Scala CI](https://github.com/reibitto/reibitto/workflows/Scala%20CI/badge.svg)
+![Scala CI](https://github.com/reibitto/ject/workflows/Scala%20CI/badge.svg)
 
 ## What is it?
 
