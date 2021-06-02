@@ -21,7 +21,7 @@ class LuceneIndex[A: DocumentDecoder](directory: Path) {
   lazy val reader: DirectoryReader = DirectoryReader.open(index)
   lazy val searcher: IndexSearcher = new IndexSearcher(reader)
 
-  def searchQuery(query: Query, hitsPerPage: Int = 10): ZStream[Any, Throwable, A] =
+  def searchQuery(query: Query, hitsPerPage: Int = 20): ZStream[Any, Throwable, A] =
     ZStream.unfoldChunkM(Option.empty[ScoreDoc]) { state =>
       Task {
         val docs = state match {
@@ -52,7 +52,7 @@ class LuceneIndex[A: DocumentDecoder](directory: Path) {
   def searchRaw(
     queryString: String,
     defaultField: LuceneField = LuceneField.none,
-    hitsPerPage: Int = 10
+    hitsPerPage: Int = 20
   ): ZStream[Any, Throwable, A] = {
     val queryParser = new QueryParser(defaultField.entryName, analyzer)
     queryParser.setAllowLeadingWildcard(true)

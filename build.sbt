@@ -3,6 +3,17 @@ import sbt.Keys._
 import sbt._
 import sbtwelcome._
 
+inThisBuild(
+  List(
+    organization := "com.github.reibitto",
+    homepage := Some(url("https://github.com/reibitto/ject")),
+    licenses := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
+    developers := List(
+      Developer("reibitto", "reibitto", "reibitto@users.noreply.github.com", url("https://reibitto.github.io"))
+    )
+  )
+)
+
 lazy val root = project
   .in(file("."))
   .aggregate(core, wordplay)
@@ -41,9 +52,9 @@ lazy val core = module("ject", Some("core"))
     libraryDependencies ++= Seq(
       "dev.zio"                %% "zio"                       % Version.zio,
       "dev.zio"                %% "zio-streams"               % Version.zio,
-      "dev.zio"                %% "zio-process"               % "0.3.0",
-      "dev.zio"                %% "zio-logging"               % "0.5.8",
-      "org.scala-lang.modules" %% "scala-xml"                 % "1.3.0",
+      "dev.zio"                %% "zio-process"               % "0.4.0",
+      "dev.zio"                %% "zio-logging"               % "0.5.10",
+      "org.scala-lang.modules" %% "scala-xml"                 % "2.0.0",
       "com.beachape"           %% "enumeratum"                % "1.6.1",
       "org.apache.lucene"       % "lucene-core"               % Version.lucene,
       "org.apache.lucene"       % "lucene-analyzers-common"   % Version.lucene,
@@ -92,4 +103,3 @@ def module(projectId: String, moduleFile: Option[String] = None): Project =
     .settings(Build.defaultSettings(projectId))
 
 ThisBuild / organization := "com.github.reibitto"
-ThisBuild / version := Build.JectVersion

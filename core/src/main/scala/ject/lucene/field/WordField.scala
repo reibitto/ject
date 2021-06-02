@@ -13,7 +13,9 @@ object WordField extends Enum[WordField] {
   case object PartOfSpeech     extends WordField
   case object KanjiTermFuzzy   extends WordField
   case object ReadingTermFuzzy extends WordField
-  case object DefinitionOther  extends WordField
+
+  /** Definition without EnglishAnalyzer applied to it */
+  case object DefinitionOther extends WordField
 
   lazy val values: IndexedSeq[WordField] = findValues
 }

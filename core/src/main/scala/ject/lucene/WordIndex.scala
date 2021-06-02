@@ -58,10 +58,14 @@ class WordIndex(directory: Path) extends LuceneIndex[WordDocument](directory) {
 
     (pattern, searchType) match {
       case (SearchPattern.Unspecified(text), SearchType.Kanji) =>
-        searchRaw(s"${KanjiTerm.entryName}:$text* OR ${KanjiTermFuzzy.entryName}:$text")
+        // We do both exact search and wildcard search because doing them separately like this will score the exact
+        // match higher.
+        searchRaw(s"${KanjiTerm.entryName}:$text OR ${KanjiTerm.entryName}:$text* OR ${KanjiTermFuzzy.entryName}:$text")
 
       case (SearchPattern.Unspecified(text), SearchType.Reading) =>
-        searchRaw(s"${ReadingTerm.entryName}:$text* OR ${ReadingTermFuzzy.entryName}:$text")
+        searchRaw(
+          s"${ReadingTerm.entryName}:$text OR ${ReadingTerm.entryName}:$text* OR ${ReadingTermFuzzy.entryName}:$text"
+        )
 
       case (SearchPattern.Unspecified(text), SearchType.Definition) =>
         val query = new BooleanQuery.Builder()

@@ -18,7 +18,12 @@ final case class WordDocument(
   definitions: Seq[String] = Seq.empty,
   tags: Seq[String] = Seq.empty,
   partsOfSpeech: Seq[String] = Seq.empty
-)
+) {
+  def render: String = {
+    val terms = (kanjiTerms ++ readingTerms).mkString(" ")
+    s"${terms}: ${definitions.mkString("; ")}"
+  }
+}
 
 object WordDocument {
   implicit val documentDecoder: DocumentDecoder[WordDocument] = new DocumentDecoder[WordDocument] {
@@ -35,12 +40,12 @@ object WordDocument {
 
     def decode(document: Document): WordDocument =
       WordDocument(
-        document.get(WordField.Id.entryName),
-        document.getValues(WordField.KanjiTerm.entryName).toIndexedSeq,
-        document.getValues(WordField.ReadingTerm.entryName).toIndexedSeq,
-        document.getValues(WordField.Definition.entryName).toIndexedSeq,
-        document.getValues(WordField.Tags.entryName).toIndexedSeq,
-        document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq
+        id = document.get(WordField.Id.entryName),
+        kanjiTerms = document.getValues(WordField.KanjiTerm.entryName).toIndexedSeq,
+        readingTerms = document.getValues(WordField.ReadingTerm.entryName).toIndexedSeq,
+        definitions = document.getValues(WordField.Definition.entryName).toIndexedSeq,
+        tags = document.getValues(WordField.Tags.entryName).toIndexedSeq,
+        partsOfSpeech = document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq
       )
   }
 }

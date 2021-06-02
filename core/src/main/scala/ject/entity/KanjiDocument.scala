@@ -26,17 +26,17 @@ object KanjiDocument {
 
     def decode(document: Document): KanjiDocument =
       KanjiDocument(
-        document.get(KanjiField.Kanji.entryName),
-        document.getValues(KanjiField.Meaning.entryName).toIndexedSeq,
-        document.getValues(KanjiField.OnYomi.entryName).toIndexedSeq,
-        document.getValues(KanjiField.KunYomi.entryName).toIndexedSeq,
-        document.getValues(KanjiField.Nanori.entryName).toIndexedSeq,
-        document.get(KanjiField.RadicalId.entryName).toInt,
-        document.getValues(KanjiField.Parts.entryName).toIndexedSeq,
-        document.getValues(KanjiField.StrokeCount.entryName).toIndexedSeq.map(_.toInt),
-        Option(document.get(KanjiField.Frequency.entryName)).map(_.toInt),
-        Option(document.get(KanjiField.Jlpt.entryName)).map(_.toInt),
-        Option(document.get(KanjiField.Grade.entryName)).map(_.toInt)
+        kanji = document.get(KanjiField.Kanji.entryName),
+        meaning = document.getValues(KanjiField.Meaning.entryName).toIndexedSeq,
+        onYomi = document.getValues(KanjiField.OnYomi.entryName).toIndexedSeq,
+        kunYomi = document.getValues(KanjiField.KunYomi.entryName).toIndexedSeq,
+        nanori = document.getValues(KanjiField.Nanori.entryName).toIndexedSeq,
+        radicalId = document.get(KanjiField.RadicalId.entryName).toInt,
+        parts = document.getValues(KanjiField.Parts.entryName).toIndexedSeq,
+        strokeCount = document.getValues(KanjiField.StrokeCount.entryName).toIndexedSeq.map(_.toInt),
+        frequency = Option(document.get(KanjiField.Frequency.entryName)).map(_.toInt),
+        jlpt = Option(document.get(KanjiField.Jlpt.entryName)).map(_.toInt),
+        grade = Option(document.get(KanjiField.Grade.entryName)).map(_.toInt)
       )
   }
 }
