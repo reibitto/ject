@@ -1,5 +1,7 @@
 # Ject
 
+![Scala CI](https://github.com/reibitto/reibitto/workflows/Scala%20CI/badge.svg)
+
 ## What is it?
 
 Ject is a library to help with the creation of Lucene indexes for dictionaries and performing searches on those indexes.
