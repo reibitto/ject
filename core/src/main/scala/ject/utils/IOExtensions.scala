@@ -2,7 +2,8 @@ package ject.utils
 
 import zio.Task
 
-import java.nio.file.{ Files, Path }
+import java.nio.file.Files
+import java.nio.file.Path
 
 object IOExtensions {
   implicit class PathExtension(val self: Path) extends AnyVal {

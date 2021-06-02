@@ -68,7 +68,9 @@ lazy val core = module("ject", Some("core"))
 lazy val wordplay = module("wordplay")
   .settings(
     fork := true,
+    Test / fork := false,
     run / baseDirectory := file("."),
+    publish / skip := true,
     libraryDependencies ++= Seq(
       "me.shadaj" %%% "slinky-web" % "0.6.7",
       "me.shadaj" %%% "slinky-hot" % "0.6.7"

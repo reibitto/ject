@@ -1,10 +1,16 @@
 package ject.io
 
-import ject.entity.{ KanjiDocument, Radical }
+import ject.entity.KanjiDocument
+import ject.entity.Radical
 import zio.blocking.Blocking
-import zio.console.{ putStrLn, Console }
-import zio.stream.{ ZSink, ZStream }
-import zio.{ Task, UIO, ZIO, ZManaged }
+import zio.console.putStrLn
+import zio.console.Console
+import zio.stream.ZSink
+import zio.stream.ZStream
+import zio.Task
+import zio.UIO
+import zio.ZIO
+import zio.ZManaged
 
 import java.net.URL
 import java.nio.file.Path

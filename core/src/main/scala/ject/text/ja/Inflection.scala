@@ -1,6 +1,7 @@
 package ject.text.ja
 
-import ject.text.ja.inflection.{ Godan, Ichidan }
+import ject.text.ja.inflection.Godan
+import ject.text.ja.inflection.Ichidan
 import zio.NonEmptyChunk
 
 object Inflection {

@@ -5,11 +5,17 @@ import ject.SearchPattern
 import ject.entity.WordDocument
 import ject.locale.JapaneseText
 import ject.lucene.field.WordField
-import org.apache.lucene.document.{ Document, Field, StringField, TextField }
+import org.apache.lucene.document.Document
+import org.apache.lucene.document.Field
+import org.apache.lucene.document.StringField
+import org.apache.lucene.document.TextField
 import org.apache.lucene.index.IndexWriter
-import org.apache.lucene.search.{ BooleanClause, BooleanQuery }
+import org.apache.lucene.search.BooleanClause
+import org.apache.lucene.search.BooleanQuery
 import zio.stream.ZStream
-import zio.{ Task, TaskManaged, ZManaged }
+import zio.Task
+import zio.TaskManaged
+import zio.ZManaged
 
 class WordIndex(directory: Path) extends LuceneIndex[WordDocument](directory) {
   def add(entry: WordDocument, writer: IndexWriter): Task[Unit] =

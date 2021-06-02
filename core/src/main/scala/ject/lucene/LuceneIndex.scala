@@ -3,12 +3,19 @@ package ject.lucene
 import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.Document
-import org.apache.lucene.index.{ DirectoryReader, IndexWriter, IndexWriterConfig }
+import org.apache.lucene.index.DirectoryReader
+import org.apache.lucene.index.IndexWriter
+import org.apache.lucene.index.IndexWriterConfig
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search.{ IndexSearcher, Query, ScoreDoc }
+import org.apache.lucene.search.IndexSearcher
+import org.apache.lucene.search.Query
+import org.apache.lucene.search.ScoreDoc
 import org.apache.lucene.store.MMapDirectory
 import zio.stream.ZStream
-import zio.{ Chunk, Task, TaskManaged, ZManaged }
+import zio.Chunk
+import zio.Task
+import zio.TaskManaged
+import zio.ZManaged
 
 import java.nio.file.Path
 

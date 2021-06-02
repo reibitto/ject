@@ -9,7 +9,9 @@ import ject.entity.WordDocument
 import zio._
 import zio.blocking.Blocking
 import zio.console._
-import zio.stream.{ ZSink, ZStream, ZTransducer }
+import zio.stream.ZSink
+import zio.stream.ZStream
+import zio.stream.ZTransducer
 
 import scala.xml.XML
 

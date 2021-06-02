@@ -5,7 +5,8 @@ import java.nio.file.Path
 import ject.entity.Radical
 import zio.RIO
 import zio.blocking.Blocking
-import zio.stream.{ ZStream, ZTransducer }
+import zio.stream.ZStream
+import zio.stream.ZTransducer
 
 object RadicalIO {
   def load(file: Path): RIO[Blocking, Map[String, Radical]] =

@@ -4,7 +4,8 @@ import org.scalajs.dom.document
 import org.scalajs.dom.raw.HTMLInputElement
 import slinky.core._
 import slinky.core.annotations.react
-import slinky.core.facade.{ Fragment, ReactElement }
+import slinky.core.facade.Fragment
+import slinky.core.facade.ReactElement
 import slinky.web.html._
 
 import scala.collection.immutable.ArraySeq

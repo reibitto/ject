@@ -27,5 +27,6 @@ local.conf
 /logs
 /data/dictionary
 /data/lucene
+/data/lucene-stable
 publish.sbt
 /wordplay/build
