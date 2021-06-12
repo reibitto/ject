@@ -11,24 +11,22 @@ import org.apache.lucene.search.IndexSearcher
 import org.apache.lucene.search.Query
 import org.apache.lucene.search.ScoreDoc
 import org.apache.lucene.store.MMapDirectory
-import zio.stream.ZStream
 import zio.Chunk
 import zio.Task
 import zio.TaskManaged
-import zio.ZManaged
+import zio.stream.ZStream
 
 import java.nio.file.Path
 
-class LuceneIndex[A: DocumentDecoder](directory: Path) {
-  // TODO: Properly capture these in ZManaged
-  val index: MMapDirectory        = new MMapDirectory(directory)
-  val decoder: DocumentDecoder[A] = implicitly[DocumentDecoder[A]]
-  val analyzer: Analyzer          = decoder.analyzer
+final case class LuceneReader[A: DocDecoder](
+  directory: MMapDirectory,
+  reader: DirectoryReader,
+  searcher: IndexSearcher
+) {
+  val decoder: DocDecoder[A] = implicitly[DocDecoder[A]]
+  val analyzer: Analyzer     = decoder.analyzer
 
-  lazy val reader: DirectoryReader = DirectoryReader.open(index)
-  lazy val searcher: IndexSearcher = new IndexSearcher(reader)
-
-  def searchQuery(query: Query, hitsPerPage: Int = 20): ZStream[Any, Throwable, A] =
+  def searchQuery(query: Query, hitsPerPage: Int = 20): ZStream[Any, Throwable, ScoredDoc[A]] =
     ZStream.unfoldChunkM(Option.empty[ScoreDoc]) { state =>
       Task {
         val docs = state match {
@@ -48,7 +46,7 @@ class LuceneIndex[A: DocumentDecoder](directory: Path) {
             val docId         = hit.doc
             val doc: Document = searcher.doc(docId)
 
-            decoder.decode(doc)
+            ScoredDoc(decoder.decode(doc), hit.score)
           }
 
           Some(Chunk.fromIterable(decodedDocs), hits.lastOption)
@@ -60,7 +58,7 @@ class LuceneIndex[A: DocumentDecoder](directory: Path) {
     queryString: String,
     defaultField: LuceneField = LuceneField.none,
     hitsPerPage: Int = 20
-  ): ZStream[Any, Throwable, A] = {
+  ): ZStream[Any, Throwable, ScoredDoc[A]] = {
     val queryParser = new QueryParser(defaultField.entryName, analyzer)
     queryParser.setAllowLeadingWildcard(true)
 
@@ -73,13 +71,31 @@ class LuceneIndex[A: DocumentDecoder](directory: Path) {
   def buildQuery(queryString: String, defaultField: LuceneField = LuceneField.none): Query =
     new QueryParser(defaultField.entryName, analyzer).parse(queryString)
 
-  def createWriter: IndexWriter = {
-    val config = new IndexWriterConfig(analyzer)
-    new IndexWriter(index, config)
-  }
+  def createWriter(autoCommitOnRelease: Boolean): TaskManaged[IndexWriter] =
+    Task {
+      val config = new IndexWriterConfig(analyzer)
+      new IndexWriter(directory, config)
+    }.toManaged { writer =>
+      Task {
+        if (autoCommitOnRelease) {
+          writer.commit()
+        }
+
+        writer.close()
+      }.orDie
+    }
 }
 
-object LuceneIndex {
-  def make[A: DocumentDecoder](directory: Path): TaskManaged[LuceneIndex[A]] =
-    ZManaged.succeed(new LuceneIndex[A](directory))
+object LuceneReader {
+  def make[A: DocDecoder](directory: Path): TaskManaged[LuceneReader[A]] =
+    (for {
+      index    <- Task(new MMapDirectory(directory))
+      reader   <- Task(DirectoryReader.open(index))
+      searcher <- Task(new IndexSearcher(reader))
+    } yield new LuceneReader[A](index, reader, searcher)).toManaged { index =>
+      Task {
+        index.directory.close()
+        index.reader.close()
+      }.orDie
+    }
 }
