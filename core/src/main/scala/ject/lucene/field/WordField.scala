@@ -1,21 +1,26 @@
 package ject.lucene.field
 
 import enumeratum.Enum
+import ject.lucene.Analyzers
+import org.apache.lucene.analysis.Analyzer
 
-sealed trait WordField extends LuceneField
+sealed abstract class WordField(val analyzer: Analyzer) extends LuceneField
 
 object WordField extends Enum[WordField] {
-  case object Id               extends WordField
-  case object KanjiTerm        extends WordField
-  case object ReadingTerm      extends WordField
-  case object Definition       extends WordField
-  case object Tags             extends WordField
-  case object PartOfSpeech     extends WordField
-  case object KanjiTermFuzzy   extends WordField
-  case object ReadingTermFuzzy extends WordField
+  case object Id extends WordField(Analyzers.standard)
 
-  /** Definition without EnglishAnalyzer applied to it */
-  case object DefinitionOther extends WordField
+  case object KanjiTerm         extends WordField(Analyzers.standard)
+  case object KanjiTermAnalyzed extends WordField(Analyzers.standard)
 
-  lazy val values: IndexedSeq[WordField] = findValues
+  case object ReadingTerm         extends WordField(Analyzers.japanese)
+  case object ReadingTermAnalyzed extends WordField(Analyzers.japanese)
+
+  case object Definition      extends WordField(Analyzers.english)
+  case object DefinitionOther extends WordField(Analyzers.standard)
+
+  case object Tags extends WordField(Analyzers.standard)
+
+  case object PartOfSpeech extends WordField(Analyzers.standard)
+
+  val values: IndexedSeq[WordField] = findValues
 }

@@ -30,3 +30,4 @@ local.conf
 /data/lucene-stable
 publish.sbt
 /wordplay/build
+Scratch.scala

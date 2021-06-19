@@ -10,7 +10,7 @@ sealed trait SearchPattern {
 }
 
 object SearchPattern {
-  final case class Unspecified(text: String) extends SearchPattern {
+  final case class Default(text: String) extends SearchPattern {
     def patternText: String = s"$text"
   }
 
@@ -18,16 +18,8 @@ object SearchPattern {
     def patternText: String = s""""$text""""
   }
 
-  final case class Contains(text: String) extends SearchPattern {
-    def patternText: String = s"*$text*"
-  }
-
   final case class Prefix(text: String) extends SearchPattern {
     def patternText: String = s"$text*"
-  }
-
-  final case class Suffix(text: String) extends SearchPattern {
-    def patternText: String = s"*$text"
   }
 
   final case class Wildcard(text: String) extends SearchPattern {
@@ -52,15 +44,14 @@ object SearchPattern {
       Raw(normalizedSearchText.tail.init)
     else if (normalizedSearchText.startsWith("`"))
       Raw(normalizedSearchText.tail)
-    else if (normalizedSearchText.isSurroundedWith("*") || normalizedSearchText.isSurroundedWith("~"))
-      Contains(QueryParserUtil.escape(normalizedSearchText.tail.init))
-    else if (normalizedSearchText.startsWith("*") || normalizedSearchText.startsWith("~"))
-      Suffix(QueryParserUtil.escape(normalizedSearchText.tail))
     else if (normalizedSearchText.endsWith("*") || normalizedSearchText.endsWith("~"))
       Prefix(QueryParserUtil.escape(normalizedSearchText.init))
-    else if (normalizedSearchText.contains("?") || normalizedSearchText.contains("*"))
+    else if (
+      normalizedSearchText.contains("?") || normalizedSearchText.contains("*") ||
+      normalizedSearchText.startsWith("~")
+    )
       Wildcard(normalizedSearchText)
     else
-      Unspecified(QueryParserUtil.escape(normalizedSearchText))
+      Default(QueryParserUtil.escape(normalizedSearchText))
   }
 }
