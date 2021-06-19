@@ -1,4 +1,4 @@
-package ject
+package ject.examples
 
 import ject.io.JMDictIO
 import ject.lucene.WordWriter
@@ -10,8 +10,7 @@ import zio.duration._
 import java.io.File
 import java.nio.file.Paths
 
-object Main extends zio.App {
-  // TODO: Eventually add command line parser and options to import other dictionaries
+object JMDictMain extends zio.App {
   def run(args: List[String]): URIO[ZEnv, ExitCode] = {
     val targetPath = Paths.get("data/dictionary/JMDict_e.xml")
 

@@ -16,7 +16,7 @@ inThisBuild(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core, wordplay)
+  .aggregate(core, examples, wordplay)
   .settings(
     name := "ject",
     addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll"),
@@ -34,14 +34,23 @@ lazy val root = project
          |    888 `Y8bod8P' `Y8bod8P'   "888"
          |    888
          |.o. 88P
-         |`Y888P              ${version.value}
+         |`Y888P       ${version.value}
          |
          |""".stripMargin,
     usefulTasks := Seq(
-      UsefulTask("a", "ject/run", "Download dictionary and create Lucene index"),
-      UsefulTask("b", "~compile", "Compile all modules with file-watch enabled"),
-      UsefulTask("c", "fmt", "Run scalafmt on the entire project"),
-      UsefulTask("d", "wordplay-dev", "Start wordplay at localhost:8080 with hot reloading enabled")
+      UsefulTask("a", "~compile", "Compile all modules with file-watch enabled"),
+      UsefulTask(
+        "b",
+        "examples/runMain ject.examples.JMDictMain",
+        "Download Japanese-English dictionary and create Lucene index"
+      ),
+      UsefulTask(
+        "c",
+        "examples/runMain ject.examples.KanjidicMain",
+        "Download kanjidic and create Lucene index"
+      ),
+      UsefulTask("d", "fmt", "Run scalafmt on the entire project"),
+      UsefulTask("e", "wordplay-dev", "Start wordplay at localhost:8080 with hot reloading enabled")
     )
   )
 
@@ -63,6 +72,14 @@ lazy val core = module("ject", Some("core"))
       "org.apache.lucene"       % "lucene-highlighter"        % Version.lucene,
       "org.apache.lucene"       % "lucene-analyzers-kuromoji" % Version.lucene
     )
+  )
+
+lazy val examples = module("examples")
+  .dependsOn(core)
+  .settings(
+    fork := true,
+    run / baseDirectory := file("."),
+    publish / skip := true
   )
 
 lazy val wordplay = module("wordplay")

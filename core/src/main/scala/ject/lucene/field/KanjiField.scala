@@ -1,21 +1,23 @@
 package ject.lucene.field
 
 import enumeratum._
+import ject.lucene.Analyzers
+import org.apache.lucene.analysis.Analyzer
 
-sealed trait KanjiField extends LuceneField
+sealed abstract class KanjiField(val analyzer: Analyzer) extends LuceneField
 
 object KanjiField extends Enum[KanjiField] {
-  case object Kanji       extends KanjiField
-  case object Meaning     extends KanjiField
-  case object OnYomi      extends KanjiField
-  case object KunYomi     extends KanjiField
-  case object Nanori      extends KanjiField
-  case object RadicalId   extends KanjiField
-  case object Parts       extends KanjiField
-  case object StrokeCount extends KanjiField
-  case object Frequency   extends KanjiField
-  case object Jlpt        extends KanjiField
-  case object Grade       extends KanjiField
+  case object Kanji       extends KanjiField(Analyzers.standard)
+  case object Meaning     extends KanjiField(Analyzers.english)
+  case object OnYomi      extends KanjiField(Analyzers.standard)
+  case object KunYomi     extends KanjiField(Analyzers.standard)
+  case object Nanori      extends KanjiField(Analyzers.standard)
+  case object RadicalId   extends KanjiField(Analyzers.standard)
+  case object Parts       extends KanjiField(Analyzers.standard)
+  case object StrokeCount extends KanjiField(Analyzers.standard)
+  case object Frequency   extends KanjiField(Analyzers.standard)
+  case object Jlpt        extends KanjiField(Analyzers.standard)
+  case object Grade       extends KanjiField(Analyzers.standard)
 
-  lazy val values: IndexedSeq[KanjiField] = findValues
+  val values: IndexedSeq[KanjiField] = findValues
 }

@@ -3,17 +3,26 @@ package ject.lucene
 import ject.SearchPattern
 import ject.docs.WordDoc
 import ject.locale.JapaneseText
-import org.apache.lucene.search.BooleanClause
-import org.apache.lucene.search.BooleanQuery
+import ject.lucene.AnalyzerExtensions._
+import ject.lucene.WordReader.SearchType
+import ject.lucene.field.LuceneField
+import ject.lucene.field.WordField
+import org.apache.lucene.queryparser.classic.QueryParser
+import org.apache.lucene.search._
+import org.apache.lucene.util.QueryBuilder
+import zio.Task
 import zio.TaskManaged
 import zio.stream.ZStream
 
 import java.nio.file.Path
 
 final case class WordReader(index: LuceneReader[WordDoc]) {
-  def search(pattern: SearchPattern): ZStream[Any, Throwable, ScoredDoc[WordDoc]] = {
-    import ject.lucene.field.WordField._
+  private val builder = new QueryBuilder(WordDoc.documentDecoder.analyzer)
 
+  private val queryParser = new QueryParser(LuceneField.none.entryName, WordDoc.documentDecoder.analyzer)
+  queryParser.setAllowLeadingWildcard(true)
+
+  def search(pattern: SearchPattern): ZStream[Any, Throwable, ScoredDoc[WordDoc]] = {
     val searchType =
       if (pattern.text.exists(JapaneseText.isKanji))
         SearchType.Kanji
@@ -22,88 +31,130 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
       else
         SearchType.Definition
 
-    (pattern, searchType) match {
-      case (SearchPattern.Unspecified(text), SearchType.Kanji) =>
-        // We do both exact search and wildcard search because doing them separately like this will score the exact
-        // match higher.
-        index.searchRaw(
-          s"${KanjiTerm.entryName}:$text OR ${KanjiTerm.entryName}:$text* OR ${KanjiTermFuzzy.entryName}:$text"
-        )
-
-      case (SearchPattern.Unspecified(text), SearchType.Reading) =>
-        index.searchRaw(
-          s"${ReadingTerm.entryName}:$text OR ${ReadingTerm.entryName}:$text* OR ${ReadingTermFuzzy.entryName}:$text"
-        )
-
-      case (SearchPattern.Unspecified(text), SearchType.Definition) =>
-        val query = new BooleanQuery.Builder()
-
-        text.split("\\s+").foreach { term =>
-          query.add(index.buildQuery(term, Definition), BooleanClause.Occur.SHOULD)
-          query.add(index.buildQuery(term, DefinitionOther), BooleanClause.Occur.SHOULD)
-        }
-
-        index.searchQuery(query.build())
-
-      case (SearchPattern.Exact(text), SearchType.Kanji) =>
-        index.searchRaw(s"${KanjiTerm.entryName}:$text")
-
-      case (SearchPattern.Exact(text), SearchType.Reading) =>
-        index.searchRaw(s"${ReadingTerm.entryName}:$text")
-
-      case (SearchPattern.Exact(text), SearchType.Definition) =>
-        index.searchRaw(s"${Definition.entryName}:$text")
-
-      case (SearchPattern.Contains(text), SearchType.Kanji) =>
-        index.searchRaw(s"${KanjiTerm.entryName}:*$text*")
-
-      case (SearchPattern.Contains(text), SearchType.Reading) =>
-        index.searchRaw(s"${ReadingTerm.entryName}:*$text*")
-
-      case (SearchPattern.Contains(text), SearchType.Definition) =>
-        index.searchRaw(s"${Definition.entryName}:*$text*")
-
-      case (SearchPattern.Prefix(text), SearchType.Kanji) =>
-        index.searchRaw(s"${KanjiTerm.entryName}:$text*")
-
-      case (SearchPattern.Prefix(text), SearchType.Reading) =>
-        index.searchRaw(s"${ReadingTerm.entryName}:$text*")
-
-      case (SearchPattern.Prefix(text), SearchType.Definition) =>
-        index.searchRaw(s"${Definition.entryName}:$text*")
-
-      case (SearchPattern.Suffix(text), SearchType.Kanji) =>
-        index.searchRaw(s"${KanjiTerm.entryName}:*$text")
-
-      case (SearchPattern.Suffix(text), SearchType.Reading) =>
-        index.searchRaw(s"${ReadingTerm.entryName}:*$text")
-
-      case (SearchPattern.Suffix(text), SearchType.Definition) =>
-        index.searchRaw(s"${Definition.entryName}:*$text")
-
-      case (SearchPattern.Wildcard(text), SearchType.Kanji) =>
-        index.searchRaw(s"${KanjiTerm.entryName}:$text")
-
-      case (SearchPattern.Wildcard(text), SearchType.Reading) =>
-        index.searchRaw(s"${ReadingTerm.entryName}:$text")
-
-      case (SearchPattern.Wildcard(text), SearchType.Definition) =>
-        index.searchRaw(s"${Definition.entryName}:$text")
-
-      case (SearchPattern.Raw(text), _) => index.searchRaw(text)
-
+    def searchTypeToField(searchType: SearchType): WordField = searchType match {
+      case SearchType.Kanji      => WordField.KanjiTerm
+      case SearchType.Reading    => WordField.ReadingTerm
+      case SearchType.Definition => WordField.Definition
     }
-  }
 
+    val booleanQueryTask = Task {
+      val booleanQuery = new BooleanQuery.Builder()
+
+      (pattern, searchType) match {
+        case (SearchPattern.Default(text), SearchType.Kanji) =>
+          booleanQuery.add(
+            new BoostQuery(builder.createPhraseQuery(WordField.KanjiTermAnalyzed.entryName, text), 5),
+            BooleanClause.Occur.SHOULD
+          )
+          booleanQuery.add(
+            new BoostQuery(builder.createBooleanQuery(WordField.KanjiTerm.entryName, text), 5),
+            BooleanClause.Occur.SHOULD
+          )
+          booleanQuery.add(
+            new BoostQuery(builder.createBooleanQuery(WordField.KanjiTermAnalyzed.entryName, text), 1),
+            BooleanClause.Occur.SHOULD
+          )
+          booleanQuery.add(
+            new BoostQuery(new TermQuery(WordField.KanjiTerm.term(text)), 100),
+            BooleanClause.Occur.SHOULD
+          )
+
+        case (SearchPattern.Default(text), SearchType.Reading) =>
+          booleanQuery.add(
+            new BoostQuery(builder.createPhraseQuery(WordField.ReadingTermAnalyzed.entryName, text), 5),
+            BooleanClause.Occur.SHOULD
+          )
+          booleanQuery.add(
+            new BoostQuery(builder.createBooleanQuery(WordField.ReadingTerm.entryName, text), 5),
+            BooleanClause.Occur.SHOULD
+          )
+          booleanQuery.add(
+            new BoostQuery(builder.createBooleanQuery(WordField.ReadingTermAnalyzed.entryName, text), 1),
+            BooleanClause.Occur.SHOULD
+          )
+          booleanQuery.add(
+            new BoostQuery(new TermQuery(WordField.ReadingTerm.term(text)), 100),
+            BooleanClause.Occur.SHOULD
+          )
+
+        case (SearchPattern.Exact(text), SearchType.Definition) =>
+          booleanQuery.add(
+            builder.createPhraseQuery(WordField.Definition.entryName, text),
+            BooleanClause.Occur.SHOULD
+          )
+
+        case (SearchPattern.Exact(text), searchType) =>
+          booleanQuery.add(
+            new TermQuery(searchTypeToField(searchType).term(text)),
+            BooleanClause.Occur.SHOULD
+          )
+
+        case (SearchPattern.Default(text), SearchType.Definition) =>
+          booleanQuery.add(
+            new BoostQuery(builder.createPhraseQuery(WordField.Definition.entryName, text), 5),
+            BooleanClause.Occur.SHOULD
+          )
+          booleanQuery.add(
+            new BoostQuery(builder.createBooleanQuery(WordField.Definition.entryName, text), 5),
+            BooleanClause.Occur.SHOULD
+          )
+
+        case (SearchPattern.Prefix(text), SearchType.Definition) =>
+          val tokens = WordField.Definition.analyzer.tokensFor(text)
+
+          tokens.init.foreach { token =>
+            booleanQuery.add(
+              new TermQuery(WordField.Definition.term(token)),
+              BooleanClause.Occur.SHOULD
+            )
+          }
+
+          tokens.lastOption.foreach { token =>
+            booleanQuery.add(
+              new PrefixQuery(WordField.DefinitionOther.term(token)),
+              BooleanClause.Occur.SHOULD
+            )
+          }
+
+          booleanQuery
+
+        case (pattern @ SearchPattern.Prefix(_), searchType) =>
+          booleanQuery.add(
+            new PrefixQuery(searchTypeToField(searchType).term(pattern.text)),
+            BooleanClause.Occur.SHOULD
+          )
+
+        case (SearchPattern.Wildcard(text), SearchType.Definition) =>
+          booleanQuery.add(
+            new WildcardQuery(WordField.DefinitionOther.term(text)),
+            BooleanClause.Occur.SHOULD
+          )
+
+        case (pattern @ SearchPattern.Wildcard(_), searchType) =>
+          booleanQuery.add(
+            new WildcardQuery(searchTypeToField(searchType).term(pattern.patternText)),
+            BooleanClause.Occur.SHOULD
+          )
+
+        case (SearchPattern.Raw(text), _) =>
+          booleanQuery.add(queryParser.parse(text), BooleanClause.Occur.SHOULD)
+      }
+    }
+
+    ZStream.unwrap(
+      booleanQueryTask.map(b => index.searchQuery(b.build()))
+    )
+  }
+}
+
+object WordReader {
   sealed trait SearchType
   object SearchType {
     case object Kanji      extends SearchType
     case object Reading    extends SearchType
     case object Definition extends SearchType
   }
-}
 
-object WordReader {
   def make(directory: Path): TaskManaged[WordReader] =
     for {
       reader <- LuceneReader.make[WordDoc](directory)

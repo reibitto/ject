@@ -1,18 +1,13 @@
 package ject.docs
 
 import ject.lucene.DocDecoder
+import ject.lucene.field.LuceneField
 import ject.lucene.field.WordField
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.analysis.en.EnglishAnalyzer
-import org.apache.lucene.analysis.ja.JapaneseAnalyzer
-import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper
-import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
 import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
-
-import scala.jdk.CollectionConverters._
 
 final case class WordDoc(
   id: String,
@@ -34,12 +29,12 @@ final case class WordDoc(
 
     kanjiTerms.foreach { value =>
       doc.add(new StringField(WordField.KanjiTerm.entryName, value, Field.Store.YES))
-      doc.add(new TextField(WordField.KanjiTermFuzzy.entryName, value, Field.Store.NO))
+      doc.add(new TextField(WordField.KanjiTermAnalyzed.entryName, value, Field.Store.NO))
     }
 
     readingTerms.foreach { value =>
       doc.add(new StringField(WordField.ReadingTerm.entryName, value, Field.Store.YES))
-      doc.add(new TextField(WordField.ReadingTermFuzzy.entryName, value, Field.Store.NO))
+      doc.add(new TextField(WordField.ReadingTermAnalyzed.entryName, value, Field.Store.NO))
     }
 
     definitions.foreach { value =>
@@ -61,16 +56,7 @@ final case class WordDoc(
 
 object WordDoc {
   implicit val documentDecoder: DocDecoder[WordDoc] = new DocDecoder[WordDoc] {
-    val analyzer: PerFieldAnalyzerWrapper = new PerFieldAnalyzerWrapper(
-      new StandardAnalyzer,
-      Map[String, Analyzer](
-        WordField.KanjiTerm.entryName        -> new JapaneseAnalyzer,
-        WordField.KanjiTermFuzzy.entryName   -> new JapaneseAnalyzer,
-        WordField.ReadingTerm.entryName      -> new JapaneseAnalyzer,
-        WordField.ReadingTermFuzzy.entryName -> new JapaneseAnalyzer,
-        WordField.Definition.entryName       -> new EnglishAnalyzer
-      ).asJava
-    )
+    val analyzer: Analyzer = LuceneField.perFieldAnalyzer(WordField.values)
 
     def decode(document: Document): WordDoc =
       WordDoc(

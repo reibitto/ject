@@ -1,7 +1,6 @@
 package ject.lucene
 
 import ject.lucene.field.LuceneField
-import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.index.IndexWriter
@@ -24,7 +23,6 @@ final case class LuceneReader[A: DocDecoder](
   searcher: IndexSearcher
 ) {
   val decoder: DocDecoder[A] = implicitly[DocDecoder[A]]
-  val analyzer: Analyzer     = decoder.analyzer
 
   def searchQuery(query: Query, hitsPerPage: Int = 20): ZStream[Any, Throwable, ScoredDoc[A]] =
     ZStream.unfoldChunkM(Option.empty[ScoreDoc]) { state =>
@@ -59,7 +57,7 @@ final case class LuceneReader[A: DocDecoder](
     defaultField: LuceneField = LuceneField.none,
     hitsPerPage: Int = 20
   ): ZStream[Any, Throwable, ScoredDoc[A]] = {
-    val queryParser = new QueryParser(defaultField.entryName, analyzer)
+    val queryParser = new QueryParser(defaultField.entryName, decoder.analyzer)
     queryParser.setAllowLeadingWildcard(true)
 
     for {
@@ -69,11 +67,11 @@ final case class LuceneReader[A: DocDecoder](
   }
 
   def buildQuery(queryString: String, defaultField: LuceneField = LuceneField.none): Query =
-    new QueryParser(defaultField.entryName, analyzer).parse(queryString)
+    new QueryParser(defaultField.entryName, decoder.analyzer).parse(queryString)
 
   def createWriter(autoCommitOnRelease: Boolean): TaskManaged[IndexWriter] =
     Task {
-      val config = new IndexWriterConfig(analyzer)
+      val config = new IndexWriterConfig(decoder.analyzer)
       new IndexWriter(directory, config)
     }.toManaged { writer =>
       Task {

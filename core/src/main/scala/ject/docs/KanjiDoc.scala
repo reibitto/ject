@@ -2,8 +2,8 @@ package ject.docs
 
 import ject.lucene.DocDecoder
 import ject.lucene.field.KanjiField
+import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.analysis.standard.StandardAnalyzer
 import org.apache.lucene.document._
 
 final case class KanjiDoc(
@@ -19,6 +19,8 @@ final case class KanjiDoc(
   jlpt: Option[Int],
   grade: Option[Int]
 ) extends Doc {
+  def isJouyouKanji: Boolean = grade.exists(_ <= 8)
+
   def toLucene: Document = {
     val doc = new Document()
 
@@ -73,7 +75,7 @@ final case class KanjiDoc(
 
 object KanjiDoc {
   implicit val documentDecoder: DocDecoder[KanjiDoc] = new DocDecoder[KanjiDoc] {
-    val analyzer: Analyzer = new StandardAnalyzer
+    val analyzer: Analyzer = LuceneField.perFieldAnalyzer(KanjiField.values)
 
     def decode(document: Document): KanjiDoc =
       KanjiDoc(

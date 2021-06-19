@@ -6,13 +6,17 @@
 
 Ject is a library to help with the creation of Lucene indexes for dictionaries and performing searches on those indexes.
 
-Currently only Japanese is supported with [JMDict](http://www.edrdg.org/jmdict/edict_doc.html), but the plan is to support multiple dictionaries for multiple languages.
+Currently only Japanese is supported with [JMDict](http://www.edrdg.org/jmdict/edict_doc.html), but the plan is to
+support multiple dictionaries for multiple languages.
 
-The motivation for creating this library is to enable real-time dictionary searches into [Command Center](https://github.com/reibitto/command-center) via a plugin.
+The motivation for creating this library is to enable real-time dictionary searches into
+[Command Center](https://github.com/reibitto/command-center) via a plugin.
 
 ## Usage
 
-To create the JMDict Lucene index, simple run `ject/run` after starting up `sbt`.
+To create the JMDict Lucene index, simply run `examples/runMain ject.examples.JMDictMain` after starting up `sbt`.
+
+Similarly for creating the Lucene index for Kanjidic: `examples/runMain ject.examples.KanjidicMain`
 
 You can also use this project as a library by adding the following dependency:
 
