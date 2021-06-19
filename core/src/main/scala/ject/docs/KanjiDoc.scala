@@ -51,22 +51,22 @@ final case class KanjiDoc(
 
     strokeCount.foreach { value =>
       doc.add(new LongPoint(KanjiField.StrokeCount.entryName, value))
-      doc.add(new StoredField(KanjiField.StrokeCount.entryName, radicalId))
+      doc.add(new StoredField(KanjiField.StrokeCount.entryName, value))
     }
 
     frequency.foreach { value =>
       doc.add(new LongPoint(KanjiField.Frequency.entryName, value))
-      doc.add(new StoredField(KanjiField.Frequency.entryName, radicalId))
+      doc.add(new StoredField(KanjiField.Frequency.entryName, value))
     }
 
     jlpt.foreach { value =>
       doc.add(new LongPoint(KanjiField.Jlpt.entryName, value))
-      doc.add(new StoredField(KanjiField.Jlpt.entryName, radicalId))
+      doc.add(new StoredField(KanjiField.Jlpt.entryName, value))
     }
 
     grade.foreach { value =>
       doc.add(new LongPoint(KanjiField.Grade.entryName, value))
-      doc.add(new StoredField(KanjiField.Grade.entryName, radicalId))
+      doc.add(new StoredField(KanjiField.Grade.entryName, value))
     }
 
     doc
