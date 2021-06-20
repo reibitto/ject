@@ -1,12 +1,12 @@
 package ject.io
 
-import java.nio.file.Path
-
 import ject.entity.Radical
 import zio.RIO
 import zio.blocking.Blocking
 import zio.stream.ZStream
 import zio.stream.ZTransducer
+
+import java.nio.file.Path
 
 object RadicalIO {
   def load(file: Path): RIO[Blocking, Map[String, Radical]] =
@@ -18,15 +18,12 @@ object RadicalIO {
         val tokens  = line.split("\t")
         val radical = tokens(0)
 
-        (
-          radical,
-          Radical(
-            index.toInt + 1,
-            radical,
-            tokens(1).map(_.toString).toSet,
-            tokens(2),
-            tokens.lift(4).getOrElse("").map(_.toString).toSet
-          )
+        radical -> Radical(
+          radicalId = index.toInt + 1,
+          radical = radical,
+          variants = tokens(1).map(_.toString).toSet,
+          name = tokens(2),
+          kanji = tokens.lift(4).getOrElse("").map(_.toString).toSet + radical
         )
       }
       .runCollect

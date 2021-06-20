@@ -12,6 +12,7 @@ final case class KanjiDoc(
   onYomi: Seq[String],
   kunYomi: Seq[String],
   nanori: Seq[String],
+  koreanReadings: Seq[String],
   radicalId: Int,
   parts: Seq[String],
   strokeCount: Seq[Int],
@@ -42,7 +43,11 @@ final case class KanjiDoc(
       doc.add(new StringField(KanjiField.Nanori.entryName, value, Field.Store.YES))
     }
 
-    doc.add(new LongPoint(KanjiField.RadicalId.entryName, radicalId))
+    koreanReadings.foreach { value =>
+      doc.add(new StringField(KanjiField.KoreanReading.entryName, value, Field.Store.YES))
+    }
+
+    doc.add(new IntPoint(KanjiField.RadicalId.entryName, radicalId))
     doc.add(new StoredField(KanjiField.RadicalId.entryName, radicalId))
 
     parts.foreach { value =>
@@ -50,24 +55,28 @@ final case class KanjiDoc(
     }
 
     strokeCount.foreach { value =>
-      doc.add(new LongPoint(KanjiField.StrokeCount.entryName, value))
+      doc.add(new IntPoint(KanjiField.StrokeCount.entryName, value))
       doc.add(new StoredField(KanjiField.StrokeCount.entryName, value))
     }
 
     frequency.foreach { value =>
-      doc.add(new LongPoint(KanjiField.Frequency.entryName, value))
+      doc.add(new IntPoint(KanjiField.Frequency.entryName, value))
       doc.add(new StoredField(KanjiField.Frequency.entryName, value))
     }
 
+    doc.add(new SortedNumericDocValuesField(KanjiField.Frequency.entryName, frequency.getOrElse(Int.MaxValue).toLong))
+
     jlpt.foreach { value =>
-      doc.add(new LongPoint(KanjiField.Jlpt.entryName, value))
+      doc.add(new IntPoint(KanjiField.Jlpt.entryName, value))
       doc.add(new StoredField(KanjiField.Jlpt.entryName, value))
     }
 
     grade.foreach { value =>
-      doc.add(new LongPoint(KanjiField.Grade.entryName, value))
+      doc.add(new IntPoint(KanjiField.Grade.entryName, value))
       doc.add(new StoredField(KanjiField.Grade.entryName, value))
     }
+
+    doc.add(new SortedNumericDocValuesField(KanjiField.Grade.entryName, grade.getOrElse(Int.MaxValue).toLong))
 
     doc
   }
@@ -84,6 +93,7 @@ object KanjiDoc {
         onYomi = document.getValues(KanjiField.OnYomi.entryName).toIndexedSeq,
         kunYomi = document.getValues(KanjiField.KunYomi.entryName).toIndexedSeq,
         nanori = document.getValues(KanjiField.Nanori.entryName).toIndexedSeq,
+        koreanReadings = document.getValues(KanjiField.KoreanReading.entryName).toIndexedSeq,
         radicalId = document.get(KanjiField.RadicalId.entryName).toInt,
         parts = document.getValues(KanjiField.Parts.entryName).toIndexedSeq,
         strokeCount = document.getValues(KanjiField.StrokeCount.entryName).toIndexedSeq.map(_.toInt),

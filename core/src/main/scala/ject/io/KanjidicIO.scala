@@ -65,6 +65,9 @@ object KanjidicIO {
             .filter(_.attribute("r_type").exists(_.text == "ja_kun"))
             .map(_.text),
           nanori = (n \ "reading_meaning" \ "nanori").map(_.text),
+          koreanReadings = (n \ "reading_meaning" \ "rmgroup" \ "reading")
+            .filter(_.attribute("r_type").exists(_.text == "korean_h"))
+            .map(_.text),
           radicalId = (n \ "radical" \ "rad_value")
             .find(_.attribute("rad_type").exists(_.text == "classical"))
             .map(_.text)
@@ -72,7 +75,7 @@ object KanjidicIO {
             .toInt,
           parts = radicals.values.filter(_.kanji.contains(kanji)).map(_.radical).toSeq,
           strokeCount = (n \ "misc" \ "stroke_count").map(_.text.toInt),
-          frequency = (n \ "misc" \ "frequency").headOption.map(_.text.toInt),
+          frequency = (n \ "misc" \ "freq").headOption.map(_.text.toInt),
           jlpt = (n \ "misc" \ "jlpt").headOption.map(_.text.toInt),
           grade = (n \ "misc" \ "grade").headOption.map(_.text.toInt)
         )

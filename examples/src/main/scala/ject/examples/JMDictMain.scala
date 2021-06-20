@@ -17,8 +17,8 @@ object JMDictMain extends zio.App {
     (for {
       _                      <- targetPath.ensureDirectoryExists()
       tempFile               <- Task(File.createTempFile("JMDict", ""))
-      _                      <- JMDictIO.download(tempFile.toPath)
-      _                      <- JMDictIO.normalize(tempFile.toPath, targetPath)
+      _                      <- JMDictIO.download(tempFile.toPath).unless(targetPath.toFile.exists())
+      _                      <- JMDictIO.normalize(tempFile.toPath, targetPath).unless(targetPath.toFile.exists())
       luceneDirectory         = Paths.get("data/lucene")
       (timeTaken, totalDocs) <- WordWriter
                                   .make(luceneDirectory.resolve("word"))

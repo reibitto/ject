@@ -16,7 +16,7 @@ object KanjidicMain extends zio.App {
       radicals               <- RadicalIO.load(Paths.get("data/radicals.dat"))
       targetPath              = Paths.get("data/dictionary/kanjidic.xml")
       _                      <- targetPath.ensureDirectoryExists()
-      _                      <- KanjidicIO.download(targetPath)
+      _                      <- KanjidicIO.download(targetPath).unless(targetPath.toFile.exists())
       luceneDirectory         = Paths.get("data/lucene")
       (timeTaken, totalDocs) <- KanjiWriter
                                   .make(luceneDirectory.resolve("kanji"))

@@ -142,7 +142,7 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
     }
 
     ZStream.unwrap(
-      booleanQueryTask.map(b => index.searchQuery(b.build()))
+      booleanQueryTask.map(b => index.search(b.build()))
     )
   }
 }
