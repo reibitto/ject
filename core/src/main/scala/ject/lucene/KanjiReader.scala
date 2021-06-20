@@ -1,5 +1,6 @@
 package ject.lucene
 
+import ject.RadicalQuery
 import ject.docs.KanjiDoc
 import ject.lucene.field.KanjiField
 import org.apache.lucene.search._
@@ -25,7 +26,7 @@ final case class KanjiReader(index: LuceneReader[KanjiDoc]) {
     ZStream.unwrap {
       val kanjiQuery = new BooleanQuery.Builder()
 
-      parts.foreach { part =>
+      RadicalQuery.normalize(parts).foreach { part =>
         kanjiQuery.add(
           new TermQuery(KanjiField.Kanji.term(part.toString)),
           BooleanClause.Occur.SHOULD
