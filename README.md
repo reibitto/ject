@@ -21,7 +21,7 @@ Similarly for creating the Lucene index for Kanjidic: `examples/runMain ject.exa
 You can also use this project as a library by adding the following dependency:
 
 ```scala
-"com.github.reibitto" %% "ject" % "0.1.0"
+"com.github.reibitto" %% "ject" % "0.2.0"
 ```
 
 But be warned the API, schemas, etc will likely change quite a bit in the future. I just wanted to get this library
