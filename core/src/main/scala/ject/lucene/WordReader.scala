@@ -4,6 +4,7 @@ import ject.SearchPattern
 import ject.docs.WordDoc
 import ject.locale.JapaneseText
 import ject.lucene.AnalyzerExtensions._
+import ject.lucene.BooleanQueryBuilderExtensions._
 import ject.lucene.WordReader.SearchType
 import ject.lucene.field.LuceneField
 import ject.lucene.field.WordField
@@ -42,99 +43,45 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
 
       (pattern, searchType) match {
         case (SearchPattern.Default(text), SearchType.Kanji) =>
-          booleanQuery.add(
-            new BoostQuery(builder.createPhraseQuery(WordField.KanjiTermAnalyzed.entryName, text), 5),
-            BooleanClause.Occur.SHOULD
-          )
-          booleanQuery.add(
-            new BoostQuery(builder.createBooleanQuery(WordField.KanjiTerm.entryName, text), 5),
-            BooleanClause.Occur.SHOULD
-          )
-          booleanQuery.add(
-            new BoostQuery(builder.createBooleanQuery(WordField.KanjiTermAnalyzed.entryName, text), 1),
-            BooleanClause.Occur.SHOULD
-          )
-          booleanQuery.add(
-            new BoostQuery(new TermQuery(WordField.KanjiTerm.term(text)), 100),
-            BooleanClause.Occur.SHOULD
-          )
+          booleanQuery.addPhraseQuery(builder)(WordField.KanjiTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.KanjiTermAnalyzed, text, BooleanClause.Occur.SHOULD)
+          booleanQuery.addTermQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 100)
 
         case (SearchPattern.Default(text), SearchType.Reading) =>
-          booleanQuery.add(
-            new BoostQuery(builder.createPhraseQuery(WordField.ReadingTermAnalyzed.entryName, text), 5),
-            BooleanClause.Occur.SHOULD
-          )
-          booleanQuery.add(
-            new BoostQuery(builder.createBooleanQuery(WordField.ReadingTerm.entryName, text), 5),
-            BooleanClause.Occur.SHOULD
-          )
-          booleanQuery.add(
-            new BoostQuery(builder.createBooleanQuery(WordField.ReadingTermAnalyzed.entryName, text), 1),
-            BooleanClause.Occur.SHOULD
-          )
-          booleanQuery.add(
-            new BoostQuery(new TermQuery(WordField.ReadingTerm.term(text)), 100),
-            BooleanClause.Occur.SHOULD
-          )
+          booleanQuery.addPhraseQuery(builder)(WordField.ReadingTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.ReadingTermAnalyzed, text, BooleanClause.Occur.SHOULD)
+          booleanQuery.addTermQuery(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 100)
 
         case (SearchPattern.Exact(text), SearchType.Definition) =>
-          booleanQuery.add(
-            builder.createPhraseQuery(WordField.Definition.entryName, text),
-            BooleanClause.Occur.SHOULD
-          )
+          booleanQuery.addPhraseQuery(builder)(WordField.Definition, text, BooleanClause.Occur.SHOULD)
 
         case (SearchPattern.Exact(text), searchType) =>
-          booleanQuery.add(
-            new TermQuery(searchTypeToField(searchType).term(text)),
-            BooleanClause.Occur.SHOULD
-          )
+          booleanQuery.addTermQuery(searchTypeToField(searchType), text, BooleanClause.Occur.SHOULD)
 
         case (SearchPattern.Default(text), SearchType.Definition) =>
-          booleanQuery.add(
-            new BoostQuery(builder.createPhraseQuery(WordField.Definition.entryName, text), 5),
-            BooleanClause.Occur.SHOULD
-          )
-          booleanQuery.add(
-            new BoostQuery(builder.createBooleanQuery(WordField.Definition.entryName, text), 5),
-            BooleanClause.Occur.SHOULD
-          )
+          booleanQuery.addPhraseQuery(builder)(WordField.Definition, text, BooleanClause.Occur.SHOULD)
+          booleanQuery.addBooleanQuery(builder)(WordField.Definition, text, BooleanClause.Occur.SHOULD)
 
         case (SearchPattern.Prefix(text), SearchType.Definition) =>
           val tokens = WordField.Definition.analyzer.tokensFor(text)
 
           tokens.init.foreach { token =>
-            booleanQuery.add(
-              new TermQuery(WordField.Definition.term(token)),
-              BooleanClause.Occur.SHOULD
-            )
+            booleanQuery.addTermQuery(WordField.Definition, token, BooleanClause.Occur.SHOULD)
           }
 
           tokens.lastOption.foreach { token =>
-            booleanQuery.add(
-              new PrefixQuery(WordField.DefinitionOther.term(token)),
-              BooleanClause.Occur.SHOULD
-            )
+            booleanQuery.addPrefixQuery(WordField.Definition, token, BooleanClause.Occur.SHOULD)
           }
 
           booleanQuery
 
         case (pattern @ SearchPattern.Prefix(_), searchType) =>
-          booleanQuery.add(
-            new PrefixQuery(searchTypeToField(searchType).term(pattern.text)),
-            BooleanClause.Occur.SHOULD
-          )
-
-        case (SearchPattern.Wildcard(text), SearchType.Definition) =>
-          booleanQuery.add(
-            new WildcardQuery(WordField.DefinitionOther.term(text)),
-            BooleanClause.Occur.SHOULD
-          )
+          booleanQuery.addPrefixQuery(searchTypeToField(searchType), pattern.text, BooleanClause.Occur.SHOULD)
 
         case (pattern @ SearchPattern.Wildcard(_), searchType) =>
-          booleanQuery.add(
-            new WildcardQuery(searchTypeToField(searchType).term(pattern.patternText)),
-            BooleanClause.Occur.SHOULD
-          )
+          booleanQuery.addWildcardQuery(searchTypeToField(searchType), pattern.patternText, BooleanClause.Occur.SHOULD)
 
         case (SearchPattern.Raw(text), _) =>
           booleanQuery.add(queryParser.parse(text), BooleanClause.Occur.SHOULD)
