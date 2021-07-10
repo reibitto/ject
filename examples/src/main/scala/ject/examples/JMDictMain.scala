@@ -1,7 +1,7 @@
 package ject.examples
 
-import ject.io.JMDictIO
-import ject.lucene.WordWriter
+import ject.ja.io.JMDictIO
+import ject.ja.lucene.WordWriter
 import ject.utils.IOExtensions._
 import zio._
 import zio.console._
