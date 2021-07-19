@@ -12,11 +12,11 @@ import org.apache.lucene.document.TextField
 
 final case class WordDoc(
   id: String,
-  kanjiTerms: Seq[String] = Seq.empty,
-  readingTerms: Seq[String] = Seq.empty,
-  definitions: Seq[String] = Seq.empty,
-  tags: Seq[String] = Seq.empty,
-  partsOfSpeech: Seq[String] = Seq.empty
+  kanjiTerms: Seq[String],
+  readingTerms: Seq[String],
+  definitions: Seq[String],
+  tags: Seq[String],
+  partsOfSpeech: Seq[String]
 ) extends Doc {
   def render: String = {
     val terms = (kanjiTerms ++ readingTerms).mkString(" ")

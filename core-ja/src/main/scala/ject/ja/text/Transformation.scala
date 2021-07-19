@@ -8,16 +8,6 @@ import zio.NonEmptyChunk
 object Transformation {
   type Transform = String => Either[String, NonEmptyChunk[String]]
 
-  def Transforms(transforms: Transform*): Transform = { (s: String) =>
-    transforms.headOption match {
-      case None                => Right(NonEmptyChunk.single(s))
-      case Some(headTransform) =>
-        transforms.tail.foldLeft(headTransform(s)) { case (acc, f) =>
-          acc.flatMap(b => multiParam(f)(b))
-        }
-    }
-  }
-
   def multiParam(
     k: String => Either[String, NonEmptyChunk[String]]
   ): Chunk[String] => Either[String, NonEmptyChunk[String]] = { (params: Chunk[String]) =>
@@ -48,6 +38,12 @@ object Transformation {
         case _               => Left(s"$s is not a godan verb")
       }
     }
+  }
+
+  def adjectiveIStem: Transform = {
+    case s if !s.endsWith("い") => Left("Adjective must end in い")
+    case s if s.length < 2     => Left("Adjective must be greater than 1 character")
+    case s                     => Right(NonEmptyChunk.single(s.init))
   }
 
   def changeBase(dan: Syllabary.Dan, suffix: String): Transform = { s =>

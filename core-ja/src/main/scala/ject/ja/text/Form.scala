@@ -2,7 +2,7 @@ package ject.ja.text
 
 import enumeratum._
 
-final case class Form(subForms: Set[SubForm], modifiers: Set[FormModifier] = Set.empty) {
+final case class Form(subForms: Set[SubForm], modifiers: Set[FormModifier]) {
   def polite: Form   = Form(subForms, modifiers + FormModifier.Polite)
   def negative: Form = Form(subForms, modifiers + FormModifier.Negative)
 
@@ -13,15 +13,15 @@ final case class Form(subForms: Set[SubForm], modifiers: Set[FormModifier] = Set
 }
 
 object Form {
-  def of(tenseType: SubForm*): Form = Form(tenseType.toSet)
+  def of(tenseType: SubForm*): Form = Form(tenseType.toSet, Set.empty)
 }
 
 sealed trait SubForm extends EnumEntry {
-  def plain: Form    = Form(Set(this))
+  def plain: Form    = Form(Set(this), Set.empty)
   def polite: Form   = Form(Set(this), Set(FormModifier.Polite))
   def negative: Form = Form(Set(this), Set(FormModifier.Negative))
 
-  def +(that: SubForm): Form = Form(Set(this, that))
+  def +(that: SubForm): Form = Form(Set(this, that), Set.empty)
 }
 
 object SubForm extends Enum[SubForm] {

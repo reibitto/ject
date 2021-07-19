@@ -1,6 +1,7 @@
 package ject.ja.text.inflection
 
 import ject.ja.text.Form
+import ject.ja.text.Transforms
 import ject.ja.text.SubForm._
 import ject.ja.text.Transformation._
 
@@ -8,7 +9,7 @@ object Ichidan {
 
   val inflections: Map[Form, Transform] = Map(
     // Plain
-    NonPast.plain                            -> Transforms(),
+    NonPast.plain                            -> Transforms.identity,
     Past.plain                               -> Transforms(ichidanStem, attach("た")),
     Te.plain                                 -> Transforms(ichidanStem, attach("て")),
     Conditional.plain                        -> Transforms(ichidanStem, attach("たら")),
