@@ -1,6 +1,7 @@
 package ject.ja.lucene
 
 import ject.ja.docs.KanjiDoc
+import ject.lucene.DocEncoder
 import ject.lucene.DocWriter
 import org.apache.lucene.index.IndexWriter
 import org.apache.lucene.index.IndexWriterConfig
@@ -10,15 +11,19 @@ import zio.TaskManaged
 
 import java.nio.file.Path
 
-final case class KanjiWriter(writer: IndexWriter) extends DocWriter[KanjiDoc]
+final case class KanjiWriter(writer: IndexWriter, docEncoder: DocEncoder[KanjiDoc]) extends DocWriter[KanjiDoc]
 
 object KanjiWriter {
-  def make(directory: Path, autoCommitOnRelease: Boolean = true): TaskManaged[KanjiWriter] =
+  def make(
+    directory: Path,
+    encoder: DocEncoder[KanjiDoc] = KanjiDoc.docEncoder,
+    autoCommitOnRelease: Boolean = true
+  ): TaskManaged[KanjiWriter] =
     (for {
-      config <- Task(new IndexWriterConfig(KanjiDoc.documentDecoder.analyzer))
+      config <- Task(new IndexWriterConfig(KanjiDoc.docDecoder.analyzer))
       index  <- Task(new MMapDirectory(directory))
       writer <- Task(new IndexWriter(index, config))
-    } yield KanjiWriter(writer)).toManaged { writer =>
+    } yield KanjiWriter(writer, encoder)).toManaged { writer =>
       Task {
         if (autoCommitOnRelease) {
           writer.writer.commit()

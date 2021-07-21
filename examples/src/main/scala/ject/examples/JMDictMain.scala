@@ -1,5 +1,6 @@
 package ject.examples
 
+import ject.ja.docs.WordDoc
 import ject.ja.io.JMDictIO
 import ject.ja.lucene.WordWriter
 import ject.utils.IOExtensions._
@@ -21,7 +22,7 @@ object JMDictMain extends zio.App {
       _                      <- JMDictIO.normalize(tempFile.toPath, targetPath).unless(targetPath.toFile.exists())
       luceneDirectory         = Paths.get("data/lucene")
       (timeTaken, totalDocs) <- WordWriter
-                                  .make(luceneDirectory.resolve("word"))
+                                  .make(luceneDirectory.resolve("word"), WordDoc.docEncoder(includeInflections = true))
                                   .use { index =>
                                     JMDictIO
                                       .load(targetPath)

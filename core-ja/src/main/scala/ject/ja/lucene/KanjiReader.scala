@@ -14,7 +14,7 @@ import zio.stream.ZStream
 import java.nio.file.Path
 
 final case class KanjiReader(index: LuceneReader[KanjiDoc]) {
-  val builder = new QueryBuilder(KanjiDoc.documentDecoder.analyzer)
+  val builder = new QueryBuilder(KanjiDoc.docDecoder.analyzer)
 
   def getByKanji(kanji: String): Task[Option[KanjiDoc]] = {
     val query = new BooleanQuery.Builder()

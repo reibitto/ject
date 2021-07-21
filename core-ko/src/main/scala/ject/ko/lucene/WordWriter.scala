@@ -1,6 +1,7 @@
 package ject.ko.lucene
 
 import ject.ko.docs.WordDoc
+import ject.lucene.DocEncoder
 import ject.lucene.DocWriter
 import org.apache.lucene.index.IndexWriter
 import org.apache.lucene.index.IndexWriterConfig
@@ -10,15 +11,15 @@ import zio.TaskManaged
 
 import java.nio.file.Path
 
-final case class WordWriter(writer: IndexWriter) extends DocWriter[WordDoc]
+final case class WordWriter(writer: IndexWriter, docEncoder: DocEncoder[WordDoc]) extends DocWriter[WordDoc]
 
 object WordWriter {
   def make(directory: Path, autoCommitOnRelease: Boolean = true): TaskManaged[WordWriter] =
     (for {
-      config <- Task(new IndexWriterConfig(WordDoc.documentDecoder.analyzer))
+      config <- Task(new IndexWriterConfig(WordDoc.docDecoder.analyzer))
       index  <- Task(new MMapDirectory(directory))
       writer <- Task(new IndexWriter(index, config))
-    } yield WordWriter(writer)).toManaged { writer =>
+    } yield WordWriter(writer, WordDoc.docEncoder)).toManaged { writer =>
       Task {
         if (autoCommitOnRelease) {
           writer.writer.commit()

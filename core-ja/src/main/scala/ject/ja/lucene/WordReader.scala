@@ -20,9 +20,9 @@ import zio.stream.ZStream
 import java.nio.file.Path
 
 final case class WordReader(index: LuceneReader[WordDoc]) {
-  private val builder = new QueryBuilder(WordDoc.documentDecoder.analyzer)
+  private val builder = new QueryBuilder(WordDoc.docDecoder.analyzer)
 
-  private val queryParser = new QueryParser(LuceneField.none.entryName, WordDoc.documentDecoder.analyzer)
+  private val queryParser = new QueryParser(LuceneField.none.entryName, WordDoc.docDecoder.analyzer)
   queryParser.setAllowLeadingWildcard(true)
 
   def search(pattern: SearchPattern): ZStream[Any, Throwable, ScoredDoc[WordDoc]] = {
@@ -48,12 +48,14 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
           booleanQuery.addPhraseQuery(builder)(WordField.KanjiTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.KanjiTermAnalyzed, text, BooleanClause.Occur.SHOULD)
+          booleanQuery.addTermQuery(WordField.KanjiTermInflected, text, BooleanClause.Occur.SHOULD, 100)
           booleanQuery.addTermQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 100)
 
         case (SearchPattern.Default(text), SearchType.Reading) =>
           booleanQuery.addPhraseQuery(builder)(WordField.ReadingTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.ReadingTermAnalyzed, text, BooleanClause.Occur.SHOULD)
+          booleanQuery.addTermQuery(WordField.ReadingTermInflected, text, BooleanClause.Occur.SHOULD, 100)
           booleanQuery.addTermQuery(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 100)
 
         case (SearchPattern.Exact(text), SearchType.Definition) =>

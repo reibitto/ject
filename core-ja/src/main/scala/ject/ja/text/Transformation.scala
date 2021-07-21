@@ -40,6 +40,12 @@ object Transformation {
     }
   }
 
+  def stemOf(stem: String): Transform = {
+    case s if !s.endsWith(stem) => Left(s"Verb must end in ${stem}")
+    case s if s.length < 2      => Left("Verb must be greater than 1 character")
+    case s                      => Right(NonEmptyChunk.single(s.init))
+  }
+
   def adjectiveIStem: Transform = {
     case s if !s.endsWith("い") => Left("Adjective must end in い")
     case s if s.length < 2     => Left("Adjective must be greater than 1 character")
@@ -77,8 +83,8 @@ object Transformation {
     }
   }
 
-  def attach(suffix: String): Transform = { s =>
-    Right(NonEmptyChunk.single(s + suffix))
+  def attach(suffix: String, suffixes: String*): Transform = { s =>
+    Right(NonEmptyChunk(s + suffix, suffixes.map(s + _): _*))
   }
 
   def attachGodanStem(detachSuffixes: String*): Transform = { s =>

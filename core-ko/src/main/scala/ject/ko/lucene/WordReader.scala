@@ -20,9 +20,9 @@ import zio.stream.ZStream
 import java.nio.file.Path
 
 final case class WordReader(index: LuceneReader[WordDoc]) {
-  private val builder = new QueryBuilder(WordDoc.documentDecoder.analyzer)
+  private val builder = new QueryBuilder(WordDoc.docDecoder.analyzer)
 
-  private val queryParser = new QueryParser(LuceneField.none.entryName, WordDoc.documentDecoder.analyzer)
+  private val queryParser = new QueryParser(LuceneField.none.entryName, WordDoc.docDecoder.analyzer)
   queryParser.setAllowLeadingWildcard(true)
 
   def search(pattern: SearchPattern): ZStream[Any, Throwable, ScoredDoc[WordDoc]] = {
