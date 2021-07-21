@@ -23,7 +23,7 @@ object Godan {
     Imperative.plain                         -> Transforms(changeBase(Dan.E, "")),
     Sou.plain                                -> Transforms(changeBase(Dan.I, "そう")),
     Tai.plain                                -> Transforms(changeBase(Dan.I, "たい")),
-    Progressive.plain                        -> Transforms(changeBase(Dan.I, "ている"), changeBase(Dan.I, "てる")),
+    Progressive.plain                        -> Transforms(changeBase(Dan.I, "ている", "てる")),
     Form.of(Past, Potential)                 -> Transforms(changeBase(Dan.E, "た")),
     // Polite
     NonPast.polite                           -> Transforms(changeBase(Dan.I, "ます")),
@@ -38,7 +38,7 @@ object Godan {
     Volitional.polite                        -> Transforms(changeBase(Dan.I, "ましょう")),
     Alternative.polite                       -> Transforms(changeBase(Dan.I, "ましたり")),
     Imperative.polite                        -> Transforms(changeBase(Dan.I, "なさい")),
-    Progressive.polite                       -> Transforms(changeBase(Dan.I, "ています"), changeBase(Dan.I, "てます")),
+    Progressive.polite                       -> Transforms(changeBase(Dan.I, "ています", "てます")),
     Form.of(Past, Potential).polite          -> Transforms(changeBase(Dan.E, "ました")),
     // Negative
     NonPast.negative                         -> Transforms(changeBase(Dan.A, "ない")),
@@ -56,7 +56,7 @@ object Godan {
     Sou.negative                             -> Transforms(changeBase(Dan.I, "なさそう")),
     Form.of(Potential, Sou).negative         -> Transforms(changeBase(Dan.E, "なさそう")),
     Tai.negative                             -> Transforms(changeBase(Dan.I, "たくない")),
-    Progressive.negative                     -> Transforms(changeBase(Dan.I, "ていない"), changeBase(Dan.I, "てない")),
+    Progressive.negative                     -> Transforms(changeBase(Dan.I, "ていない", "てない")),
     Form.of(Tai, Sou).negative               -> Transforms(changeBase(Dan.I, "たくなさそう")),
     Form.of(Past, Potential).negative        -> Transforms(changeBase(Dan.E, "なかった")),
     // Polite negative
@@ -72,7 +72,7 @@ object Godan {
     Volitional.polite.negative               -> Transforms(changeBase(Dan.I, "ますまい")),
     Alternative.polite.negative              -> Transforms(changeBase(Dan.I, "ませんでしたり")),
     Imperative.polite.negative               -> Transforms(changeBase(Dan.I, "なさるな")),
-    Progressive.polite.negative              -> Transforms(changeBase(Dan.I, "ていません"), changeBase(Dan.I, "てません")),
+    Progressive.polite.negative              -> Transforms(changeBase(Dan.I, "ていません", "てません")),
     Form.of(Past, Potential).polite.negative -> Transforms(changeBase(Dan.E, "ませんでした"))
   )
 

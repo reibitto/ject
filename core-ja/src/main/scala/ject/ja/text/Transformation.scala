@@ -52,19 +52,21 @@ object Transformation {
     case s                     => Right(NonEmptyChunk.single(s.init))
   }
 
-  def changeBase(dan: Syllabary.Dan, suffix: String): Transform = { s =>
+  def changeBase(dan: Syllabary.Dan, suffix: String, suffixes: String*): Transform = { s =>
     if (s.length < 2) {
       Left("Verb must be greater than 1 character")
     } else {
       val stem = s.init
       val last = s.last
 
-      if (dan == Dan.A && last == 'う')
-        Right(NonEmptyChunk.single(s"${stem}わ"))
-      else {
+      if (dan == Dan.A && last == 'う') {
+        Right(
+          NonEmptyChunk(suffix, suffixes: _*).map(s => s"${stem}わ$s")
+        )
+      } else {
         for {
           shifted <- Syllabary.shift(last, dan).toRight(s"Unable to shift '$last' to $dan")
-        } yield NonEmptyChunk.single(s"$stem$shifted$suffix")
+        } yield NonEmptyChunk(suffix, suffixes: _*).map(s => s"$stem$shifted$s")
       }
     }
   }
