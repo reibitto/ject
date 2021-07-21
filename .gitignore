@@ -28,6 +28,7 @@ local.conf
 /data/dictionary
 /data/lucene
 /data/lucene-stable
+/data/krdict
 publish.sbt
 /wordplay/build
 Scratch.scala
