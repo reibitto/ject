@@ -61,9 +61,9 @@ lazy val core = module("ject", Some("core"))
     libraryDependencies ++= Seq(
       "dev.zio"          %% "zio"                     % Version.zio,
       "dev.zio"          %% "zio-streams"             % Version.zio,
-      "dev.zio"          %% "zio-process"             % "0.4.0",
-      "dev.zio"          %% "zio-logging"             % "0.5.10",
-      "com.beachape"     %% "enumeratum"              % "1.6.1",
+      "dev.zio"          %% "zio-process"             % "0.5.0",
+      "dev.zio"          %% "zio-logging"             % "0.5.11",
+      "com.beachape"     %% "enumeratum"              % "1.7.0",
       "org.apache.lucene" % "lucene-core"             % Version.lucene,
       "org.apache.lucene" % "lucene-analyzers-common" % Version.lucene,
       "org.apache.lucene" % "lucene-queryparser"      % Version.lucene,
@@ -78,7 +78,7 @@ lazy val coreJapanese = module("ject-ja", Some("core-ja"))
     fork := true,
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %% "scala-xml"                 % "2.0.0",
+      "org.scala-lang.modules" %% "scala-xml"                 % "2.0.1",
       "org.apache.lucene"       % "lucene-analyzers-kuromoji" % Version.lucene
     )
   )
@@ -92,8 +92,8 @@ lazy val coreKorean = module("ject-ko", Some("core-ko"))
       "org.apache.lucene"              % "lucene-analyzers-nori"         % Version.lucene,
       "com.softwaremill.sttp.client3" %% "core"                          % Version.sttp,
       "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % Version.sttp,
-      "org.jsoup"                      % "jsoup"                         % "1.13.1",
-      "org.slf4j"                      % "slf4j-nop"                     % "1.7.21"
+      "org.jsoup"                      % "jsoup"                         % "1.14.2",
+      "org.slf4j"                      % "slf4j-nop"                     % "1.7.32"
     )
   )
 
@@ -112,8 +112,8 @@ lazy val wordplay = module("wordplay")
     run / baseDirectory := file("."),
     publish / skip := true,
     libraryDependencies ++= Seq(
-      "me.shadaj" %%% "slinky-web" % "0.6.7",
-      "me.shadaj" %%% "slinky-hot" % "0.6.7"
+      "me.shadaj" %%% "slinky-web" % "0.6.8",
+      "me.shadaj" %%% "slinky-hot" % "0.6.8"
     ),
     Compile / npmDependencies ++= Seq(
       "react"       -> "16.13.1",

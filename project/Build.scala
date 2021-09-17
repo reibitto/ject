@@ -6,9 +6,9 @@ object Build {
   val ScalaVersion = "2.13.6"
 
   object Version {
-    val lucene = "8.8.2"
-    val sttp   = "3.3.9"
-    val zio    = "1.0.9"
+    val lucene = "8.9.0"
+    val sttp   = "3.3.14"
+    val zio    = "1.0.11"
   }
 
   lazy val ScalacOptions = Seq(
