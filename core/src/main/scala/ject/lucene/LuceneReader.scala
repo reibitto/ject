@@ -11,9 +11,9 @@ import zio.stream.ZStream
 import java.nio.file.Path
 
 final case class LuceneReader[A: DocDecoder](
-    directory: MMapDirectory,
-    reader: DirectoryReader,
-    searcher: IndexSearcher
+  directory: MMapDirectory,
+  reader: DirectoryReader,
+  searcher: IndexSearcher
 ) {
   val decoder: DocDecoder[A] = implicitly[DocDecoder[A]]
 
@@ -87,9 +87,9 @@ final case class LuceneReader[A: DocDecoder](
     }
 
   def searchRaw(
-      queryString: String,
-      defaultField: LuceneField = LuceneField.none,
-      hitsPerPage: Int = 20
+    queryString: String,
+    defaultField: LuceneField = LuceneField.none,
+    hitsPerPage: Int = 20
   ): ZStream[Any, Throwable, ScoredDoc[A]] = {
     val queryParser = new QueryParser(defaultField.entryName, decoder.analyzer)
     queryParser.setAllowLeadingWildcard(true)
@@ -101,10 +101,10 @@ final case class LuceneReader[A: DocDecoder](
   }
 
   def searchRawSorted(
-      queryString: String,
-      sort: Sort,
-      defaultField: LuceneField = LuceneField.none,
-      hitsPerPage: Int = 20
+    queryString: String,
+    sort: Sort,
+    defaultField: LuceneField = LuceneField.none,
+    hitsPerPage: Int = 20
   ): ZStream[Any, Throwable, ScoredDoc[A]] = {
     val queryParser = new QueryParser(defaultField.entryName, decoder.analyzer)
     queryParser.setAllowLeadingWildcard(true)

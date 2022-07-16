@@ -13,12 +13,12 @@ import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
 
 final case class WordDoc(
-    id: String,
-    kanjiTerms: Seq[String],
-    readingTerms: Seq[String],
-    definitions: Seq[String],
-    tags: Seq[String],
-    partsOfSpeech: Seq[String]
+  id: String,
+  kanjiTerms: Seq[String],
+  readingTerms: Seq[String],
+  definitions: Seq[String],
+  tags: Seq[String],
+  partsOfSpeech: Seq[String]
 ) {
 
   def render: String = {
