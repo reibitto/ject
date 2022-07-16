@@ -1,13 +1,10 @@
 package ject.ja.lucene
 
 import ject.ja.docs.WordDoc
-import ject.lucene.DocWriter
-import ject.lucene.DocEncoder
-import org.apache.lucene.index.IndexWriter
-import org.apache.lucene.index.IndexWriterConfig
+import ject.lucene.{ DocEncoder, DocWriter }
+import org.apache.lucene.index.{ IndexWriter, IndexWriterConfig }
 import org.apache.lucene.store.MMapDirectory
-import zio.Task
-import zio.TaskManaged
+import zio.{ Scope, ZIO }
 
 import java.nio.file.Path
 
@@ -18,13 +15,13 @@ object WordWriter {
     directory: Path,
     encoder: DocEncoder[WordDoc] = WordDoc.docEncoder(includeInflections = true),
     autoCommitOnRelease: Boolean = true
-  ): TaskManaged[WordWriter] =
+  ): ZIO[Scope, Throwable, WordWriter] =
     (for {
-      config <- Task(new IndexWriterConfig(WordDoc.docDecoder.analyzer))
-      index  <- Task(new MMapDirectory(directory))
-      writer <- Task(new IndexWriter(index, config))
-    } yield WordWriter(writer, encoder)).toManaged { writer =>
-      Task {
+      config <- ZIO.attempt(new IndexWriterConfig(WordDoc.docDecoder.analyzer))
+      index  <- ZIO.attempt(new MMapDirectory(directory))
+      writer <- ZIO.attempt(new IndexWriter(index, config))
+    } yield WordWriter(writer, encoder)).withFinalizer { writer =>
+      ZIO.attempt {
         if (autoCommitOnRelease) {
           writer.writer.commit()
         }

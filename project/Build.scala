@@ -1,14 +1,12 @@
+import sbt.Keys._
 import sbt._
-import Keys._
-import scala.Console
 
 object Build {
-  val ScalaVersion = "2.13.6"
+  val ScalaVersion = "2.13.8"
 
   object Version {
-    val lucene = "8.9.0"
-    val sttp   = "3.3.14"
-    val zio    = "1.0.11"
+    val lucene = "8.11.2"
+    val zio    = "2.0.0"
   }
 
   lazy val ScalacOptions = Seq(
@@ -60,13 +58,11 @@ object Build {
       Test / logBuffered := false
     )
 
-  lazy val Resolvers = Seq(
-    // Order of resolvers affects resolution time. More general purpose repositories should come first.
-    Resolver.sonatypeRepo("releases"),
+  // Order of resolvers affects resolution time. More general purpose repositories should come first.
+  lazy val Resolvers = Resolver.sonatypeOssRepos("releases") ++ Seq(
     Resolver.typesafeRepo("releases"),
-    Resolver.jcenterRepo,
-    Resolver.sonatypeRepo("snapshots")
-  )
+    Resolver.jcenterRepo
+  ) ++ Resolver.sonatypeOssRepos("snapshots")
 
   def compilerFlag(key: String, default: Boolean): Boolean = {
     val flag = sys.props.get(key).orElse {

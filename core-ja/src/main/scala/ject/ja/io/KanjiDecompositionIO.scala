@@ -1,21 +1,19 @@
 package ject.ja.io
 
-import ject.ja.entity.KanjiComposition
-import ject.ja.entity.KanjiPart
-import zio.Task
-import zio.blocking.Blocking
-import zio.stream.ZStream
-import zio.stream.ZTransducer
+import ject.ja.entity.{ KanjiComposition, KanjiPart }
+import zio.ZIO
+import zio.stream.{ ZPipeline, ZStream }
 
 import java.nio.file.Path
 
 object KanjiDecompositionIO {
-  def load(file: Path): ZStream[Blocking, Any, KanjiPart] =
+  def load(file: Path): ZStream[Any, Any, KanjiPart] =
     ZStream
-      .fromFile(file)
-      .transduce(ZTransducer.utf8Decode >>> ZTransducer.splitLines)
-      .mapM { line =>
-        Task {
+      .fromPath(file)
+      .via(ZPipeline.utf8Decode)
+      .via(ZPipeline.splitLines)
+      .mapZIO { line =>
+        ZIO.attempt {
           val tokens = line.split('\t')
           val comp   = (tokens(2), tokens(3), tokens(6)) match {
             case ("一" | "*", a, _) => KanjiComposition.Primitive(a)

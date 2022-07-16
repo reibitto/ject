@@ -61,8 +61,7 @@ lazy val core = module("ject", Some("core"))
     libraryDependencies ++= Seq(
       "dev.zio"          %% "zio"                     % Version.zio,
       "dev.zio"          %% "zio-streams"             % Version.zio,
-      "dev.zio"          %% "zio-process"             % "0.5.0",
-      "dev.zio"          %% "zio-logging"             % "0.5.11",
+      "dev.zio"          %% "zio-process"             % "0.7.1",
       "com.beachape"     %% "enumeratum"              % "1.7.0",
       "org.apache.lucene" % "lucene-core"             % Version.lucene,
       "org.apache.lucene" % "lucene-analyzers-common" % Version.lucene,
@@ -78,7 +77,7 @@ lazy val coreJapanese = module("ject-ja", Some("core-ja"))
     fork := true,
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %% "scala-xml"                 % "2.0.1",
+      "org.scala-lang.modules" %% "scala-xml"                 % "2.1.0",
       "org.apache.lucene"       % "lucene-analyzers-kuromoji" % Version.lucene
     )
   )
@@ -89,11 +88,10 @@ lazy val coreKorean = module("ject-ko", Some("core-ko"))
     fork := true,
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "org.apache.lucene"              % "lucene-analyzers-nori"         % Version.lucene,
-      "com.softwaremill.sttp.client3" %% "core"                          % Version.sttp,
-      "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % Version.sttp,
-      "org.jsoup"                      % "jsoup"                         % "1.14.2",
-      "org.slf4j"                      % "slf4j-nop"                     % "1.7.32"
+      "org.apache.lucene"              % "lucene-analyzers-nori" % Version.lucene,
+      "com.softwaremill.sttp.client3" %% "zio"                   % "3.7.0",
+      "org.jsoup"                      % "jsoup"                 % "1.15.2",
+      "org.slf4j"                      % "slf4j-nop"             % "1.7.36"
     )
   )
 
