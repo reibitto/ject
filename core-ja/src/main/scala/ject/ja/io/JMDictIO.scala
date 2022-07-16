@@ -1,21 +1,22 @@
 package ject.ja.io
 
 import ject.ja.docs.WordDoc
+import zio.*
+import zio.stream.{ZPipeline, ZSink, ZStream}
 import zio.Console.printLine
-import zio._
-import zio.stream.{ ZPipeline, ZSink, ZStream }
 
 import java.net.URL
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 import javax.xml.parsers.SAXParserFactory
+import scala.xml.{Elem, SAXParser}
 import scala.xml.factory.XMLLoader
-import scala.xml.{ Elem, SAXParser }
 
 object JMDictIO {
 
-  lazy private val xmlLoader: XMLLoader[Elem] = new XMLLoader[Elem] {
+  private lazy val xmlLoader: XMLLoader[Elem] = new XMLLoader[Elem] {
+
     override def parser: SAXParser = {
       val parser = SAXParserFactory.newInstance()
       parser.setFeature("http://javax.xml.XMLConstants/feature/secure-processing", true)
@@ -30,7 +31,10 @@ object JMDictIO {
     }
   }
 
-  /** Downloads the latest JMDict file (with English definitions only) and extracts it. */
+  /**
+   * Downloads the latest JMDict file (with English definitions only) and
+   * extracts it.
+   */
   def download(destination: Path): ZIO[Any, Throwable, Long] = {
     val url = new URL("http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz")
 
@@ -44,8 +48,8 @@ object JMDictIO {
   }
 
   /**
-   * Normalizes the JMDict file. This is mainly done as a workaround to prevent unwanted XML entity expansions,
-   * particularly for tags and parts of speech.
+   * Normalizes the JMDict file. This is mainly done as a workaround to prevent
+   * unwanted XML entity expansions, particularly for tags and parts of speech.
    */
   def normalize(input: Path, output: Path): ZIO[Any, Throwable, Long] = {
     val entityRegex = """<!ENTITY (\S+) "(.+?)">""".r
@@ -68,7 +72,7 @@ object JMDictIO {
       java.lang.System.setProperty("jdk.xml.entityExpansionLimit", "0")
 
       for {
-        xml       <- ZIO.attempt(xmlLoader.loadFile(file.toFile))
+        xml <- ZIO.attempt(xmlLoader.loadFile(file.toFile))
         entryNodes = xml \ "entry"
       } yield entryNodes.iterator.map { n =>
         WordDoc(

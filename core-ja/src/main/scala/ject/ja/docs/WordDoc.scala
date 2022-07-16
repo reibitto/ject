@@ -3,9 +3,9 @@ package ject.ja.docs
 import ject.ja.lucene.field.WordField
 import ject.ja.text.Inflection
 import ject.ja.text.WordType
+import ject.lucene.field.LuceneField
 import ject.lucene.DocDecoder
 import ject.lucene.DocEncoder
-import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
@@ -13,13 +13,14 @@ import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
 
 final case class WordDoc(
-  id: String,
-  kanjiTerms: Seq[String],
-  readingTerms: Seq[String],
-  definitions: Seq[String],
-  tags: Seq[String],
-  partsOfSpeech: Seq[String]
+    id: String,
+    kanjiTerms: Seq[String],
+    readingTerms: Seq[String],
+    definitions: Seq[String],
+    tags: Seq[String],
+    partsOfSpeech: Seq[String]
 ) {
+
   def render: String = {
     val terms = (kanjiTerms ++ readingTerms).mkString(" ")
     s"$terms: ${definitions.mkString("; ")}"
@@ -27,6 +28,7 @@ final case class WordDoc(
 }
 
 object WordDoc {
+
   implicit val docDecoder: DocDecoder[WordDoc] = new DocDecoder[WordDoc] {
     val analyzer: Analyzer = LuceneField.perFieldAnalyzer(WordField.values)
 

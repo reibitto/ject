@@ -1,9 +1,10 @@
 package ject.ja.text
 
-import ject.ja.text.inflection._
+import ject.ja.text.inflection.*
 import zio.NonEmptyChunk
 
 object Inflection {
+
   def inflect(word: String, wordType: WordType, targetForm: Form): Either[String, NonEmptyChunk[String]] = {
     val inflections = wordType match {
       case WordType.VerbIchidan => Ichidan.inflections

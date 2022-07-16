@@ -1,12 +1,13 @@
 package ject.ja.io
 
-import ject.ja.entity.{ KanjiComposition, KanjiPart }
+import ject.ja.entity.{KanjiComposition, KanjiPart}
+import zio.stream.{ZPipeline, ZStream}
 import zio.ZIO
-import zio.stream.{ ZPipeline, ZStream }
 
 import java.nio.file.Path
 
 object KanjiDecompositionIO {
+
   def load(file: Path): ZStream[Any, Any, KanjiPart] =
     ZStream
       .fromPath(file)
@@ -15,7 +16,7 @@ object KanjiDecompositionIO {
       .mapZIO { line =>
         ZIO.attempt {
           val tokens = line.split('\t')
-          val comp   = (tokens(2), tokens(3), tokens(6)) match {
+          val comp = (tokens(2), tokens(3), tokens(6)) match {
             case ("一" | "*", a, _) => KanjiComposition.Primitive(a)
             case ("吅", a, b)       => KanjiComposition.Horizontal(a.map(_.toString), b.map(_.toString))
             case ("吕", a, b)       => KanjiComposition.Vertical(a.map(_.toString), b.map(_.toString))

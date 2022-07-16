@@ -2,11 +2,11 @@ package ject.wordplay
 
 import org.scalajs.dom.document
 import org.scalajs.dom.raw.HTMLInputElement
-import slinky.core._
+import slinky.core.*
 import slinky.core.annotations.react
 import slinky.core.facade.Fragment
 import slinky.core.facade.ReactElement
-import slinky.web.html._
+import slinky.web.html.*
 
 import scala.collection.immutable.ArraySeq
 import scala.scalajs.js
@@ -17,10 +17,11 @@ import scala.scalajs.js.annotation.JSImport
 object AppCSS extends js.Object
 
 sealed trait QuizState
+
 object QuizState {
-  case object Init        extends QuizState
-  case object Correct     extends QuizState
-  case object Incorrect   extends QuizState
+  case object Init extends QuizState
+  case object Correct extends QuizState
+  case object Incorrect extends QuizState
   case object ShownAnswer extends QuizState
 }
 
@@ -88,7 +89,7 @@ object QuizState {
             )(
               (i + 1).toString
             )
-          }: _*
+          }*
         ),
         button(
           className := "show-answer",

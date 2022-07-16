@@ -11,14 +11,15 @@ import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
 
 final case class WordDoc(
-  id: String,
-  hangulTerms: Seq[String],
-  hanjaTerms: Seq[String],
-  pronunciation: Seq[String],
-  definitionsEnglish: Seq[String],
-  definitionsKorean: Seq[String],
-  partsOfSpeech: Seq[String]
+    id: String,
+    hangulTerms: Seq[String],
+    hanjaTerms: Seq[String],
+    pronunciation: Seq[String],
+    definitionsEnglish: Seq[String],
+    definitionsKorean: Seq[String],
+    partsOfSpeech: Seq[String]
 ) {
+
   def render: String = {
     val terms = (hangulTerms ++ hanjaTerms).mkString(" ")
     s"$terms: ${definitionsEnglish.mkString("\n")}"
@@ -26,6 +27,7 @@ final case class WordDoc(
 }
 
 object WordDoc {
+
   implicit val docDecoder: DocDecoder[WordDoc] = new DocDecoder[WordDoc] {
     val analyzer: Analyzer = LuceneField.perFieldAnalyzer(WordField.values)
 

@@ -1,20 +1,21 @@
 package ject.ja.lucene
 
 import ject.ja.docs.KanjiDoc
-import ject.lucene.{ DocEncoder, DocWriter }
-import org.apache.lucene.index.{ IndexWriter, IndexWriterConfig }
+import ject.lucene.{DocEncoder, DocWriter}
+import org.apache.lucene.index.{IndexWriter, IndexWriterConfig}
 import org.apache.lucene.store.MMapDirectory
-import zio.{ Scope, ZIO }
+import zio.{Scope, ZIO}
 
 import java.nio.file.Path
 
 final case class KanjiWriter(writer: IndexWriter, docEncoder: DocEncoder[KanjiDoc]) extends DocWriter[KanjiDoc]
 
 object KanjiWriter {
+
   def make(
-    directory: Path,
-    encoder: DocEncoder[KanjiDoc] = KanjiDoc.docEncoder,
-    autoCommitOnRelease: Boolean = true
+      directory: Path,
+      encoder: DocEncoder[KanjiDoc] = KanjiDoc.docEncoder,
+      autoCommitOnRelease: Boolean = true
   ): ZIO[Scope, Throwable, KanjiWriter] =
     (for {
       config <- ZIO.attempt(new IndexWriterConfig(KanjiDoc.docDecoder.analyzer))

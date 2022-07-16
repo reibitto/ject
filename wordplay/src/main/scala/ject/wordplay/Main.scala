@@ -5,9 +5,9 @@ import slinky.hot
 import slinky.web.ReactDOM
 
 import scala.scalajs.js
-import scala.scalajs.LinkingInfo
 import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.scalajs.js.annotation.JSImport
+import scala.scalajs.LinkingInfo
 
 @JSImport("resources/index.css", JSImport.Default)
 @js.native

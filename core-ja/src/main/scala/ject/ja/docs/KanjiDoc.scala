@@ -5,26 +5,27 @@ import ject.lucene.field.LuceneField
 import ject.lucene.DocDecoder
 import ject.lucene.DocEncoder
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.document._
+import org.apache.lucene.document.*
 
 final case class KanjiDoc(
-  kanji: String,
-  meaning: Seq[String],
-  onYomi: Seq[String],
-  kunYomi: Seq[String],
-  nanori: Seq[String],
-  koreanReadings: Seq[String],
-  radicalId: Int,
-  parts: Seq[String],
-  strokeCount: Seq[Int],
-  frequency: Option[Int],
-  jlpt: Option[Int],
-  grade: Option[Int]
+    kanji: String,
+    meaning: Seq[String],
+    onYomi: Seq[String],
+    kunYomi: Seq[String],
+    nanori: Seq[String],
+    koreanReadings: Seq[String],
+    radicalId: Int,
+    parts: Seq[String],
+    strokeCount: Seq[Int],
+    frequency: Option[Int],
+    jlpt: Option[Int],
+    grade: Option[Int]
 ) {
   def isJouyouKanji: Boolean = grade.exists(_ <= 8)
 }
 
 object KanjiDoc {
+
   implicit val docDecoder: DocDecoder[KanjiDoc] = new DocDecoder[KanjiDoc] {
     val analyzer: Analyzer = LuceneField.perFieldAnalyzer(KanjiField.values)
 

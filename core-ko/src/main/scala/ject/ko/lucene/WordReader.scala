@@ -1,19 +1,19 @@
 package ject.ko.lucene
 
-import ject.SearchPattern
-import ject.ko.KoreanText
 import ject.ko.docs.WordDoc
-import ject.ko.lucene.WordReader.SearchType
 import ject.ko.lucene.field.WordField
-import ject.lucene.AnalyzerExtensions._
-import ject.lucene.BooleanQueryBuilderExtensions._
-import ject.lucene.{ LuceneReader, ScoredDoc }
+import ject.ko.lucene.WordReader.SearchType
+import ject.ko.KoreanText
+import ject.lucene.{LuceneReader, ScoredDoc}
 import ject.lucene.field.LuceneField
+import ject.lucene.AnalyzerExtensions.*
+import ject.lucene.BooleanQueryBuilderExtensions.*
+import ject.SearchPattern
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search._
+import org.apache.lucene.search.*
 import org.apache.lucene.util.QueryBuilder
+import zio.{Scope, ZIO}
 import zio.stream.ZStream
-import zio.{ Scope, ZIO }
 
 import java.nio.file.Path
 

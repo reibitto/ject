@@ -1,12 +1,13 @@
 package ject.ja.io
 
 import ject.ja.entity.Radical
+import zio.stream.{ZPipeline, ZStream}
 import zio.RIO
-import zio.stream.{ ZPipeline, ZStream }
 
 import java.nio.file.Path
 
 object RadicalIO {
+
   def load(file: Path): RIO[Any, Map[String, Radical]] =
     ZStream
       .fromPath(file)
@@ -14,7 +15,7 @@ object RadicalIO {
       .via(ZPipeline.splitLines)
       .zipWithIndex
       .map { case (line, index) =>
-        val tokens  = line.split("\t")
+        val tokens = line.split("\t")
         val radical = tokens(0)
 
         radical -> Radical(
