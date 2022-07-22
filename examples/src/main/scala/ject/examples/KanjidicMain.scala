@@ -21,16 +21,17 @@ object KanjidicMain extends zio.ZIOAppDefault {
                                   for {
                                     index <- KanjiWriter.make(luceneDirectory.resolve("kanji"))
                                     count <- KanjidicIO
-                                           .load(targetPath, radicals)
-                                           .zipWithIndex
-                                           .mapZIO { case (entry, n) =>
-                                             for {
-                                               _ <- printLine(s"Imported $n entries...").when(n > 0 && n % 1000 == 0)
-                                               _ <- index.add(entry)
-                                             } yield n
-                                           }
-                                           .runLast
-                                           .map(_.getOrElse(0))
+                                               .load(targetPath, radicals)
+                                               .zipWithIndex
+                                               .mapZIO { case (entry, n) =>
+                                                 for {
+                                                   _ <-
+                                                     printLine(s"Imported $n entries...").when(n > 0 && n % 1000 == 0)
+                                                   _ <- index.add(entry)
+                                                 } yield n
+                                               }
+                                               .runLast
+                                               .map(_.getOrElse(0))
                                   } yield count
                                 }.timed
       _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
