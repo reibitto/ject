@@ -25,21 +25,23 @@ object JMDictMain extends zio.ZIOAppDefault {
                                   for {
                                     index <- WordWriter
                                                .make(
-                                                 luceneDirectory.resolve("word"),
+                                                 luceneDirectory.resolve("word-ja"),
                                                  WordDoc.docEncoder(includeInflections = true)
                                                )
-                                    _ <- JMDictIO
-                                           .load(targetPath)
-                                           .zipWithIndex
-                                           .mapZIO { case (entry, n) =>
-                                             for {
-                                               _ <- printLine(s"Imported $n entries...").when(n > 0 && n % 10000 == 0)
-                                               _ <- index.add(entry)
-                                             } yield n
-                                           }
-                                           .runLast
-                                           .map(_.getOrElse(0))
-                                  } yield ()
+                                    count <- JMDictIO
+                                               .load(targetPath)
+                                               .zipWithIndex
+                                               .mapZIO { case (entry, n) =>
+                                                 for {
+                                                   _ <- printLine(s"Imported $n entries...").when(
+                                                          n > 0 && n % 10000 == 0
+                                                        )
+                                                   _ <- index.add(entry)
+                                                 } yield n
+                                               }
+                                               .runLast
+                                               .map(_.getOrElse(0))
+                                  } yield count
                                 }.timed
       _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")

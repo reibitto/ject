@@ -20,7 +20,7 @@ object KanjidicMain extends zio.ZIOAppDefault {
       (timeTaken, totalDocs) <- ZIO.scoped {
                                   for {
                                     index <- KanjiWriter.make(luceneDirectory.resolve("kanji"))
-                                    _ <- KanjidicIO
+                                    count <- KanjidicIO
                                            .load(targetPath, radicals)
                                            .zipWithIndex
                                            .mapZIO { case (entry, n) =>
@@ -31,7 +31,7 @@ object KanjidicMain extends zio.ZIOAppDefault {
                                            }
                                            .runLast
                                            .map(_.getOrElse(0))
-                                  } yield ()
+                                  } yield count
                                 }.timed
       _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")

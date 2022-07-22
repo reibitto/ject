@@ -39,6 +39,7 @@ object Build {
     Seq(
       name := projectName,
       Test / javaOptions += "-Duser.timezone=UTC",
+      javaOptions += "-Dfile.encoding=UTF-8",
       scalacOptions := ScalacOptions,
       ThisBuild / scalaVersion := ScalaVersion,
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
