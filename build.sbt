@@ -1,6 +1,5 @@
-import Build.Version
-import sbt.Keys._
 import sbt._
+import sbt.Keys._
 import sbtwelcome._
 
 inThisBuild(
@@ -59,16 +58,15 @@ lazy val core = module("ject", Some("core"))
     fork := true,
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "dev.zio"          %% "zio"                     % Version.zio,
-      "dev.zio"          %% "zio-streams"             % Version.zio,
-      "dev.zio"          %% "zio-process"             % "0.5.0",
-      "dev.zio"          %% "zio-logging"             % "0.5.11",
-      "com.beachape"     %% "enumeratum"              % "1.7.0",
-      "org.apache.lucene" % "lucene-core"             % Version.lucene,
-      "org.apache.lucene" % "lucene-analyzers-common" % Version.lucene,
-      "org.apache.lucene" % "lucene-queryparser"      % Version.lucene,
-      "org.apache.lucene" % "lucene-facet"            % Version.lucene,
-      "org.apache.lucene" % "lucene-highlighter"      % Version.lucene
+      "dev.zio" %% "zio" % V.zio,
+      "dev.zio" %% "zio-streams" % V.zio,
+      "dev.zio" %% "zio-process" % V.zioProcess,
+      "com.beachape" %% "enumeratum" % V.enumeratum,
+      "org.apache.lucene" % "lucene-core" % V.lucene,
+      "org.apache.lucene" % "lucene-analyzers-common" % V.lucene,
+      "org.apache.lucene" % "lucene-queryparser" % V.lucene,
+      "org.apache.lucene" % "lucene-facet" % V.lucene,
+      "org.apache.lucene" % "lucene-highlighter" % V.lucene
     )
   )
 
@@ -78,8 +76,8 @@ lazy val coreJapanese = module("ject-ja", Some("core-ja"))
     fork := true,
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %% "scala-xml"                 % "2.0.1",
-      "org.apache.lucene"       % "lucene-analyzers-kuromoji" % Version.lucene
+      "org.scala-lang.modules" %% "scala-xml" % V.scalaXml,
+      "org.apache.lucene" % "lucene-analyzers-kuromoji" % V.lucene
     )
   )
 
@@ -89,11 +87,10 @@ lazy val coreKorean = module("ject-ko", Some("core-ko"))
     fork := true,
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "org.apache.lucene"              % "lucene-analyzers-nori"         % Version.lucene,
-      "com.softwaremill.sttp.client3" %% "core"                          % Version.sttp,
-      "com.softwaremill.sttp.client3" %% "async-http-client-backend-zio" % Version.sttp,
-      "org.jsoup"                      % "jsoup"                         % "1.14.2",
-      "org.slf4j"                      % "slf4j-nop"                     % "1.7.32"
+      "org.apache.lucene" % "lucene-analyzers-nori" % V.lucene,
+      "com.softwaremill.sttp.client3" %% "zio" % V.sttp,
+      "org.jsoup" % "jsoup" % V.jsoup,
+      "org.slf4j" % "slf4j-nop" % V.slf4j
     )
   )
 
@@ -112,21 +109,21 @@ lazy val wordplay = module("wordplay")
     run / baseDirectory := file("."),
     publish / skip := true,
     libraryDependencies ++= Seq(
-      "me.shadaj" %%% "slinky-web" % "0.6.8",
-      "me.shadaj" %%% "slinky-hot" % "0.6.8"
+      "me.shadaj" %%% "slinky-web" % V.slinky,
+      "me.shadaj" %%% "slinky-hot" % V.slinky
     ),
     Compile / npmDependencies ++= Seq(
-      "react"       -> "16.13.1",
-      "react-dom"   -> "16.13.1",
+      "react" -> "16.13.1",
+      "react-dom" -> "16.13.1",
       "react-proxy" -> "1.1.8"
     ),
     Compile / npmDevDependencies ++= Seq(
-      "file-loader"         -> "6.0.0",
-      "style-loader"        -> "1.2.1",
-      "css-loader"          -> "3.5.3",
+      "file-loader" -> "6.0.0",
+      "style-loader" -> "1.2.1",
+      "css-loader" -> "3.5.3",
       "html-webpack-plugin" -> "4.3.0",
       "copy-webpack-plugin" -> "5.1.1",
-      "webpack-merge"       -> "4.2.2"
+      "webpack-merge" -> "4.2.2"
     ),
     webpack / version := "4.43.0",
     startWebpackDevServer / version := "3.11.0",

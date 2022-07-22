@@ -6,8 +6,9 @@ import scala.util.Random
 final case class KanjiQuiz(top: String, left: String, bottom: String, right: String, answers: Set[String])
 
 object KanjiQuiz {
+
   def apply(front: String, back: String, answers: String): KanjiQuiz = {
-    val IndexedSeq(top, left)     = Random.shuffle(front.toIndexedSeq)
+    val IndexedSeq(top, left) = Random.shuffle(front.toIndexedSeq)
     val IndexedSeq(bottom, right) = Random.shuffle(back.toIndexedSeq)
 
     KanjiQuiz(top.toString, left.toString, bottom.toString, right.toString, answers.map(_.toString).toSet)

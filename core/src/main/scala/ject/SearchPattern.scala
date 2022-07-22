@@ -10,6 +10,7 @@ sealed trait SearchPattern {
 }
 
 object SearchPattern {
+
   final case class Default(text: String) extends SearchPattern {
     def patternText: String = s"$text"
   }
@@ -31,9 +32,9 @@ object SearchPattern {
   }
 
   def apply(searchText: String): SearchPattern = {
-    import ject.utils.StringExtensions._
+    import ject.utils.StringExtensions.*
 
-    val text                 = searchText.trim
+    val text = searchText.trim
     val normalizedSearchText = text.replace("？", "?").replace("＊", "*").replace("～", "~").replace("｀", "`")
 
     if (text.isSurroundedWith("\""))

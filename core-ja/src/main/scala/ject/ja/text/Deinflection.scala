@@ -5,6 +5,7 @@ import ject.ja.text.inflection.Ichidan
 import zio.NonEmptyChunk
 
 object Deinflection {
+
   def deinflect(word: String): Map[(Form, WordType), NonEmptyChunk[String]] = {
     val wordTypes: Seq[WordType] = Seq(WordType.VerbIchidan, WordType.VerbGodan)
 

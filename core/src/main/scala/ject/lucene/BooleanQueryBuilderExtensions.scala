@@ -1,11 +1,13 @@
 package ject.lucene
 
 import ject.lucene.field.LuceneField
-import org.apache.lucene.search._
+import org.apache.lucene.search.*
 import org.apache.lucene.util.QueryBuilder
 
 object BooleanQueryBuilderExtensions {
+
   implicit class BooleanQueryBuilderExtension(val self: BooleanQuery.Builder) extends AnyVal {
+
     def addPhraseQuery(builder: QueryBuilder)(
       field: LuceneField,
       queryText: String,

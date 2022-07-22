@@ -19,6 +19,7 @@ final case class WordDoc(
   definitionsKorean: Seq[String],
   partsOfSpeech: Seq[String]
 ) {
+
   def render: String = {
     val terms = (hangulTerms ++ hanjaTerms).mkString(" ")
     s"$terms: ${definitionsEnglish.mkString("\n")}"
@@ -26,6 +27,7 @@ final case class WordDoc(
 }
 
 object WordDoc {
+
   implicit val docDecoder: DocDecoder[WordDoc] = new DocDecoder[WordDoc] {
     val analyzer: Analyzer = LuceneField.perFieldAnalyzer(WordField.values)
 

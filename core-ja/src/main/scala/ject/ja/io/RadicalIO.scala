@@ -1,21 +1,21 @@
 package ject.ja.io
 
 import ject.ja.entity.Radical
+import zio.stream.{ZPipeline, ZStream}
 import zio.RIO
-import zio.blocking.Blocking
-import zio.stream.ZStream
-import zio.stream.ZTransducer
 
 import java.nio.file.Path
 
 object RadicalIO {
-  def load(file: Path): RIO[Blocking, Map[String, Radical]] =
+
+  def load(file: Path): RIO[Any, Map[String, Radical]] =
     ZStream
-      .fromFile(file)
-      .transduce(ZTransducer.utf8Decode >>> ZTransducer.splitLines)
+      .fromPath(file)
+      .via(ZPipeline.utf8Decode)
+      .via(ZPipeline.splitLines)
       .zipWithIndex
       .map { case (line, index) =>
-        val tokens  = line.split("\t")
+        val tokens = line.split("\t")
         val radical = tokens(0)
 
         radical -> Radical(

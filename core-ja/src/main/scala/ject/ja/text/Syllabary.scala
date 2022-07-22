@@ -1,6 +1,6 @@
 package ject.ja.text
 
-import enumeratum._
+import enumeratum.*
 import ject.ja.JapaneseText
 
 object Syllabary {
@@ -8,7 +8,7 @@ object Syllabary {
   sealed trait Gyo extends EnumEntry
 
   object Gyo extends Enum[Gyo] {
-    case object A  extends Gyo
+    case object A extends Gyo
     case object Ka extends Gyo
     case object Sa extends Gyo
     case object Ta extends Gyo
@@ -80,21 +80,21 @@ object Syllabary {
       (c, j)    <- line.zipWithIndex
     } yield c -> (Dan.values(j), Gyo.values(i % Gyo.values.length))).toMap
 
-  def apply(c: Char): Option[(Dan, Gyo)]     = indices.get(c)
+  def apply(c: Char): Option[(Dan, Gyo)] = indices.get(c)
 
   def shift(c: Char, gyo: Gyo): Option[Char] =
     for {
-      (dan, _)      <- apply(c)
-      g             <- Gyo.valuesToIndex.get(gyo)
-      d             <- Dan.valuesToIndex.get(dan)
+      (dan, _) <- apply(c)
+      g        <- Gyo.valuesToIndex.get(gyo)
+      d        <- Dan.valuesToIndex.get(dan)
       katakanaOffset = if (JapaneseText.isHiragana(c)) 0 else Gyo.values.length
     } yield table(g + katakanaOffset)(d)
 
   def shift(c: Char, dan: Dan): Option[Char] =
     for {
-      (_, gyo)      <- apply(c)
-      g             <- Gyo.valuesToIndex.get(gyo)
-      d             <- Dan.valuesToIndex.get(dan)
+      (_, gyo) <- apply(c)
+      g        <- Gyo.valuesToIndex.get(gyo)
+      d        <- Dan.valuesToIndex.get(dan)
       katakanaOffset = if (JapaneseText.isHiragana(c)) 0 else Gyo.values.length
     } yield table(g + katakanaOffset)(d)
 

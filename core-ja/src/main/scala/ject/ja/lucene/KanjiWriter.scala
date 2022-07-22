@@ -1,30 +1,28 @@
 package ject.ja.lucene
 
 import ject.ja.docs.KanjiDoc
-import ject.lucene.DocEncoder
-import ject.lucene.DocWriter
-import org.apache.lucene.index.IndexWriter
-import org.apache.lucene.index.IndexWriterConfig
+import ject.lucene.{DocEncoder, DocWriter}
+import org.apache.lucene.index.{IndexWriter, IndexWriterConfig}
 import org.apache.lucene.store.MMapDirectory
-import zio.Task
-import zio.TaskManaged
+import zio.{Scope, ZIO}
 
 import java.nio.file.Path
 
 final case class KanjiWriter(writer: IndexWriter, docEncoder: DocEncoder[KanjiDoc]) extends DocWriter[KanjiDoc]
 
 object KanjiWriter {
+
   def make(
     directory: Path,
     encoder: DocEncoder[KanjiDoc] = KanjiDoc.docEncoder,
     autoCommitOnRelease: Boolean = true
-  ): TaskManaged[KanjiWriter] =
+  ): ZIO[Scope, Throwable, KanjiWriter] =
     (for {
-      config <- Task(new IndexWriterConfig(KanjiDoc.docDecoder.analyzer))
-      index  <- Task(new MMapDirectory(directory))
-      writer <- Task(new IndexWriter(index, config))
-    } yield KanjiWriter(writer, encoder)).toManaged { writer =>
-      Task {
+      config <- ZIO.attempt(new IndexWriterConfig(KanjiDoc.docDecoder.analyzer))
+      index  <- ZIO.attempt(new MMapDirectory(directory))
+      writer <- ZIO.attempt(new IndexWriter(index, config))
+    } yield KanjiWriter(writer, encoder)).withFinalizer { writer =>
+      ZIO.attempt {
         if (autoCommitOnRelease) {
           writer.writer.commit()
         }

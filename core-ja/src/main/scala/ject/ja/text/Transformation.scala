@@ -1,7 +1,7 @@
 package ject.ja.text
 
-import ject.ja.JapaneseText
 import ject.ja.text.Syllabary.Dan
+import ject.ja.JapaneseText
 import zio.Chunk
 import zio.NonEmptyChunk
 
@@ -61,12 +61,12 @@ object Transformation {
 
       if (dan == Dan.A && last == 'う') {
         Right(
-          NonEmptyChunk(suffix, suffixes: _*).map(s => s"${stem}わ$s")
+          NonEmptyChunk(suffix, suffixes*).map(s => s"${stem}わ$s")
         )
       } else {
         for {
           shifted <- Syllabary.shift(last, dan).toRight(s"Unable to shift '$last' to $dan")
-        } yield NonEmptyChunk(suffix, suffixes: _*).map(s => s"$stem$shifted$s")
+        } yield NonEmptyChunk(suffix, suffixes*).map(s => s"$stem$shifted$s")
       }
     }
   }
@@ -86,7 +86,7 @@ object Transformation {
   }
 
   def attach(suffix: String, suffixes: String*): Transform = { s =>
-    Right(NonEmptyChunk(s + suffix, suffixes.map(s + _): _*))
+    Right(NonEmptyChunk(s + suffix, suffixes.map(s + _)*))
   }
 
   def attachGodanStem(detachSuffixes: String*): Transform = { s =>
@@ -94,7 +94,7 @@ object Transformation {
       Left("Verb must be greater than 2 character")
     } else {
       detachSuffixes.find(ds => s.endsWith(ds)) match {
-        case None         => Left(s"$s is not a godan verb")
+        case None => Left(s"$s is not a godan verb")
         case Some(suffix) =>
           val stem = s.substring(0, s.length - suffix.length - 1)
 

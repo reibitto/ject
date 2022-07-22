@@ -1,15 +1,8 @@
 import sbt._
-import Keys._
-import scala.Console
+import sbt.Keys._
 
 object Build {
-  val ScalaVersion = "2.13.6"
-
-  object Version {
-    val lucene = "8.9.0"
-    val sttp   = "3.3.14"
-    val zio    = "1.0.11"
-  }
+  val ScalaVersion = "2.13.8"
 
   lazy val ScalacOptions = Seq(
     "-encoding",
@@ -20,30 +13,27 @@ object Build {
     "-language:postfixOps",
     "-language:implicitConversions",
     "-language:higherKinds",
+    "-Xsource:3",
     "-Xfatal-warnings",
     "-Ymacro-annotations",
-    "-Xlint:nullary-unit",           // Warn when nullary methods return Unit.
-    "-Xlint:inaccessible",           // Warn about inaccessible types in method signatures.
-    "-Xlint:missing-interpolator",   // A string literal appears to be missing an interpolator id.
-    "-Xlint:doc-detached",           // A Scaladoc comment appears to be detached from its element.
-    "-Xlint:private-shadow",         // A private field (or class parameter) shadows a superclass field.
-    "-Xlint:type-parameter-shadow",  // A local type parameter shadows a type already in scope.
-    "-Xlint:delayedinit-select",     // Selecting member of DelayedInit.
-    "-Xlint:stars-align",            // Pattern sequence wildcard must align with sequence component.
-    "-Xlint:option-implicit",        // Option.apply used implicit view.
+    "-Xlint:nullary-unit", // Warn when nullary methods return Unit.
+    "-Xlint:inaccessible", // Warn about inaccessible types in method signatures.
+    "-Xlint:missing-interpolator", // A string literal appears to be missing an interpolator id.
+    "-Xlint:doc-detached", // A Scaladoc comment appears to be detached from its element.
+    "-Xlint:private-shadow", // A private field (or class parameter) shadows a superclass field.
+    "-Xlint:type-parameter-shadow", // A local type parameter shadows a type already in scope.
+    "-Xlint:delayedinit-select", // Selecting member of DelayedInit.
+    "-Xlint:stars-align", // Pattern sequence wildcard must align with sequence component.
+    "-Xlint:option-implicit", // Option.apply used implicit view.
     "-Xlint:poly-implicit-overload", // Parameterized overloaded implicit methods are not visible as view bounds.
-    "-Ywarn-extra-implicit"          // Warn when more than one implicit parameter section is defined.
+    "-Ywarn-extra-implicit" // Warn when more than one implicit parameter section is defined.
   ) ++
     Seq(
-      "-Ywarn-unused:imports",       // Warn if an import selector is not referenced.
-      "-Ywarn-unused:locals",        // Warn if a local definition is unused.
-      "-Ywarn-unused:privates",      // Warn if a private member is unused.
-      "-Ywarn-unused:implicits"      // Warn if an implicit parameter is unused.
-    ).filter(_ => shouldWarnForUnusedCode) ++
-    Seq(
-      "-opt:l:inline",
-      "-opt-inline-from:**"
-    ).filter(_ => shouldOptimize)
+      "-Ywarn-unused:imports", // Warn if an import selector is not referenced.
+      "-Ywarn-unused:locals", // Warn if a local definition is unused.
+      "-Ywarn-unused:privates", // Warn if a private member is unused.
+      "-Ywarn-unused:implicits" // Warn if an implicit parameter is unused.
+    ).filter(_ => shouldWarnForUnusedCode)
 
   def defaultSettings(projectName: String) =
     Seq(
@@ -60,13 +50,11 @@ object Build {
       Test / logBuffered := false
     )
 
-  lazy val Resolvers = Seq(
-    // Order of resolvers affects resolution time. More general purpose repositories should come first.
-    Resolver.sonatypeRepo("releases"),
+  // Order of resolvers affects resolution time. More general purpose repositories should come first.
+  lazy val Resolvers = Resolver.sonatypeOssRepos("releases") ++ Seq(
     Resolver.typesafeRepo("releases"),
-    Resolver.jcenterRepo,
-    Resolver.sonatypeRepo("snapshots")
-  )
+    Resolver.jcenterRepo
+  ) ++ Resolver.sonatypeOssRepos("snapshots")
 
   def compilerFlag(key: String, default: Boolean): Boolean = {
     val flag = sys.props.get(key).orElse {
@@ -80,8 +68,6 @@ object Build {
 
     flagValue
   }
-
-  lazy val shouldOptimize: Boolean = compilerFlag("scalac.optimize", false)
 
   lazy val shouldWarnForUnusedCode: Boolean = compilerFlag("scalac.unused.enabled", false)
 

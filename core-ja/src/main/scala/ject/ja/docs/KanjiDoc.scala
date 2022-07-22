@@ -5,7 +5,7 @@ import ject.lucene.field.LuceneField
 import ject.lucene.DocDecoder
 import ject.lucene.DocEncoder
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.document._
+import org.apache.lucene.document.*
 
 final case class KanjiDoc(
   kanji: String,
@@ -25,6 +25,7 @@ final case class KanjiDoc(
 }
 
 object KanjiDoc {
+
   implicit val docDecoder: DocDecoder[KanjiDoc] = new DocDecoder[KanjiDoc] {
     val analyzer: Analyzer = LuceneField.perFieldAnalyzer(KanjiField.values)
 

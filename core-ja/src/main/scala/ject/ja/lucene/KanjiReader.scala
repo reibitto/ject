@@ -1,14 +1,12 @@
 package ject.ja.lucene
 
-import ject.ja.RadicalQuery
 import ject.ja.docs.KanjiDoc
 import ject.ja.lucene.field.KanjiField
-import ject.lucene.LuceneReader
-import ject.lucene.ScoredDoc
-import org.apache.lucene.search._
+import ject.ja.RadicalQuery
+import ject.lucene.{LuceneReader, ScoredDoc}
+import org.apache.lucene.search.*
 import org.apache.lucene.util.QueryBuilder
-import zio.Task
-import zio.TaskManaged
+import zio.{Scope, Task, ZIO}
 import zio.stream.ZStream
 
 import java.nio.file.Path
@@ -38,26 +36,27 @@ final case class KanjiReader(index: LuceneReader[KanjiDoc]) {
       for {
         combinedParts <- index
                            .search(kanjiQuery.build)
-                           .map(d => Set(d.doc.parts: _*) + d.doc.kanji)
-                           .fold(Set.empty[String])(_ ++ _)
-        partsQuery     = new BooleanQuery.Builder()
-        _              = combinedParts.foreach { part =>
-                           partsQuery.add(
-                             new TermQuery(KanjiField.Parts.term(part)),
-                             BooleanClause.Occur.SHOULD
-                           )
-                         }
-        sort           = new Sort(
-                           SortField.FIELD_SCORE,
-                           new SortedNumericSortField(KanjiField.Grade.entryName, SortField.Type.LONG),
-                           new SortedNumericSortField(KanjiField.Frequency.entryName, SortField.Type.LONG)
-                         )
+                           .map(d => Set(d.doc.parts*) + d.doc.kanji)
+                           .runFold(Set.empty[String])(_ ++ _)
+        partsQuery = new BooleanQuery.Builder()
+        _ = combinedParts.foreach { part =>
+              partsQuery.add(
+                new TermQuery(KanjiField.Parts.term(part)),
+                BooleanClause.Occur.SHOULD
+              )
+            }
+        sort = new Sort(
+                 SortField.FIELD_SCORE,
+                 new SortedNumericSortField(KanjiField.Grade.entryName, SortField.Type.LONG),
+                 new SortedNumericSortField(KanjiField.Frequency.entryName, SortField.Type.LONG)
+               )
       } yield index.searchSorted(partsQuery.build, sort)
     }
 }
 
 object KanjiReader {
-  def make(directory: Path): TaskManaged[KanjiReader] =
+
+  def make(directory: Path): ZIO[Scope, Throwable, KanjiReader] =
     for {
       reader <- LuceneReader.make[KanjiDoc](directory)
     } yield KanjiReader(reader)

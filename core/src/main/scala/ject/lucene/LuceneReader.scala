@@ -1,18 +1,11 @@
 package ject.lucene
 
 import ject.lucene.field.LuceneField
-import org.apache.lucene.index.DirectoryReader
-import org.apache.lucene.index.IndexWriter
-import org.apache.lucene.index.IndexWriterConfig
+import org.apache.lucene.index.{DirectoryReader, IndexWriter, IndexWriterConfig}
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search.IndexSearcher
-import org.apache.lucene.search.Query
-import org.apache.lucene.search.ScoreDoc
-import org.apache.lucene.search.Sort
+import org.apache.lucene.search.{IndexSearcher, Query, ScoreDoc, Sort}
 import org.apache.lucene.store.MMapDirectory
-import zio.Chunk
-import zio.Task
-import zio.TaskManaged
+import zio.{Chunk, Scope, Task, ZIO}
 import zio.stream.ZStream
 
 import java.nio.file.Path
@@ -25,25 +18,25 @@ final case class LuceneReader[A: DocDecoder](
   val decoder: DocDecoder[A] = implicitly[DocDecoder[A]]
 
   def headOption(query: Query): Task[Option[A]] =
-    Task {
+    ZIO.attempt {
       searcher.search(query, 1).scoreDocs.headOption.map { hit =>
         decoder.decode(searcher.doc(hit.doc))
       }
     }
 
   def take(query: Query, n: Int): Task[Seq[ScoredDoc[A]]] =
-    Task {
+    ZIO.attempt {
       val hits = searcher.search(query, n).scoreDocs
 
-      hits.toIterable.map { hit =>
+      hits.map { hit =>
         val doc = searcher.doc(hit.doc)
         ScoredDoc(decoder.decode(doc), hit.score)
       }.toSeq
     }
 
   def search(query: Query, hitsPerPage: Int = 20): ZStream[Any, Throwable, ScoredDoc[A]] =
-    ZStream.unfoldChunkM(Option.empty[ScoreDoc]) { state =>
-      Task {
+    ZStream.unfoldChunkZIO(Option.empty[ScoreDoc]) { state =>
+      ZIO.attempt {
         val docs = state match {
           case Some(scoreDoc) =>
             searcher.searchAfter(scoreDoc, query, hitsPerPage)
@@ -57,7 +50,7 @@ final case class LuceneReader[A: DocDecoder](
         } else {
           val hits = docs.scoreDocs
 
-          val decodedDocs = hits.toIterable.map { hit =>
+          val decodedDocs = hits.map { hit =>
             val doc = searcher.doc(hit.doc)
             ScoredDoc(decoder.decode(doc), hit.score)
           }
@@ -68,8 +61,8 @@ final case class LuceneReader[A: DocDecoder](
     }
 
   def searchSorted(query: Query, sort: Sort, hitsPerPage: Int = 20): ZStream[Any, Throwable, ScoredDoc[A]] =
-    ZStream.unfoldChunkM(Option.empty[ScoreDoc]) { state =>
-      Task {
+    ZStream.unfoldChunkZIO(Option.empty[ScoreDoc]) { state =>
+      ZIO.attempt {
         val docs = state match {
           case Some(scoreDoc) =>
             searcher.searchAfter(scoreDoc, query, hitsPerPage, sort, true)
@@ -83,7 +76,7 @@ final case class LuceneReader[A: DocDecoder](
         } else {
           val hits = docs.scoreDocs
 
-          val decodedDocs = hits.toIterable.map { hit =>
+          val decodedDocs = hits.map { hit =>
             val doc = searcher.doc(hit.doc)
             ScoredDoc(decoder.decode(doc), hit.score)
           }
@@ -102,7 +95,7 @@ final case class LuceneReader[A: DocDecoder](
     queryParser.setAllowLeadingWildcard(true)
 
     for {
-      query   <- ZStream.fromEffect(Task(queryParser.parse(queryString)))
+      query   <- ZStream.fromZIO(ZIO.attempt(queryParser.parse(queryString)))
       results <- search(query, hitsPerPage)
     } yield results
   }
@@ -117,7 +110,7 @@ final case class LuceneReader[A: DocDecoder](
     queryParser.setAllowLeadingWildcard(true)
 
     for {
-      query   <- ZStream.fromEffect(Task(queryParser.parse(queryString)))
+      query   <- ZStream.fromZIO(ZIO.attempt(queryParser.parse(queryString)))
       results <- searchSorted(query, sort, hitsPerPage)
     } yield results
   }
@@ -125,12 +118,12 @@ final case class LuceneReader[A: DocDecoder](
   def buildQuery(queryString: String, defaultField: LuceneField = LuceneField.none): Query =
     new QueryParser(defaultField.entryName, decoder.analyzer).parse(queryString)
 
-  def createWriter(autoCommitOnRelease: Boolean): TaskManaged[IndexWriter] =
-    Task {
+  def createWriter(autoCommitOnRelease: Boolean): ZIO[Scope, Throwable, IndexWriter] =
+    ZIO.attempt {
       val config = new IndexWriterConfig(decoder.analyzer)
       new IndexWriter(directory, config)
-    }.toManaged { writer =>
-      Task {
+    }.withFinalizer { writer =>
+      ZIO.attempt {
         if (autoCommitOnRelease) {
           writer.commit()
         }
@@ -141,13 +134,14 @@ final case class LuceneReader[A: DocDecoder](
 }
 
 object LuceneReader {
-  def make[A: DocDecoder](directory: Path): TaskManaged[LuceneReader[A]] =
+
+  def make[A: DocDecoder](directory: Path): ZIO[Scope, Throwable, LuceneReader[A]] =
     (for {
-      index    <- Task(new MMapDirectory(directory))
-      reader   <- Task(DirectoryReader.open(index))
-      searcher <- Task(new IndexSearcher(reader))
-    } yield new LuceneReader[A](index, reader, searcher)).toManaged { index =>
-      Task {
+      index    <- ZIO.attempt(new MMapDirectory(directory))
+      reader   <- ZIO.attempt(DirectoryReader.open(index))
+      searcher <- ZIO.attempt(new IndexSearcher(reader))
+    } yield new LuceneReader[A](index, reader, searcher)).withFinalizer { index =>
+      ZIO.attempt {
         index.directory.close()
         index.reader.close()
       }.orDie

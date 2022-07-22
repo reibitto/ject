@@ -1,20 +1,18 @@
 package ject.ja.lucene
 
-import ject.SearchPattern
-import ject.ja.JapaneseText
 import ject.ja.docs.WordDoc
-import ject.lucene.AnalyzerExtensions._
-import ject.lucene.BooleanQueryBuilderExtensions._
-import ject.ja.lucene.WordReader.SearchType
-import ject.lucene.field.LuceneField
 import ject.ja.lucene.field.WordField
-import ject.lucene.LuceneReader
-import ject.lucene.ScoredDoc
+import ject.ja.lucene.WordReader.SearchType
+import ject.ja.JapaneseText
+import ject.lucene.{LuceneReader, ScoredDoc}
+import ject.lucene.field.LuceneField
+import ject.lucene.AnalyzerExtensions.*
+import ject.lucene.BooleanQueryBuilderExtensions.*
+import ject.SearchPattern
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search._
+import org.apache.lucene.search.*
 import org.apache.lucene.util.QueryBuilder
-import zio.Task
-import zio.TaskManaged
+import zio.{Scope, ZIO}
 import zio.stream.ZStream
 
 import java.nio.file.Path
@@ -40,7 +38,7 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
       case SearchType.Definition => WordField.Definition
     }
 
-    val booleanQueryTask = Task {
+    val booleanQueryTask = ZIO.attempt {
       val booleanQuery = new BooleanQuery.Builder()
 
       (pattern, searchType) match {
@@ -100,13 +98,16 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
 
 object WordReader {
   sealed trait SearchType
+
   object SearchType {
-    case object Kanji      extends SearchType
-    case object Reading    extends SearchType
+    case object Kanji extends SearchType
+
+    case object Reading extends SearchType
+
     case object Definition extends SearchType
   }
 
-  def make(directory: Path): TaskManaged[WordReader] =
+  def make(directory: Path): ZIO[Scope, Throwable, WordReader] =
     for {
       reader <- LuceneReader.make[WordDoc](directory)
     } yield WordReader(reader)
