@@ -1,13 +1,8 @@
-import sbt.*
-import sbt.Keys.*
+import sbt._
+import sbt.Keys._
 
 object Build {
   val ScalaVersion = "2.13.8"
-
-  object Version {
-    val lucene = "8.11.2"
-    val zio = "2.0.0"
-  }
 
   lazy val ScalacOptions = Seq(
     "-encoding",
@@ -38,11 +33,7 @@ object Build {
       "-Ywarn-unused:locals", // Warn if a local definition is unused.
       "-Ywarn-unused:privates", // Warn if a private member is unused.
       "-Ywarn-unused:implicits" // Warn if an implicit parameter is unused.
-    ).filter(_ => shouldWarnForUnusedCode) ++
-    Seq(
-      "-opt:l:inline",
-      "-opt-inline-from:**"
-    ).filter(_ => shouldOptimize)
+    ).filter(_ => shouldWarnForUnusedCode)
 
   def defaultSettings(projectName: String) =
     Seq(
@@ -77,8 +68,6 @@ object Build {
 
     flagValue
   }
-
-  lazy val shouldOptimize: Boolean = compilerFlag("scalac.optimize", false)
 
   lazy val shouldWarnForUnusedCode: Boolean = compilerFlag("scalac.unused.enabled", false)
 
