@@ -34,7 +34,7 @@ final case class LuceneReader[A: DocDecoder](
       }.toSeq
     }
 
-  def search(query: Query, hitsPerPage: Int = 20): ZStream[Any, Throwable, ScoredDoc[A]] =
+  def search(query: Query, hitsPerPage: Int = 10): ZStream[Any, Throwable, ScoredDoc[A]] =
     ZStream.unfoldChunkZIO(Option.empty[ScoreDoc]) { state =>
       ZIO.attempt {
         val docs = state match {
@@ -45,9 +45,7 @@ final case class LuceneReader[A: DocDecoder](
             searcher.search(query, hitsPerPage)
         }
 
-        if (docs.scoreDocs.isEmpty) {
-          None
-        } else {
+        Option.when (docs.scoreDocs.nonEmpty) {
           val hits = docs.scoreDocs
 
           val decodedDocs = hits.map { hit =>
@@ -55,12 +53,12 @@ final case class LuceneReader[A: DocDecoder](
             ScoredDoc(decoder.decode(doc), hit.score)
           }
 
-          Some(Chunk.fromIterable(decodedDocs), hits.lastOption)
+          (Chunk.fromIterable(decodedDocs), hits.lastOption)
         }
       }
     }
 
-  def searchSorted(query: Query, sort: Sort, hitsPerPage: Int = 20): ZStream[Any, Throwable, ScoredDoc[A]] =
+  def searchSorted(query: Query, sort: Sort, hitsPerPage: Int = 10): ZStream[Any, Throwable, ScoredDoc[A]] =
     ZStream.unfoldChunkZIO(Option.empty[ScoreDoc]) { state =>
       ZIO.attempt {
         val docs = state match {
@@ -71,9 +69,7 @@ final case class LuceneReader[A: DocDecoder](
             searcher.search(query, hitsPerPage, sort, true)
         }
 
-        if (docs.scoreDocs.isEmpty) {
-          None
-        } else {
+        Option.when (docs.scoreDocs.nonEmpty) {
           val hits = docs.scoreDocs
 
           val decodedDocs = hits.map { hit =>
@@ -81,7 +77,7 @@ final case class LuceneReader[A: DocDecoder](
             ScoredDoc(decoder.decode(doc), hit.score)
           }
 
-          Some(Chunk.fromIterable(decodedDocs), hits.lastOption)
+          (Chunk.fromIterable(decodedDocs), hits.lastOption)
         }
       }
     }

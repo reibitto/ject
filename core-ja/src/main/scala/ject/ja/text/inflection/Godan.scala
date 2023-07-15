@@ -44,7 +44,7 @@ object Godan {
     // Negative
     NonPast.negative -> Transforms(changeBase(Dan.A, "ない")),
     Past.negative -> Transforms(changeBase(Dan.A, "なかった")),
-    Te.negative -> Transforms(changeBase(Dan.A, "なくて")),
+    Te.negative -> Transforms(changeBase(Dan.A, "なくて", "ないで")),
     Conditional.negative -> Transforms(changeBase(Dan.A, "なかったら")),
     Provisional.negative -> Transforms(changeBase(Dan.A, "なければ")),
     Potential.negative -> Transforms(changeBase(Dan.E, "ない")),
@@ -113,7 +113,7 @@ object Godan {
     // Negative
     NonPast.negative -> Transforms(detach("ない"), shiftBase(Dan.A, Dan.U)),
     Past.negative -> Transforms(detach("なかった"), shiftBase(Dan.A, Dan.U)),
-    Te.negative -> Transforms(detach("なくて"), shiftBase(Dan.A, Dan.U)),
+    Te.negative -> Transforms(detach("なくて", "ないで"), shiftBase(Dan.A, Dan.U)),
     Conditional.negative -> Transforms(detach("なかったら"), shiftBase(Dan.A, Dan.U)),
     Provisional.negative -> Transforms(detach("なければ"), shiftBase(Dan.A, Dan.U)),
     Potential.negative -> Transforms(detach("ない"), shiftBase(Dan.E, Dan.U)),

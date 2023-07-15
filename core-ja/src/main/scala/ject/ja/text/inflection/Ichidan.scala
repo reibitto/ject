@@ -43,7 +43,7 @@ object Ichidan {
     // Negative
     NonPast.negative -> Transforms(ichidanStem, attach("ない")),
     Past.negative -> Transforms(ichidanStem, attach("なかった")),
-    Te.negative -> Transforms(ichidanStem, attach("なくて")),
+    Te.negative -> Transforms(ichidanStem, attach("なくて", "ないで")),
     Conditional.negative -> Transforms(ichidanStem, attach("なかったら")),
     Provisional.negative -> Transforms(ichidanStem, attach("なければ")),
     Potential.negative -> Transforms(ichidanStem, attach("られない")),
@@ -112,7 +112,7 @@ object Ichidan {
     // Negative
     NonPast.negative -> Transforms(detach("ない"), attach("る")),
     Past.negative -> Transforms(detach("なかった"), attach("る")),
-    Te.negative -> Transforms(detach("なくて"), attach("る")),
+    Te.negative -> Transforms(detach("なくて", "ないで"), attach("る")),
     Conditional.negative -> Transforms(detach("なかったら"), attach("る")),
     Provisional.negative -> Transforms(detach("なければ"), attach("る")),
     Potential.negative -> Transforms(detach("られない"), attach("る")),

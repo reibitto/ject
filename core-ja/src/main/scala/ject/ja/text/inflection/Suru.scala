@@ -41,7 +41,7 @@ object Suru {
     // Negative
     NonPast.negative -> Transforms.pure("しない", "せぬ", "せず"),
     Past.negative -> Transforms.pure("しなかった"),
-    Te.negative -> Transforms.pure("しなくて"),
+    Te.negative -> Transforms.pure("しなくて", "しないで"),
     Conditional.negative -> Transforms.pure("しなかったら"),
     Provisional.negative -> Transforms.pure("しなければ"),
     Potential.negative -> Transforms.pure("できない"),
@@ -108,7 +108,7 @@ object Suru {
     // Negative
     NonPast.negative -> Transforms(detach("しない", "せぬ", "せず"), attach("する")),
     Past.negative -> Transforms(detach("しなかった"), attach("する")),
-    Te.negative -> Transforms(detach("しなくて"), attach("する")),
+    Te.negative -> Transforms(detach("しなくて", "しないで"), attach("する")),
     Conditional.negative -> Transforms(detach("しなかったら"), attach("する")),
     Provisional.negative -> Transforms(detach("しなければ"), attach("する")),
     Potential.negative -> Transforms(detach("できない"), attach("する")),
