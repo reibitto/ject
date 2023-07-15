@@ -40,7 +40,7 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
 
     val booleanQueryTask = ZIO.attempt {
       val booleanQuery = new BooleanQuery.Builder()
-      
+
       (pattern, searchType) match {
         case (SearchPattern.Default(text), SearchType.Kanji) =>
           if (text.length > 1)
