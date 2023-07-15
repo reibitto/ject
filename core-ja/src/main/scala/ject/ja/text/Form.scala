@@ -40,6 +40,8 @@ object SubForm extends Enum[SubForm] {
   case object Sou extends SubForm
   case object Tai extends SubForm
   case object Progressive extends SubForm
+  case object Noun extends SubForm
+  case object Stem extends SubForm
 
   val values: IndexedSeq[SubForm] = findValues
 }

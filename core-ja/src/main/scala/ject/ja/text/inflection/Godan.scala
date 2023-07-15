@@ -74,7 +74,9 @@ object Godan {
     Alternative.polite.negative -> Transforms(changeBase(Dan.I, "ませんでしたり")),
     Imperative.polite.negative -> Transforms(changeBase(Dan.I, "なさるな")),
     Progressive.polite.negative -> Transforms(changeBase(Dan.I, "ていません", "てません")),
-    Form.of(Past, Potential).polite.negative -> Transforms(changeBase(Dan.E, "ませんでした"))
+    Form.of(Past, Potential).polite.negative -> Transforms(changeBase(Dan.E, "ませんでした")),
+    // Other
+    Form.of(Stem) -> Transforms(changeBase(Dan.I, ""))
   )
 
   val deinflections: Map[Form, Transform] = Map(
@@ -139,6 +141,8 @@ object Godan {
     Volitional.polite.negative -> Transforms(detach("ますまい"), shiftBase(Dan.I, Dan.U)),
     Alternative.polite.negative -> Transforms(detach("ませんでしたり"), shiftBase(Dan.I, Dan.U)),
     Imperative.polite.negative -> Transforms(detach("なさるな"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Past, Potential).polite.negative -> Transforms(detach("ませんでした"), shiftBase(Dan.E, Dan.U))
+    Form.of(Past, Potential).polite.negative -> Transforms(detach("ませんでした"), shiftBase(Dan.E, Dan.U)),
+    // Other
+    Form.of(Stem) -> Transforms(shiftBase(Dan.I, Dan.U))
   )
 }

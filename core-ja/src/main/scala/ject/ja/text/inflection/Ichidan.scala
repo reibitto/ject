@@ -73,7 +73,9 @@ object Ichidan {
     Alternative.polite.negative -> Transforms(ichidanStem, attach("ませんでしたり")),
     Imperative.polite.negative -> Transforms(ichidanStem, attach("なさるな")),
     Progressive.polite.negative -> Transforms(ichidanStem, attach("いません", "ません")),
-    Form.of(Past, Potential).polite.negative -> Transforms(ichidanStem, attach("られませんでした"))
+    Form.of(Past, Potential).polite.negative -> Transforms(ichidanStem, attach("られませんでした")),
+    // Other
+    Form.of(Stem) -> Transforms(ichidanStem)
   )
 
   val deinflections: Map[Form, Transform] = Map(
@@ -138,6 +140,8 @@ object Ichidan {
     Volitional.polite.negative -> Transforms(detach("ますまい"), attach("る")),
     Alternative.polite.negative -> Transforms(detach("ませんでしたり"), attach("る")),
     Imperative.polite.negative -> Transforms(detach("なさるな"), attach("る")),
-    Form.of(Past, Potential).polite.negative -> Transforms(detach("られませんでした"), attach("る"))
+    Form.of(Past, Potential).polite.negative -> Transforms(detach("られませんでした"), attach("る")),
+    // Other
+    Form.of(Stem) -> Transforms(attach("る"))
   )
 }

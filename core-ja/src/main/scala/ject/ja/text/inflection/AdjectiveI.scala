@@ -23,8 +23,29 @@ object AdjectiveI {
     Conditional.negative -> Transforms(adjectiveIStem, attach("くなかったら")),
     Provisional.negative -> Transforms(adjectiveIStem, attach("くなければ")),
     Alternative.negative -> Transforms(adjectiveIStem, attach("くなかったり")),
-    Sou.negative -> Transforms(adjectiveIStem, attach("くなさそう"))
+    Sou.negative -> Transforms(adjectiveIStem, attach("くなさそう")),
+    // Other
+    Noun.plain -> Transforms(adjectiveIStem, attach("さ"))
   )
 
-  val deinflections: Map[Form, Transform] = Map.empty // TODO: Implement
+  val deinflections: Map[Form, Transform] = Map(
+    // Plain
+    NonPast.plain -> Transforms.identity,
+    Past.plain -> Transforms(detach("かった"), attach("い")),
+    Te.plain -> Transforms(detach("くて"), attach("い")),
+    Conditional.plain -> Transforms(detach("かったら"), attach("い")),
+    Provisional.plain -> Transforms(detach("ければ"), attach("い")),
+    Alternative.plain -> Transforms(detach("かったり"), attach("い")),
+    Sou.plain -> Transforms(detach("そう"), attach("い")),
+    // Negative
+    NonPast.negative -> Transforms(detach("くない"), attach("い")),
+    Past.negative -> Transforms(detach("くなかった"), attach("い")),
+    Te.negative -> Transforms(detach("くなくて"), attach("い")),
+    Conditional.negative -> Transforms(detach("くなかったら"), attach("い")),
+    Provisional.negative -> Transforms(detach("くなければ"), attach("い")),
+    Alternative.negative -> Transforms(detach("くなかったり"), attach("い")),
+    Sou.negative -> Transforms(detach("くなさそう"), attach("い")),
+    // Other
+    Noun.plain -> Transforms(detach("さ"), attach("い"))
+  )
 }

@@ -40,21 +40,27 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
 
     val booleanQueryTask = ZIO.attempt {
       val booleanQuery = new BooleanQuery.Builder()
-
+      
       (pattern, searchType) match {
         case (SearchPattern.Default(text), SearchType.Kanji) =>
+          if (text.length > 1)
+            booleanQuery.addPrefixQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 1_000)
+
           booleanQuery.addPhraseQuery(builder)(WordField.KanjiTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.KanjiTermAnalyzed, text, BooleanClause.Occur.SHOULD)
           booleanQuery.addTermQuery(WordField.KanjiTermInflected, text, BooleanClause.Occur.SHOULD, 50)
-          booleanQuery.addTermQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 100)
+          booleanQuery.addTermQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 10_000)
 
         case (SearchPattern.Default(text), SearchType.Reading) =>
+          if (text.length > 1)
+            booleanQuery.addPrefixQuery(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 1_000)
+
           booleanQuery.addPhraseQuery(builder)(WordField.ReadingTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.ReadingTermAnalyzed, text, BooleanClause.Occur.SHOULD)
           booleanQuery.addTermQuery(WordField.ReadingTermInflected, text, BooleanClause.Occur.SHOULD, 50)
-          booleanQuery.addTermQuery(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 100)
+          booleanQuery.addTermQuery(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 10_000)
 
         case (SearchPattern.Exact(text), SearchType.Definition) =>
           booleanQuery.addPhraseQuery(builder)(WordField.Definition, text, BooleanClause.Occur.SHOULD)
