@@ -8,7 +8,7 @@ import zio.*
 import zio.Console.printLine
 
 import java.io.File
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 
 object JMDictMain extends zio.ZIOAppDefault {
 
@@ -20,6 +20,8 @@ object JMDictMain extends zio.ZIOAppDefault {
       tempFile <- ZIO.attempt(File.createTempFile("JMDict", ""))
       _        <- JMDictIO.download(tempFile.toPath).unless(targetPath.toFile.exists())
       _        <- JMDictIO.normalize(tempFile.toPath, targetPath).unless(targetPath.toFile.exists())
+      fileTime <- ZIO.attempt(Files.getLastModifiedTime(targetPath))
+      _        <- printLine(s"Using JMDict file from $fileTime")
       luceneDirectory = Paths.get("data/lucene")
       (timeTaken, totalDocs) <- ZIO.scoped {
                                   for {

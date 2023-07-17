@@ -41,7 +41,7 @@ object Ichidan {
     Progressive.polite -> Transforms(ichidanStem, attach("ています", "てます")),
     Form.of(Past, Potential).polite -> Transforms(ichidanStem, attach("られました")),
     // Negative
-    NonPast.negative -> Transforms(ichidanStem, attach("ない")),
+    NonPast.negative -> Transforms(ichidanStem, attach("ない", "ぬ", "ず")),
     Past.negative -> Transforms(ichidanStem, attach("なかった")),
     Te.negative -> Transforms(ichidanStem, attach("なくて", "ないで")),
     Conditional.negative -> Transforms(ichidanStem, attach("なかったら")),
@@ -110,7 +110,7 @@ object Ichidan {
     Imperative.polite -> Transforms(detach("なさい"), attach("る")),
     Form.of(Past, Potential).polite -> Transforms(detach("られました"), attach("る")),
     // Negative
-    NonPast.negative -> Transforms(detach("ない"), attach("る")),
+    NonPast.negative -> Transforms(detach("ない", "ぬ", "ず"), attach("る")),
     Past.negative -> Transforms(detach("なかった"), attach("る")),
     Te.negative -> Transforms(detach("なくて", "ないで"), attach("る")),
     Conditional.negative -> Transforms(detach("なかったら"), attach("る")),

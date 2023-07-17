@@ -43,8 +43,14 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
 
       (pattern, searchType) match {
         case (SearchPattern.Default(text), SearchType.Kanji) =>
-          if (text.length > 1)
-            booleanQuery.addPrefixQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 1_000)
+          val prefixScoreBoost = text.length match {
+            case 1 => 10
+            case 2 => 25
+            case 3 => 100
+            case _ => 1000
+          }
+
+          booleanQuery.addPrefixQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, prefixScoreBoost.toFloat)
 
           booleanQuery.addPhraseQuery(builder)(WordField.KanjiTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 5)
@@ -53,8 +59,14 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
           booleanQuery.addTermQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 10_000)
 
         case (SearchPattern.Default(text), SearchType.Reading) =>
-          if (text.length > 1)
-            booleanQuery.addPrefixQuery(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 1_000)
+          val prefixScoreBoost = text.length match {
+            case 1 => 10
+            case 2 => 25
+            case 3 => 100
+            case _ => 1000
+          }
+
+          booleanQuery.addPrefixQuery(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, prefixScoreBoost.toFloat)
 
           booleanQuery.addPhraseQuery(builder)(WordField.ReadingTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 5)

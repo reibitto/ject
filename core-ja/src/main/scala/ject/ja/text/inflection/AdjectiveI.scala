@@ -16,6 +16,7 @@ object AdjectiveI {
     Provisional.plain -> Transforms(adjectiveIStem, attach("ければ")),
     Alternative.plain -> Transforms(adjectiveIStem, attach("かったり")),
     Sou.plain -> Transforms(adjectiveIStem, attach("そう")),
+    Adverb.plain -> Transforms(adjectiveIStem, attach("く")),
     // Negative
     NonPast.negative -> Transforms(adjectiveIStem, attach("くない")),
     Past.negative -> Transforms(adjectiveIStem, attach("くなかった")),
@@ -24,6 +25,7 @@ object AdjectiveI {
     Provisional.negative -> Transforms(adjectiveIStem, attach("くなければ")),
     Alternative.negative -> Transforms(adjectiveIStem, attach("くなかったり")),
     Sou.negative -> Transforms(adjectiveIStem, attach("くなさそう")),
+    Adverb.negative -> Transforms(adjectiveIStem, attach("くなく")),
     // Other
     Noun.plain -> Transforms(adjectiveIStem, attach("さ"))
   )
@@ -37,6 +39,7 @@ object AdjectiveI {
     Provisional.plain -> Transforms(detach("ければ"), attach("い")),
     Alternative.plain -> Transforms(detach("かったり"), attach("い")),
     Sou.plain -> Transforms(detach("そう"), attach("い")),
+    Adverb.plain -> Transforms(detach("く"), attach("い")),
     // Negative
     NonPast.negative -> Transforms(detach("くない"), attach("い")),
     Past.negative -> Transforms(detach("くなかった"), attach("い")),
@@ -45,6 +48,7 @@ object AdjectiveI {
     Provisional.negative -> Transforms(detach("くなければ"), attach("い")),
     Alternative.negative -> Transforms(detach("くなかったり"), attach("い")),
     Sou.negative -> Transforms(detach("くなさそう"), attach("い")),
+    Adverb.negative -> Transforms(detach("くなく"), attach("い")),
     // Other
     Noun.plain -> Transforms(detach("さ"), attach("い"))
   )

@@ -45,7 +45,7 @@ final case class LuceneReader[A: DocDecoder](
             searcher.search(query, hitsPerPage)
         }
 
-        Option.when (docs.scoreDocs.nonEmpty) {
+        Option.when(docs.scoreDocs.nonEmpty) {
           val hits = docs.scoreDocs
 
           val decodedDocs = hits.map { hit =>
@@ -69,7 +69,7 @@ final case class LuceneReader[A: DocDecoder](
             searcher.search(query, hitsPerPage, sort, true)
         }
 
-        Option.when (docs.scoreDocs.nonEmpty) {
+        Option.when(docs.scoreDocs.nonEmpty) {
           val hits = docs.scoreDocs
 
           val decodedDocs = hits.map { hit =>
