@@ -40,8 +40,14 @@ object Transformation {
     }
   }
 
+  def suruStem: Transform = {
+    case s if !s.endsWith("する") => Left("Verb must end in する")
+    case s if s.length < 2      => Left("Verb must be greater than 1 character")
+    case s                      => Right(NonEmptyChunk.single(s.stripSuffix("する")))
+  }
+
   def stemOf(stem: String): Transform = {
-    case s if !s.endsWith(stem) => Left(s"Verb must end in ${stem}")
+    case s if !s.endsWith(stem) => Left(s"Verb must end in $stem")
     case s if s.length < 2      => Left("Verb must be greater than 1 character")
     case s                      => Right(NonEmptyChunk.single(s.init))
   }

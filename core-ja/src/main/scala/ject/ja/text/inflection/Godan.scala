@@ -26,6 +26,7 @@ object Godan {
     Tai.plain -> Transforms(changeBase(Dan.I, "たい")),
     Progressive.plain -> Transforms(changeBase(Dan.I, "ている", "てる")),
     Form.of(Past, Potential) -> Transforms(changeBase(Dan.E, "た")),
+    Form.of(Tai, Te) -> Transforms(changeBase(Dan.I, "たくて")),
     // Polite
     NonPast.polite -> Transforms(changeBase(Dan.I, "ます")),
     Past.polite -> Transforms(changeBase(Dan.I, "ました")),
@@ -96,6 +97,7 @@ object Godan {
     Sou.plain -> Transforms(detach("そう"), shiftBase(Dan.I, Dan.U)),
     Tai.plain -> Transforms(detach("たい"), shiftBase(Dan.I, Dan.U)),
     Form.of(Past, Potential) -> Transforms(detach("た"), shiftBase(Dan.I, Dan.U)),
+    Form.of(Tai, Te) -> Transforms(detach("たくて"), shiftBase(Dan.I, Dan.U)),
     // Polite
     NonPast.polite -> Transforms(detach("ます"), shiftBase(Dan.I, Dan.U)),
     Past.polite -> Transforms(detach("ました"), shiftBase(Dan.I, Dan.U)),

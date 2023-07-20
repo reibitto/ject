@@ -26,6 +26,7 @@ object Iku {
       Tai.plain -> Transforms(stemOf("く"), attach("きたい")),
       Progressive.plain -> Transforms(stemOf("く"), attach("っている", "ってる")),
       Form.of(Past, Potential) -> Transforms(stemOf("く"), attach("けた")),
+      Form.of(Tai, Te) -> Transforms(stemOf("く"), attach("きたくて")),
       // Polite
       NonPast.polite -> Transforms(stemOf("く"), attach("きます")),
       Past.polite -> Transforms(stemOf("く"), attach("きました")),

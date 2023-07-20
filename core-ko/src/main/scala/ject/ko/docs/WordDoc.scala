@@ -9,6 +9,7 @@ import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
 import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
+import zio.ZIO
 
 final case class WordDoc(
   id: String,
@@ -43,39 +44,40 @@ object WordDoc {
       )
   }
 
-  val docEncoder: DocEncoder[WordDoc] = (a: WordDoc) => {
-    val doc = new Document()
+  val docEncoder: DocEncoder[WordDoc] = (a: WordDoc) =>
+    ZIO.attempt {
+      val doc = new Document()
 
-    doc.add(new StringField(WordField.Id.entryName, a.id, Field.Store.YES))
+      doc.add(new StringField(WordField.Id.entryName, a.id, Field.Store.YES))
 
-    a.hangulTerms.foreach { value =>
-      doc.add(new StringField(WordField.HangulTerm.entryName, value, Field.Store.YES))
-      doc.add(new TextField(WordField.HangulTermAnalyzed.entryName, value, Field.Store.NO))
+      a.hangulTerms.foreach { value =>
+        doc.add(new StringField(WordField.HangulTerm.entryName, value, Field.Store.YES))
+        doc.add(new TextField(WordField.HangulTermAnalyzed.entryName, value, Field.Store.NO))
+      }
+
+      a.hanjaTerms.foreach { value =>
+        doc.add(new StringField(WordField.HanjaTerm.entryName, value, Field.Store.YES))
+        doc.add(new TextField(WordField.HanjaTermAnalyzed.entryName, value, Field.Store.NO))
+      }
+
+      a.pronunciation.foreach { value =>
+        doc.add(new StringField(WordField.Pronunciation.entryName, value, Field.Store.YES))
+      }
+
+      a.definitionsEnglish.foreach { value =>
+        doc.add(new TextField(WordField.DefinitionEnglish.entryName, value, Field.Store.YES))
+        doc.add(new TextField(WordField.DefinitionEnglishOther.entryName, value, Field.Store.NO))
+      }
+
+      a.definitionsKorean.foreach { value =>
+        doc.add(new TextField(WordField.DefinitionKorean.entryName, value, Field.Store.YES))
+        doc.add(new TextField(WordField.DefinitionKoreanOther.entryName, value, Field.Store.NO))
+      }
+
+      a.partsOfSpeech.foreach { value =>
+        doc.add(new StringField(WordField.PartOfSpeech.entryName, value, Field.Store.YES))
+      }
+
+      doc
     }
-
-    a.hanjaTerms.foreach { value =>
-      doc.add(new StringField(WordField.HanjaTerm.entryName, value, Field.Store.YES))
-      doc.add(new TextField(WordField.HanjaTermAnalyzed.entryName, value, Field.Store.NO))
-    }
-
-    a.pronunciation.foreach { value =>
-      doc.add(new StringField(WordField.Pronunciation.entryName, value, Field.Store.YES))
-    }
-
-    a.definitionsEnglish.foreach { value =>
-      doc.add(new TextField(WordField.DefinitionEnglish.entryName, value, Field.Store.YES))
-      doc.add(new TextField(WordField.DefinitionEnglishOther.entryName, value, Field.Store.NO))
-    }
-
-    a.definitionsKorean.foreach { value =>
-      doc.add(new TextField(WordField.DefinitionKorean.entryName, value, Field.Store.YES))
-      doc.add(new TextField(WordField.DefinitionKoreanOther.entryName, value, Field.Store.NO))
-    }
-
-    a.partsOfSpeech.foreach { value =>
-      doc.add(new StringField(WordField.PartOfSpeech.entryName, value, Field.Store.YES))
-    }
-
-    doc
-  }
 }

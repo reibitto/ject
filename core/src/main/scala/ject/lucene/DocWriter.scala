@@ -8,13 +8,23 @@ trait DocWriter[A] {
 
   def docEncoder: DocEncoder[A]
 
-  def add(doc: A): Task[Long] = ZIO.attempt(writer.addDocument(docEncoder.encode(doc)))
+  def add(doc: A): Task[Unit] = {
+    for {
+      document <- docEncoder.encode(doc)
+      _        <- ZIO.attempt(writer.addDocument(document))
+    } yield ()
+  }
 
-  def addBulk(docs: A*): Task[Long] = {
+  def addBulk(docs: A*): Task[Unit] = {
     import scala.jdk.CollectionConverters.*
 
-    ZIO.attempt {
-      writer.addDocuments(docs.map(docEncoder.encode).asJava)
-    }
+    for {
+      documents <- ZIO.foreach(docs) { doc =>
+                     docEncoder.encode(doc)
+                   }
+      _ <- ZIO.attempt {
+             writer.addDocuments(documents.asJava)
+           }
+    } yield ()
   }
 }

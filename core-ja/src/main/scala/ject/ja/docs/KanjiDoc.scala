@@ -6,6 +6,7 @@ import ject.lucene.DocDecoder
 import ject.lucene.DocEncoder
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.*
+import zio.ZIO
 
 final case class KanjiDoc(
   kanji: String,
@@ -46,62 +47,65 @@ object KanjiDoc {
       )
   }
 
-  val docEncoder: DocEncoder[KanjiDoc] = (a: KanjiDoc) => {
-    val doc = new Document()
+  val docEncoder: DocEncoder[KanjiDoc] = (a: KanjiDoc) =>
+    ZIO.attempt {
+      val doc = new Document()
 
-    doc.add(new StringField(KanjiField.Kanji.entryName, a.kanji, Field.Store.YES))
+      doc.add(new StringField(KanjiField.Kanji.entryName, a.kanji, Field.Store.YES))
 
-    a.meaning.foreach { value =>
-      doc.add(new StringField(KanjiField.Meaning.entryName, value, Field.Store.YES))
+      a.meaning.foreach { value =>
+        doc.add(new StringField(KanjiField.Meaning.entryName, value, Field.Store.YES))
+      }
+
+      a.onYomi.foreach { value =>
+        doc.add(new StringField(KanjiField.OnYomi.entryName, value, Field.Store.YES))
+      }
+
+      a.kunYomi.foreach { value =>
+        doc.add(new TextField(KanjiField.KunYomi.entryName, value, Field.Store.YES))
+      }
+
+      a.nanori.foreach { value =>
+        doc.add(new StringField(KanjiField.Nanori.entryName, value, Field.Store.YES))
+      }
+
+      a.koreanReadings.foreach { value =>
+        doc.add(new StringField(KanjiField.KoreanReading.entryName, value, Field.Store.YES))
+      }
+
+      doc.add(new IntPoint(KanjiField.RadicalId.entryName, a.radicalId))
+      doc.add(new StoredField(KanjiField.RadicalId.entryName, a.radicalId))
+
+      a.parts.foreach { value =>
+        doc.add(new StringField(KanjiField.Parts.entryName, value, Field.Store.YES))
+      }
+
+      a.strokeCount.foreach { value =>
+        doc.add(new IntPoint(KanjiField.StrokeCount.entryName, value))
+        doc.add(new StoredField(KanjiField.StrokeCount.entryName, value))
+      }
+
+      a.frequency.foreach { value =>
+        doc.add(new IntPoint(KanjiField.Frequency.entryName, value))
+        doc.add(new StoredField(KanjiField.Frequency.entryName, value))
+      }
+
+      doc.add(
+        new SortedNumericDocValuesField(KanjiField.Frequency.entryName, a.frequency.getOrElse(Int.MaxValue).toLong)
+      )
+
+      a.jlpt.foreach { value =>
+        doc.add(new IntPoint(KanjiField.Jlpt.entryName, value))
+        doc.add(new StoredField(KanjiField.Jlpt.entryName, value))
+      }
+
+      a.grade.foreach { value =>
+        doc.add(new IntPoint(KanjiField.Grade.entryName, value))
+        doc.add(new StoredField(KanjiField.Grade.entryName, value))
+      }
+
+      doc.add(new SortedNumericDocValuesField(KanjiField.Grade.entryName, a.grade.getOrElse(Int.MaxValue).toLong))
+
+      doc
     }
-
-    a.onYomi.foreach { value =>
-      doc.add(new StringField(KanjiField.OnYomi.entryName, value, Field.Store.YES))
-    }
-
-    a.kunYomi.foreach { value =>
-      doc.add(new TextField(KanjiField.KunYomi.entryName, value, Field.Store.YES))
-    }
-
-    a.nanori.foreach { value =>
-      doc.add(new StringField(KanjiField.Nanori.entryName, value, Field.Store.YES))
-    }
-
-    a.koreanReadings.foreach { value =>
-      doc.add(new StringField(KanjiField.KoreanReading.entryName, value, Field.Store.YES))
-    }
-
-    doc.add(new IntPoint(KanjiField.RadicalId.entryName, a.radicalId))
-    doc.add(new StoredField(KanjiField.RadicalId.entryName, a.radicalId))
-
-    a.parts.foreach { value =>
-      doc.add(new StringField(KanjiField.Parts.entryName, value, Field.Store.YES))
-    }
-
-    a.strokeCount.foreach { value =>
-      doc.add(new IntPoint(KanjiField.StrokeCount.entryName, value))
-      doc.add(new StoredField(KanjiField.StrokeCount.entryName, value))
-    }
-
-    a.frequency.foreach { value =>
-      doc.add(new IntPoint(KanjiField.Frequency.entryName, value))
-      doc.add(new StoredField(KanjiField.Frequency.entryName, value))
-    }
-
-    doc.add(new SortedNumericDocValuesField(KanjiField.Frequency.entryName, a.frequency.getOrElse(Int.MaxValue).toLong))
-
-    a.jlpt.foreach { value =>
-      doc.add(new IntPoint(KanjiField.Jlpt.entryName, value))
-      doc.add(new StoredField(KanjiField.Jlpt.entryName, value))
-    }
-
-    a.grade.foreach { value =>
-      doc.add(new IntPoint(KanjiField.Grade.entryName, value))
-      doc.add(new StoredField(KanjiField.Grade.entryName, value))
-    }
-
-    doc.add(new SortedNumericDocValuesField(KanjiField.Grade.entryName, a.grade.getOrElse(Int.MaxValue).toLong))
-
-    doc
-  }
 }

@@ -11,6 +11,7 @@ import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
 import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
+import zio.{Task, ZIO}
 
 final case class WordDoc(
   id: String,
@@ -44,64 +45,75 @@ object WordDoc {
   }
 
   def docEncoder(includeInflections: Boolean): DocEncoder[WordDoc] = (a: WordDoc) => {
-    val doc = new Document()
+    for {
+      doc <- ZIO.attempt {
+               val doc = new Document()
 
-    doc.add(new StringField(WordField.Id.entryName, a.id, Field.Store.YES))
+               doc.add(new StringField(WordField.Id.entryName, a.id, Field.Store.YES))
 
-    a.kanjiTerms.foreach { value =>
-      doc.add(new StringField(WordField.KanjiTerm.entryName, value, Field.Store.YES))
-      doc.add(new TextField(WordField.KanjiTermAnalyzed.entryName, value, Field.Store.NO))
-    }
+               a.kanjiTerms.foreach { value =>
+                 doc.add(new StringField(WordField.KanjiTerm.entryName, value, Field.Store.YES))
+                 doc.add(new TextField(WordField.KanjiTermAnalyzed.entryName, value, Field.Store.NO))
+               }
 
-    a.readingTerms.foreach { value =>
-      doc.add(new StringField(WordField.ReadingTerm.entryName, value, Field.Store.YES))
-      doc.add(new TextField(WordField.ReadingTermAnalyzed.entryName, value, Field.Store.NO))
-    }
+               a.readingTerms.foreach { value =>
+                 doc.add(new StringField(WordField.ReadingTerm.entryName, value, Field.Store.YES))
+                 doc.add(new TextField(WordField.ReadingTermAnalyzed.entryName, value, Field.Store.NO))
+               }
 
-    a.definitions.foreach { value =>
-      doc.add(new TextField(WordField.Definition.entryName, value, Field.Store.YES))
-      doc.add(new TextField(WordField.DefinitionOther.entryName, value, Field.Store.NO))
-    }
+               a.definitions.foreach { value =>
+                 doc.add(new TextField(WordField.Definition.entryName, value, Field.Store.YES))
+                 doc.add(new TextField(WordField.DefinitionOther.entryName, value, Field.Store.NO))
+               }
 
-    a.tags.foreach { value =>
-      doc.add(new StringField(WordField.Tags.entryName, value, Field.Store.YES))
-    }
+               a.tags.foreach { value =>
+                 doc.add(new StringField(WordField.Tags.entryName, value, Field.Store.YES))
+               }
 
-    a.partsOfSpeech.foreach { value =>
-      doc.add(new StringField(WordField.PartOfSpeech.entryName, value, Field.Store.YES))
-    }
+               a.partsOfSpeech.foreach { value =>
+                 doc.add(new StringField(WordField.PartOfSpeech.entryName, value, Field.Store.YES))
+               }
 
-    if (includeInflections)
-      indexInflections(a, doc)
-
-    doc
+               doc
+             }
+      _ <- indexInflections(a, doc).when(includeInflections)
+    } yield doc
   }
 
-  private def indexInflections(a: WordDoc, doc: Document): Unit = {
-    def indexTerms(terms: Seq[String], field: WordField, wordType: WordType): Unit =
-      terms.foreach { value =>
-        Inflection.inflectAll(value, wordType).foreach {
-          case (_, Right(chunk)) =>
-            chunk.foreach { s =>
-              doc.add(new StringField(field.entryName, s, Field.Store.NO))
-            }
+  private def indexInflections(d: WordDoc, document: Document): Task[Unit] = {
+    def indexTerms(terms: Seq[String], field: WordField, wordType: WordType): Task[Unit] =
+      ZIO.foreachDiscard(terms) { value =>
+        ZIO.attempt {
+          Inflection.inflectAll(value, wordType).foreach {
+            case (_, Right(chunk)) =>
+              chunk.foreach { s =>
+                document.add(new StringField(field.entryName, s, Field.Store.NO))
+              }
 
-          case _ => ()
+            case _ => ()
+          }
         }
       }
 
-    if (a.partsOfSpeech.contains("adj-i")) {
-      indexTerms(a.kanjiTerms, WordField.KanjiTermInflected, WordType.AdjectiveI)
-      indexTerms(a.readingTerms, WordField.ReadingTermInflected, WordType.AdjectiveI)
-    } else if (a.partsOfSpeech.contains("v1")) {
-      indexTerms(a.kanjiTerms, WordField.KanjiTermInflected, WordType.VerbIchidan)
-      indexTerms(a.readingTerms, WordField.ReadingTermInflected, WordType.VerbIchidan)
-    } else if (a.partsOfSpeech.exists(_.startsWith("v5k-s"))) {
-      indexTerms(a.kanjiTerms, WordField.KanjiTermInflected, WordType.VerbIku)
-      indexTerms(a.readingTerms, WordField.ReadingTermInflected, WordType.VerbIku)
-    } else if (a.partsOfSpeech.exists(_.startsWith("v5"))) {
-      indexTerms(a.kanjiTerms, WordField.KanjiTermInflected, WordType.VerbGodan)
-      indexTerms(a.readingTerms, WordField.ReadingTermInflected, WordType.VerbGodan)
+    val wordTypeOpt =
+      if (d.partsOfSpeech.contains("adj-i"))
+        Some(WordType.AdjectiveI)
+      else if (d.partsOfSpeech.contains("v1"))
+        Some(WordType.VerbIchidan)
+      else if (d.partsOfSpeech.exists(_.startsWith("v5k-s")))
+        Some(WordType.VerbIku)
+      else if (d.partsOfSpeech.exists(_.startsWith("v5")))
+        Some(WordType.VerbGodan)
+      else if (d.partsOfSpeech.contains("vs") || d.partsOfSpeech.contains("vs-s"))
+        Some(WordType.VerbSuru)
+      else
+        None
+
+    ZIO.foreachDiscard(wordTypeOpt) { wordType =>
+      for {
+        _ <- indexTerms(d.kanjiTerms, WordField.KanjiTermInflected, wordType)
+        _ <- indexTerms(d.readingTerms, WordField.ReadingTermInflected, wordType)
+      } yield ()
     }
   }
 }

@@ -25,6 +25,7 @@ object Ichidan {
     Tai.plain -> Transforms(ichidanStem, attach("たい")),
     Progressive.plain -> Transforms(ichidanStem, attach("ている", "てる")),
     Form.of(Past, Potential) -> Transforms(ichidanStem, attach("られた")),
+    Form.of(Tai, Te) -> Transforms(ichidanStem, attach("たくて")),
     // Polite
     NonPast.polite -> Transforms(ichidanStem, attach("ます")),
     Past.polite -> Transforms(ichidanStem, attach("ました")),
@@ -95,6 +96,7 @@ object Ichidan {
     Sou.plain -> Transforms(detach("そう"), attach("る")),
     Tai.plain -> Transforms(detach("たい"), attach("る")),
     Form.of(Past, Potential) -> Transforms(detach("られた"), attach("る")),
+    Form.of(Tai, Te) -> Transforms(detach("たくて"), attach("る")),
     // Polite
     NonPast.polite -> Transforms(detach("ます"), attach("る")),
     Past.polite -> Transforms(detach("ました"), attach("る")),

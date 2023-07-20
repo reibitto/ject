@@ -45,7 +45,7 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
         case (SearchPattern.Default(text), SearchType.Kanji) =>
           val prefixScoreBoost = text.length match {
             case 1 => 10
-            case 2 => 25
+            case 2 => 50
             case 3 => 100
             case _ => 1000
           }
@@ -61,7 +61,7 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
         case (SearchPattern.Default(text), SearchType.Reading) =>
           val prefixScoreBoost = text.length match {
             case 1 => 10
-            case 2 => 25
+            case 2 => 50
             case 3 => 100
             case _ => 1000
           }
