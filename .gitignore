@@ -2,7 +2,10 @@ target
 .idea
 .idea_modules
 .bloop
-.metals
+.metals/
+metals.sbt
+metals/project/
+.vscode/
 .bsp
 /.classpath
 /.project
