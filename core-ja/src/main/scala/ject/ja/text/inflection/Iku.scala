@@ -25,7 +25,8 @@ object Iku {
       Sou.plain -> Transforms(stemOf("く"), attach("きそう")),
       Tai.plain -> Transforms(stemOf("く"), attach("きたい")),
       Progressive.plain -> Transforms(stemOf("く"), attach("っている", "ってる")),
-      Form.of(Past, Potential) -> Transforms(stemOf("く"), attach("けた")),
+      Form.of(Potential, Te) -> Transforms(stemOf("く"), attach("けて")),
+      Form.of(Potential, Past) -> Transforms(stemOf("く"), attach("けた")),
       Form.of(Tai, Te) -> Transforms(stemOf("く"), attach("きたくて")),
       // Polite
       NonPast.polite -> Transforms(stemOf("く"), attach("きます")),
@@ -41,7 +42,8 @@ object Iku {
       Alternative.polite -> Transforms(stemOf("く"), attach("きましたり")),
       Imperative.polite -> Transforms(stemOf("く"), attach("きなさい")),
       Progressive.polite -> Transforms(stemOf("く"), attach("っています", "ってます")),
-      Form.of(Past, Potential).polite -> Transforms(stemOf("く"), attach("けました")),
+      Form.of(Potential, Te).polite -> Transforms(stemOf("く"), attach("けまして")),
+      Form.of(Potential, Past).polite -> Transforms(stemOf("く"), attach("けました")),
       // Negative
       NonPast.negative -> Transforms(stemOf("く"), attach("かない", "かぬ", "かず")),
       Past.negative -> Transforms(stemOf("く"), attach("かなかった")),
@@ -60,7 +62,8 @@ object Iku {
       Tai.negative -> Transforms(stemOf("く"), attach("きたくない")),
       Progressive.negative -> Transforms(stemOf("く"), attach("っていない", "ってない")),
       Form.of(Tai, Sou).negative -> Transforms(stemOf("く"), attach("きたくなさそう")),
-      Form.of(Past, Potential).negative -> Transforms(stemOf("く"), attach("けなかった")),
+      Form.of(Potential, Te).negative -> Transforms(stemOf("く"), attach("けなくて")),
+      Form.of(Potential, Past).negative -> Transforms(stemOf("く"), attach("けなかった")),
       // Polite negative
       NonPast.polite.negative -> Transforms(stemOf("く"), attach("きません")),
       Past.polite.negative -> Transforms(stemOf("く"), attach("きませんでした")),
@@ -75,7 +78,8 @@ object Iku {
       Alternative.polite.negative -> Transforms(stemOf("く"), attach("きませんでしたり")),
       Imperative.polite.negative -> Transforms(stemOf("く"), attach("きなさるな")),
       Progressive.polite.negative -> Transforms(stemOf("く"), attach("っていません", "ってません")),
-      Form.of(Past, Potential).polite.negative -> Transforms(stemOf("く"), attach("けませんでした"))
+      Form.of(Potential, Te).polite.negative -> Transforms(stemOf("く"), attach("けませんでして")),
+      Form.of(Potential, Past).polite.negative -> Transforms(stemOf("く"), attach("けませんでした"))
     )
 
   val deinflections: Map[Form, Transform] = Map.empty // TODO: Implement

@@ -5,7 +5,7 @@ import zio.*
 import zio.stream.{ZPipeline, ZSink, ZStream}
 import zio.Console.printLine
 
-import java.net.URL
+import java.net.{URI, URL}
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
@@ -36,7 +36,7 @@ object JMDictIO {
    * extracts it.
    */
   def download(destination: Path): ZIO[Any, Throwable, Long] = {
-    val url = new URL("http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz")
+    val url = new URI("http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz").toURL
 
     ZIO.scoped {
       for {

@@ -1,18 +1,26 @@
 package ject.ja.text.inflection
 
-import ject.ja.text.Form
 import ject.ja.text.SubForm.*
 import ject.ja.text.Syllabary.Dan
 import ject.ja.text.Transformation.*
+import ject.ja.text.Form
 import ject.ja.text.Transforms
+import zio.NonEmptyChunk
 
 object Godan {
-
   val inflections: Map[Form, Transform] = Map(
     // Plain
     NonPast.plain -> Transforms.identity,
     Past.plain -> Transforms(godanStem, attach("た")),
-    Te.plain -> Transforms(godanStem, attach("て")),
+    Te.plain -> Transforms.withInitial { s =>
+      NonEmptyChunk(
+        godanStem,
+        if (s.endsWith("ぐ") || s.endsWith("む") || s.endsWith("ぬ") || s.endsWith("ぶ"))
+          attach("で")
+        else
+          attach("て")
+      )
+    },
     Conditional.plain -> Transforms(godanStem, attach("たら")),
     Provisional.plain -> Transforms(changeBase(Dan.E, "ば")),
     Potential.plain -> Transforms(changeBase(Dan.E, "る")),
@@ -25,7 +33,11 @@ object Godan {
     Sou.plain -> Transforms(changeBase(Dan.I, "そう")),
     Tai.plain -> Transforms(changeBase(Dan.I, "たい")),
     Progressive.plain -> Transforms(changeBase(Dan.I, "ている", "てる")),
-    Form.of(Past, Potential) -> Transforms(changeBase(Dan.E, "た")),
+    Form.of(Potential, Te) -> Transforms(changeBase(Dan.E, "て")),
+    Form.of(Potential, Past) -> Transforms(changeBase(Dan.E, "た")),
+    Form.of(Passive, Stem) -> Transforms(changeBase(Dan.A, "れ")),
+    Form.of(Passive, Te) -> Transforms(changeBase(Dan.A, "れて")),
+    Form.of(Passive, Past) -> Transforms(changeBase(Dan.A, "れた")),
     Form.of(Tai, Te) -> Transforms(changeBase(Dan.I, "たくて")),
     // Polite
     NonPast.polite -> Transforms(changeBase(Dan.I, "ます")),
@@ -41,7 +53,8 @@ object Godan {
     Alternative.polite -> Transforms(changeBase(Dan.I, "ましたり")),
     Imperative.polite -> Transforms(changeBase(Dan.I, "なさい")),
     Progressive.polite -> Transforms(changeBase(Dan.I, "ています", "てます")),
-    Form.of(Past, Potential).polite -> Transforms(changeBase(Dan.E, "ました")),
+    Form.of(Potential, Te).polite -> Transforms(changeBase(Dan.E, "まして")),
+    Form.of(Potential, Past).polite -> Transforms(changeBase(Dan.E, "ました")),
     // Negative
     NonPast.negative -> Transforms(changeBase(Dan.A, "ない", "ぬ", "ず")),
     Past.negative -> Transforms(changeBase(Dan.A, "なかった")),
@@ -60,7 +73,8 @@ object Godan {
     Tai.negative -> Transforms(changeBase(Dan.I, "たくない")),
     Progressive.negative -> Transforms(changeBase(Dan.I, "ていない", "てない")),
     Form.of(Tai, Sou).negative -> Transforms(changeBase(Dan.I, "たくなさそう")),
-    Form.of(Past, Potential).negative -> Transforms(changeBase(Dan.E, "なかった")),
+    Form.of(Potential, Te).negative -> Transforms(changeBase(Dan.E, "なくて")),
+    Form.of(Potential, Past).negative -> Transforms(changeBase(Dan.E, "なかった")),
     // Polite negative
     NonPast.polite.negative -> Transforms(changeBase(Dan.I, "ません")),
     Past.polite.negative -> Transforms(changeBase(Dan.I, "ませんでした")),
@@ -75,7 +89,8 @@ object Godan {
     Alternative.polite.negative -> Transforms(changeBase(Dan.I, "ませんでしたり")),
     Imperative.polite.negative -> Transforms(changeBase(Dan.I, "なさるな")),
     Progressive.polite.negative -> Transforms(changeBase(Dan.I, "ていません", "てません")),
-    Form.of(Past, Potential).polite.negative -> Transforms(changeBase(Dan.E, "ませんでした")),
+    Form.of(Potential, Te).polite.negative -> Transforms(changeBase(Dan.E, "ませんでして")),
+    Form.of(Potential, Past).polite.negative -> Transforms(changeBase(Dan.E, "ませんでした")),
     // Other
     Form.of(Stem) -> Transforms(changeBase(Dan.I, ""))
   )
@@ -96,7 +111,11 @@ object Godan {
     Imperative.plain -> Transforms(shiftBase(Dan.E, Dan.U)),
     Sou.plain -> Transforms(detach("そう"), shiftBase(Dan.I, Dan.U)),
     Tai.plain -> Transforms(detach("たい"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Past, Potential) -> Transforms(detach("た"), shiftBase(Dan.I, Dan.U)),
+    Form.of(Potential, Te) -> Transforms(detach("て"), shiftBase(Dan.I, Dan.U)),
+    Form.of(Potential, Past) -> Transforms(detach("た"), shiftBase(Dan.I, Dan.U)),
+    Form.of(Passive, Stem) -> Transforms(detach("れ"), shiftBase(Dan.A, Dan.U)),
+    Form.of(Passive, Te) -> Transforms(detach("れて"), shiftBase(Dan.A, Dan.U)),
+    Form.of(Passive, Past) -> Transforms(detach("れた"), shiftBase(Dan.A, Dan.U)),
     Form.of(Tai, Te) -> Transforms(detach("たくて"), shiftBase(Dan.I, Dan.U)),
     // Polite
     NonPast.polite -> Transforms(detach("ます"), shiftBase(Dan.I, Dan.U)),
@@ -111,7 +130,8 @@ object Godan {
     Volitional.polite -> Transforms(detach("ましょう"), shiftBase(Dan.I, Dan.U)),
     Alternative.polite -> Transforms(detach("ましたり"), shiftBase(Dan.I, Dan.U)),
     Imperative.polite -> Transforms(detach("なさい"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Past, Potential).polite -> Transforms(detach("ました"), shiftBase(Dan.E, Dan.U)),
+    Form.of(Potential, Te).polite -> Transforms(detach("まして"), shiftBase(Dan.E, Dan.U)),
+    Form.of(Potential, Past).polite -> Transforms(detach("ました"), shiftBase(Dan.E, Dan.U)),
     // Negative
     NonPast.negative -> Transforms(detach("ない", "ぬ", "ず"), shiftBase(Dan.A, Dan.U)),
     Past.negative -> Transforms(detach("なかった"), shiftBase(Dan.A, Dan.U)),
@@ -129,7 +149,8 @@ object Godan {
     Form.of(Potential, Sou).negative -> Transforms(detach("なさそう"), shiftBase(Dan.E, Dan.U)),
     Tai.negative -> Transforms(detach("たくない"), shiftBase(Dan.I, Dan.U)),
     Form.of(Tai, Sou).negative -> Transforms(detach("たくなさそう"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Past, Potential).negative -> Transforms(detach("なかった"), shiftBase(Dan.E, Dan.U)),
+    Form.of(Potential, Te).negative -> Transforms(detach("なくて"), shiftBase(Dan.E, Dan.U)),
+    Form.of(Potential, Past).negative -> Transforms(detach("なかった"), shiftBase(Dan.E, Dan.U)),
     // Polite negative
     NonPast.polite.negative -> Transforms(detach("ません"), shiftBase(Dan.I, Dan.U)),
     Past.polite.negative -> Transforms(detach("ませんでした"), shiftBase(Dan.I, Dan.U)),
@@ -143,7 +164,8 @@ object Godan {
     Volitional.polite.negative -> Transforms(detach("ますまい"), shiftBase(Dan.I, Dan.U)),
     Alternative.polite.negative -> Transforms(detach("ませんでしたり"), shiftBase(Dan.I, Dan.U)),
     Imperative.polite.negative -> Transforms(detach("なさるな"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Past, Potential).polite.negative -> Transforms(detach("ませんでした"), shiftBase(Dan.E, Dan.U)),
+    Form.of(Potential, Te).polite.negative -> Transforms(detach("ませんでして"), shiftBase(Dan.E, Dan.U)),
+    Form.of(Potential, Past).polite.negative -> Transforms(detach("ませんでした"), shiftBase(Dan.E, Dan.U)),
     // Other
     Form.of(Stem) -> Transforms(shiftBase(Dan.I, Dan.U))
   )

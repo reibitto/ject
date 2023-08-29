@@ -2,16 +2,19 @@ package ject.ja.io
 
 import ject.ja.docs.KanjiDoc
 import ject.ja.entity.Radical
-import zio.{RIO, ZIO}
-import zio.stream.{ZSink, ZStream}
 import zio.Console.printLine
+import zio.stream.ZSink
+import zio.stream.ZStream
+import zio.RIO
+import zio.ZIO
 
-import java.net.URL
+import java.net.URI
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 import javax.xml.parsers.SAXParserFactory
-import scala.xml.{Elem, SAXParser}
 import scala.xml.factory.XMLLoader
+import scala.xml.Elem
+import scala.xml.SAXParser
 
 object KanjidicIO {
 
@@ -33,7 +36,7 @@ object KanjidicIO {
 
   /** Downloads the latest kanjidic file and extracts it. */
   def download(destination: Path): RIO[Any, Long] = {
-    val url = new URL("http://www.edrdg.org/kanjidic/kanjidic2.xml.gz")
+    val url = new URI("http://www.edrdg.org/kanjidic/kanjidic2.xml.gz").toURL
 
     ZIO.scoped {
       for {

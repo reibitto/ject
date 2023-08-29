@@ -24,7 +24,12 @@ object Ichidan {
     Sou.plain -> Transforms(ichidanStem, attach("そう")),
     Tai.plain -> Transforms(ichidanStem, attach("たい")),
     Progressive.plain -> Transforms(ichidanStem, attach("ている", "てる")),
-    Form.of(Past, Potential) -> Transforms(ichidanStem, attach("られた")),
+    Form.of(Potential, Stem) -> Transforms(ichidanStem, attach("られ")),
+    Form.of(Potential, Te) -> Transforms(ichidanStem, attach("られて")),
+    Form.of(Potential, Past) -> Transforms(ichidanStem, attach("られた")),
+    Form.of(Passive, Stem) -> Transforms(ichidanStem, attach("られ")),
+    Form.of(Passive, Te) -> Transforms(ichidanStem, attach("られて")),
+    Form.of(Passive, Past) -> Transforms(ichidanStem, attach("られた")),
     Form.of(Tai, Te) -> Transforms(ichidanStem, attach("たくて")),
     // Polite
     NonPast.polite -> Transforms(ichidanStem, attach("ます")),
@@ -40,7 +45,8 @@ object Ichidan {
     Alternative.polite -> Transforms(ichidanStem, attach("ましたり")),
     Imperative.polite -> Transforms(ichidanStem, attach("なさい")),
     Progressive.polite -> Transforms(ichidanStem, attach("ています", "てます")),
-    Form.of(Past, Potential).polite -> Transforms(ichidanStem, attach("られました")),
+    Form.of(Potential, Te).polite -> Transforms(ichidanStem, attach("られまして")),
+    Form.of(Potential, Past).polite -> Transforms(ichidanStem, attach("られました")),
     // Negative
     NonPast.negative -> Transforms(ichidanStem, attach("ない", "ぬ", "ず")),
     Past.negative -> Transforms(ichidanStem, attach("なかった")),
@@ -59,7 +65,8 @@ object Ichidan {
     Tai.negative -> Transforms(ichidanStem, attach("たくない")),
     Progressive.negative -> Transforms(ichidanStem, attach("いない", "ない")),
     Form.of(Tai, Sou).negative -> Transforms(ichidanStem, attach("たくなさそう")),
-    Form.of(Past, Potential).negative -> Transforms(ichidanStem, attach("られなかった")),
+    Form.of(Potential, Te).negative -> Transforms(ichidanStem, attach("られなくて")),
+    Form.of(Potential, Past).negative -> Transforms(ichidanStem, attach("られなかった")),
     // Polite negative
     NonPast.polite.negative -> Transforms(ichidanStem, attach("ません")),
     Past.polite.negative -> Transforms(ichidanStem, attach("ませんでした")),
@@ -74,7 +81,8 @@ object Ichidan {
     Alternative.polite.negative -> Transforms(ichidanStem, attach("ませんでしたり")),
     Imperative.polite.negative -> Transforms(ichidanStem, attach("なさるな")),
     Progressive.polite.negative -> Transforms(ichidanStem, attach("いません", "ません")),
-    Form.of(Past, Potential).polite.negative -> Transforms(ichidanStem, attach("られませんでした")),
+    Form.of(Potential, Te).polite.negative -> Transforms(ichidanStem, attach("られませんでして")),
+    Form.of(Potential, Past).polite.negative -> Transforms(ichidanStem, attach("られませんでした")),
     // Other
     Form.of(Stem) -> Transforms(ichidanStem)
   )
@@ -95,7 +103,12 @@ object Ichidan {
     Imperative.plain -> Transforms(detach("ろ"), attach("る")),
     Sou.plain -> Transforms(detach("そう"), attach("る")),
     Tai.plain -> Transforms(detach("たい"), attach("る")),
-    Form.of(Past, Potential) -> Transforms(detach("られた"), attach("る")),
+    Form.of(Potential, Stem) -> Transforms(detach("られ"), attach("る")),
+    Form.of(Potential, Te) -> Transforms(detach("られて"), attach("る")),
+    Form.of(Potential, Past) -> Transforms(detach("られた"), attach("る")),
+    Form.of(Passive, Stem) -> Transforms(detach("られ"), attach("る")),
+    Form.of(Passive, Te) -> Transforms(detach("られて"), attach("る")),
+    Form.of(Passive, Past) -> Transforms(detach("られた"), attach("る")),
     Form.of(Tai, Te) -> Transforms(detach("たくて"), attach("る")),
     // Polite
     NonPast.polite -> Transforms(detach("ます"), attach("る")),
@@ -110,7 +123,8 @@ object Ichidan {
     Volitional.polite -> Transforms(detach("ましょう"), attach("る")),
     Alternative.polite -> Transforms(detach("ましたり"), attach("る")),
     Imperative.polite -> Transforms(detach("なさい"), attach("る")),
-    Form.of(Past, Potential).polite -> Transforms(detach("られました"), attach("る")),
+    Form.of(Potential, Te).polite -> Transforms(detach("られまして"), attach("る")),
+    Form.of(Potential, Past).polite -> Transforms(detach("られました"), attach("る")),
     // Negative
     NonPast.negative -> Transforms(detach("ない", "ぬ", "ず"), attach("る")),
     Past.negative -> Transforms(detach("なかった"), attach("る")),
@@ -128,7 +142,8 @@ object Ichidan {
     Form.of(Potential, Sou).negative -> Transforms(detach("られなさそう"), attach("る")),
     Tai.negative -> Transforms(detach("たくない"), attach("る")),
     Form.of(Tai, Sou).negative -> Transforms(detach("たくなさそう"), attach("る")),
-    Form.of(Past, Potential).negative -> Transforms(detach("られなかった"), attach("る")),
+    Form.of(Potential, Te).negative -> Transforms(detach("られなくて"), attach("る")),
+    Form.of(Potential, Past).negative -> Transforms(detach("られなかった"), attach("る")),
     // Polite negative
     NonPast.polite.negative -> Transforms(detach("ません"), attach("る")),
     Past.polite.negative -> Transforms(detach("ませんでした"), attach("る")),
@@ -142,7 +157,8 @@ object Ichidan {
     Volitional.polite.negative -> Transforms(detach("ますまい"), attach("る")),
     Alternative.polite.negative -> Transforms(detach("ませんでしたり"), attach("る")),
     Imperative.polite.negative -> Transforms(detach("なさるな"), attach("る")),
-    Form.of(Past, Potential).polite.negative -> Transforms(detach("られませんでした"), attach("る")),
+    Form.of(Potential, Te).polite.negative -> Transforms(detach("られませんでして"), attach("る")),
+    Form.of(Potential, Past).polite.negative -> Transforms(detach("られませんでした"), attach("る")),
     // Other
     Form.of(Stem) -> Transforms(attach("る"))
   )

@@ -34,4 +34,4 @@ local.conf
 /data/krdict
 publish.sbt
 /wordplay/build
-Scratch.scala
+Playground.scala

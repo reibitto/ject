@@ -104,7 +104,7 @@ object WordDoc {
         Some(WordType.VerbIku)
       else if (d.partsOfSpeech.exists(_.startsWith("v5")))
         Some(WordType.VerbGodan)
-      else if (d.partsOfSpeech.contains("vs") || d.partsOfSpeech.contains("vs-s"))
+      else if (d.partsOfSpeech.contains("vs") || d.partsOfSpeech.contains("vs-s") || d.partsOfSpeech.contains("vs-i"))
         Some(WordType.VerbSuru)
       else
         None

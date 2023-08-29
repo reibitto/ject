@@ -16,6 +16,9 @@ object Transforms {
     }
   }
 
+  def withInitial(f: String => NonEmptyChunk[Transform]): Transform =
+    (s: String) => Transforms.apply(f(s)*)(s)
+
   def identity: Transform = s => Right(NonEmptyChunk.single(s))
 
   def pure(s: String): Transform = _ => Right(NonEmptyChunk.single(s))
