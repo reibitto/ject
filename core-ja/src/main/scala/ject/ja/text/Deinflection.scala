@@ -30,7 +30,7 @@ object Deinflection {
     }
   }
 
-  private def deinflectionsFor(wordType: WordType): Map[Form, Transform] = {
+  private def deinflectionsFor(wordType: WordType): Map[Form, Transform] =
     wordType match {
       case WordType.VerbIchidan => Ichidan.deinflections
       case WordType.VerbGodan   => Godan.deinflections
@@ -41,5 +41,4 @@ object Deinflection {
       case wordType @ WordType.AdjectiveNa =>
         throw new NotImplementedError(s"Deinflections for $wordType not yet supported.")
     }
-  }
 }

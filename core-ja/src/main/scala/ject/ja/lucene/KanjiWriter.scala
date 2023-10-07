@@ -13,9 +13,9 @@ final case class KanjiWriter(writer: IndexWriter, docEncoder: DocEncoder[KanjiDo
 object KanjiWriter {
 
   def make(
-    directory: Path,
-    encoder: DocEncoder[KanjiDoc] = KanjiDoc.docEncoder,
-    autoCommitOnRelease: Boolean = true
+      directory: Path,
+      encoder: DocEncoder[KanjiDoc] = KanjiDoc.docEncoder,
+      autoCommitOnRelease: Boolean = true
   ): ZIO[Scope, Throwable, KanjiWriter] =
     (for {
       config <- ZIO.attempt(new IndexWriterConfig(KanjiDoc.docDecoder.analyzer))

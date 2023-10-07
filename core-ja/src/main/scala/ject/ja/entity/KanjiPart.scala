@@ -1,10 +1,10 @@
 package ject.ja.entity
 
 final case class KanjiPart(
-  character: String,
-  strokeCount: Int,
-  composition: KanjiComposition,
-  radical: String
+    character: String,
+    strokeCount: Int,
+    composition: KanjiComposition,
+    radical: String
 )
 
 sealed trait KanjiComposition

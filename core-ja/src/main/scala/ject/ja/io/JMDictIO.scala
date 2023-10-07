@@ -31,10 +31,9 @@ object JMDictIO {
     }
   }
 
-  /**
-   * Downloads the latest JMDict file (with English definitions only) and
-   * extracts it.
-   */
+  /** Downloads the latest JMDict file (with English definitions only) and
+    * extracts it.
+    */
   def download(destination: Path): ZIO[Any, Throwable, Long] = {
     val url = new URI("http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz").toURL
 
@@ -47,10 +46,9 @@ object JMDictIO {
     }
   }
 
-  /**
-   * Normalizes the JMDict file. This is mainly done as a workaround to prevent
-   * unwanted XML entity expansions, particularly for tags and parts of speech.
-   */
+  /** Normalizes the JMDict file. This is mainly done as a workaround to prevent
+    * unwanted XML entity expansions, particularly for tags and parts of speech.
+    */
   def normalize(input: Path, output: Path): ZIO[Any, Throwable, Long] = {
     val entityRegex = """<!ENTITY (\S+) "(.+?)">""".r
 

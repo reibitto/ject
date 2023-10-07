@@ -13,9 +13,9 @@ final case class WordWriter(writer: IndexWriter, docEncoder: DocEncoder[WordDoc]
 object WordWriter {
 
   def make(
-    directory: Path,
-    encoder: DocEncoder[WordDoc] = WordDoc.docEncoder(includeInflections = true),
-    autoCommitOnRelease: Boolean = true
+      directory: Path,
+      encoder: DocEncoder[WordDoc] = WordDoc.docEncoder(includeInflections = true),
+      autoCommitOnRelease: Boolean = true
   ): ZIO[Scope, Throwable, WordWriter] =
     (for {
       config <- ZIO.attempt(new IndexWriterConfig(WordDoc.docDecoder.analyzer))

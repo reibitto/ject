@@ -9,7 +9,7 @@ object Transformation {
   type Transform = String => Either[String, NonEmptyChunk[String]]
 
   def multiParam(
-    k: String => Either[String, NonEmptyChunk[String]]
+      k: String => Either[String, NonEmptyChunk[String]]
   ): Chunk[String] => Either[String, NonEmptyChunk[String]] = { (params: Chunk[String]) =>
     val collected = params.flatMap { p =>
       k(p).fold(_ => Chunk.empty, _.toChunk)

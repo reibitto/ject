@@ -12,13 +12,13 @@ import org.apache.lucene.document.TextField
 import zio.ZIO
 
 final case class WordDoc(
-  id: String,
-  hangulTerms: Seq[String],
-  hanjaTerms: Seq[String],
-  pronunciation: Seq[String],
-  definitionsEnglish: Seq[String],
-  definitionsKorean: Seq[String],
-  partsOfSpeech: Seq[String]
+    id: String,
+    hangulTerms: Seq[String],
+    hanjaTerms: Seq[String],
+    pronunciation: Seq[String],
+    definitionsEnglish: Seq[String],
+    definitionsKorean: Seq[String],
+    partsOfSpeech: Seq[String]
 ) {
 
   def render: String = {

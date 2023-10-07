@@ -8,12 +8,11 @@ trait DocWriter[A] {
 
   def docEncoder: DocEncoder[A]
 
-  def add(doc: A): Task[Unit] = {
+  def add(doc: A): Task[Unit] =
     for {
       document <- docEncoder.encode(doc)
       _        <- ZIO.attempt(writer.addDocument(document))
     } yield ()
-  }
 
   def addBulk(docs: A*): Task[Unit] = {
     import scala.jdk.CollectionConverters.*

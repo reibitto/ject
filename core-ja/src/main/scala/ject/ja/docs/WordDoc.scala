@@ -14,12 +14,12 @@ import org.apache.lucene.document.TextField
 import zio.{Task, ZIO}
 
 final case class WordDoc(
-  id: String,
-  kanjiTerms: Seq[String],
-  readingTerms: Seq[String],
-  definitions: Seq[String],
-  tags: Seq[String],
-  partsOfSpeech: Seq[String]
+    id: String,
+    kanjiTerms: Seq[String],
+    readingTerms: Seq[String],
+    definitions: Seq[String],
+    tags: Seq[String],
+    partsOfSpeech: Seq[String]
 ) {
 
   def render: String = {
@@ -44,7 +44,7 @@ object WordDoc {
       )
   }
 
-  def docEncoder(includeInflections: Boolean): DocEncoder[WordDoc] = (a: WordDoc) => {
+  def docEncoder(includeInflections: Boolean): DocEncoder[WordDoc] = (a: WordDoc) =>
     for {
       doc <- ZIO.attempt {
                val doc = new Document()
@@ -78,7 +78,6 @@ object WordDoc {
              }
       _ <- indexInflections(a, doc).when(includeInflections)
     } yield doc
-  }
 
   private def indexInflections(d: WordDoc, document: Document): Task[Unit] = {
     def indexTerms(terms: Seq[String], field: WordField, wordType: WordType): Task[Unit] =
