@@ -1,5 +1,5 @@
 object V {
-  val enumeratum = "1.7.2"
+  val enumeratum = "1.7.3"
 
   val jsoup = "1.16.1"
 
@@ -9,11 +9,9 @@ object V {
 
   val slf4j = "1.7.36"
 
-  val slinky = "0.6.8"
+  val sttp = "3.9.0"
 
-  val sttp = "3.8.16"
-
-  val zio = "2.0.15"
+  val zio = "2.0.18"
 
   val zioProcess = "0.7.2"
 }

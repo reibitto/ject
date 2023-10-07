@@ -1,13 +1,14 @@
 package ject.ja.text.inflection
 
+import ject.ja.text.Form
 import ject.ja.text.SubForm.*
 import ject.ja.text.Syllabary.Dan
 import ject.ja.text.Transformation.*
-import ject.ja.text.Form
 import ject.ja.text.Transforms
 import zio.NonEmptyChunk
 
 object Godan {
+
   val inflections: Map[Form, Transform] = Map(
     // Plain
     NonPast.plain -> Transforms.identity,

@@ -2,9 +2,9 @@ package ject.ja.io
 
 import ject.ja.docs.KanjiDoc
 import ject.ja.entity.Radical
-import zio.Console.printLine
 import zio.stream.ZSink
 import zio.stream.ZStream
+import zio.Console.printLine
 import zio.RIO
 import zio.ZIO
 

@@ -33,5 +33,4 @@ local.conf
 /data/lucene-stable
 /data/krdict
 publish.sbt
-/wordplay/build
 Playground.scala

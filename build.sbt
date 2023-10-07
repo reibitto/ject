@@ -1,6 +1,6 @@
-import sbt._
-import sbt.Keys._
-import sbtwelcome._
+import sbt.*
+import sbt.Keys.*
+import sbtwelcome.*
 
 inThisBuild(
   List(
@@ -15,13 +15,11 @@ inThisBuild(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core, coreJapanese, coreKorean, examples, wordplay)
+  .aggregate(core, coreJapanese, coreKorean, examples)
   .settings(
     name := "ject",
     addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll"),
     addCommandAlias("fmtCheck", "all root/scalafmtSbtCheck root/scalafmtCheckAll"),
-    addCommandAlias("wordplay-dev", ";wordplay/fastOptJS::startWebpackDevServer;~wordplay/fastOptJS"),
-    addCommandAlias("wordplay-build", "wordplay/fullOptJS::webpack"),
     logo :=
       s"""
          |    o8o                         .
@@ -37,19 +35,16 @@ lazy val root = project
          |
          |""".stripMargin,
     usefulTasks := Seq(
-      UsefulTask("a", "~compile", "Compile all modules with file-watch enabled"),
+      UsefulTask("~compile", "Compile all modules with file-watch enabled"),
       UsefulTask(
-        "b",
         "examples/runMain ject.examples.JMDictMain",
         "Download Japanese-English dictionary and create Lucene index"
       ),
       UsefulTask(
-        "c",
         "examples/runMain ject.examples.KanjidicMain",
         "Download kanjidic and create Lucene index"
       ),
-      UsefulTask("d", "fmt", "Run scalafmt on the entire project"),
-      UsefulTask("e", "wordplay-dev", "Start wordplay at localhost:8080 with hot reloading enabled")
+      UsefulTask("fmt", "Run scalafmt on the entire project")
     )
   )
 
@@ -101,41 +96,6 @@ lazy val examples = module("examples")
     run / baseDirectory := file("."),
     publish / skip := true
   )
-
-lazy val wordplay = module("wordplay")
-  .settings(
-    fork := true,
-    Test / fork := false,
-    run / baseDirectory := file("."),
-    publish / skip := true,
-    libraryDependencies ++= Seq(
-      "me.shadaj" %%% "slinky-web" % V.slinky,
-      "me.shadaj" %%% "slinky-hot" % V.slinky
-    ),
-    Compile / npmDependencies ++= Seq(
-      "react" -> "16.13.1",
-      "react-dom" -> "16.13.1",
-      "react-proxy" -> "1.1.8"
-    ),
-    Compile / npmDevDependencies ++= Seq(
-      "file-loader" -> "6.0.0",
-      "style-loader" -> "1.2.1",
-      "css-loader" -> "3.5.3",
-      "html-webpack-plugin" -> "4.3.0",
-      "copy-webpack-plugin" -> "5.1.1",
-      "webpack-merge" -> "4.2.2"
-    ),
-    webpack / version := "4.43.0",
-    startWebpackDevServer / version := "3.11.0",
-    webpackResources := baseDirectory.value / "webpack" * "*",
-    fastOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack" / "webpack-fastopt.config.js"),
-    fullOptJS / webpackConfigFile := Some(baseDirectory.value / "webpack" / "webpack-opt.config.js"),
-    Test / webpackConfigFile := Some(baseDirectory.value / "webpack" / "webpack-core.config.js"),
-    fastOptJS / webpackDevServerExtraArgs := Seq("--inline", "--hot"),
-    fastOptJS / webpackBundlingMode := BundlingMode.LibraryOnly(),
-    Test / requireJsDomEnv := true
-  )
-  .enablePlugins(ScalaJSBundlerPlugin)
 
 def module(projectId: String, moduleFile: Option[String] = None): Project =
   Project(id = projectId, base = file(moduleFile.getOrElse(projectId)))
