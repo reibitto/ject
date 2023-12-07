@@ -3,11 +3,14 @@ package ject.ja.lucene
 import ject.ja.docs.KanjiDoc
 import ject.ja.lucene.field.KanjiField
 import ject.ja.RadicalQuery
-import ject.lucene.{LuceneReader, ScoredDoc}
+import ject.lucene.LuceneReader
+import ject.lucene.ScoredDoc
 import org.apache.lucene.search.*
 import org.apache.lucene.util.QueryBuilder
-import zio.{Scope, Task, ZIO}
 import zio.stream.ZStream
+import zio.Scope
+import zio.Task
+import zio.ZIO
 
 import java.nio.file.Path
 
@@ -47,8 +50,9 @@ final case class KanjiReader(index: LuceneReader[KanjiDoc]) {
             }
         sort = new Sort(
                  SortField.FIELD_SCORE,
-                 new SortedNumericSortField(KanjiField.Grade.entryName, SortField.Type.LONG),
-                 new SortedNumericSortField(KanjiField.Frequency.entryName, SortField.Type.LONG)
+                 new SortedNumericSortField(KanjiField.StrokeCount.entryName, SortField.Type.INT),
+                 new SortedNumericSortField(KanjiField.Grade.entryName, SortField.Type.INT),
+                 new SortedNumericSortField(KanjiField.Frequency.entryName, SortField.Type.INT)
                )
       } yield index.searchSorted(partsQuery.build, sort)
     }

@@ -73,38 +73,38 @@ object KanjiDoc {
         doc.add(new StringField(KanjiField.KoreanReading.entryName, value, Field.Store.YES))
       }
 
-      doc.add(new IntPoint(KanjiField.RadicalId.entryName, a.radicalId))
       doc.add(new StoredField(KanjiField.RadicalId.entryName, a.radicalId))
+      doc.add(new NumericDocValuesField(KanjiField.RadicalId.entryName, a.radicalId))
 
       a.parts.foreach { value =>
         doc.add(new StringField(KanjiField.Parts.entryName, value, Field.Store.YES))
       }
 
       a.strokeCount.foreach { value =>
-        doc.add(new IntPoint(KanjiField.StrokeCount.entryName, value))
         doc.add(new StoredField(KanjiField.StrokeCount.entryName, value))
       }
 
+      doc.add(
+        new NumericDocValuesField(KanjiField.StrokeCount.entryName, a.strokeCount.minOption.getOrElse(Int.MaxValue))
+      )
+
       a.frequency.foreach { value =>
-        doc.add(new IntPoint(KanjiField.Frequency.entryName, value))
         doc.add(new StoredField(KanjiField.Frequency.entryName, value))
       }
 
-      doc.add(
-        new SortedNumericDocValuesField(KanjiField.Frequency.entryName, a.frequency.getOrElse(Int.MaxValue).toLong)
-      )
+      doc.add(new NumericDocValuesField(KanjiField.Frequency.entryName, a.frequency.getOrElse(Int.MaxValue)))
 
       a.jlpt.foreach { value =>
-        doc.add(new IntPoint(KanjiField.Jlpt.entryName, value))
         doc.add(new StoredField(KanjiField.Jlpt.entryName, value))
       }
 
+      doc.add(new NumericDocValuesField(KanjiField.Jlpt.entryName, a.jlpt.getOrElse(Int.MaxValue)))
+
       a.grade.foreach { value =>
-        doc.add(new IntPoint(KanjiField.Grade.entryName, value))
         doc.add(new StoredField(KanjiField.Grade.entryName, value))
       }
 
-      doc.add(new SortedNumericDocValuesField(KanjiField.Grade.entryName, a.grade.getOrElse(Int.MaxValue).toLong))
+      doc.add(new NumericDocValuesField(KanjiField.Grade.entryName, a.grade.getOrElse(Int.MaxValue)))
 
       doc
     }

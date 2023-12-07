@@ -20,7 +20,7 @@ final case class LuceneReader[A: DocDecoder](
   def headOption(query: Query): Task[Option[A]] =
     ZIO.attempt {
       searcher.search(query, 1).scoreDocs.headOption.map { hit =>
-        decoder.decode(searcher.doc(hit.doc))
+        decoder.decode(searcher.storedFields().document(hit.doc))
       }
     }
 
@@ -29,7 +29,7 @@ final case class LuceneReader[A: DocDecoder](
       val hits = searcher.search(query, n).scoreDocs
 
       hits.map { hit =>
-        val doc = searcher.doc(hit.doc)
+        val doc = searcher.storedFields().document(hit.doc)
         ScoredDoc(decoder.decode(doc), hit.score)
       }.toSeq
     }
@@ -49,7 +49,7 @@ final case class LuceneReader[A: DocDecoder](
           val hits = docs.scoreDocs
 
           val decodedDocs = hits.map { hit =>
-            val doc = searcher.doc(hit.doc)
+            val doc = searcher.storedFields().document(hit.doc)
             ScoredDoc(decoder.decode(doc), hit.score)
           }
 
@@ -73,7 +73,7 @@ final case class LuceneReader[A: DocDecoder](
           val hits = docs.scoreDocs
 
           val decodedDocs = hits.map { hit =>
-            val doc = searcher.doc(hit.doc)
+            val doc = searcher.storedFields().document(hit.doc)
             ScoredDoc(decoder.decode(doc), hit.score)
           }
 

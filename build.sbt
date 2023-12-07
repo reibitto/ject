@@ -58,7 +58,7 @@ lazy val core = module("ject", Some("core"))
       "dev.zio" %% "zio-process" % V.zioProcess,
       "com.beachape" %% "enumeratum" % V.enumeratum,
       "org.apache.lucene" % "lucene-core" % V.lucene,
-      "org.apache.lucene" % "lucene-analyzers-common" % V.lucene,
+      "org.apache.lucene" % "lucene-analysis-common" % V.lucene,
       "org.apache.lucene" % "lucene-queryparser" % V.lucene,
       "org.apache.lucene" % "lucene-facet" % V.lucene,
       "org.apache.lucene" % "lucene-highlighter" % V.lucene
@@ -72,7 +72,7 @@ lazy val coreJapanese = module("ject-ja", Some("core-ja"))
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
       "org.scala-lang.modules" %% "scala-xml" % V.scalaXml,
-      "org.apache.lucene" % "lucene-analyzers-kuromoji" % V.lucene
+      "org.apache.lucene" % "lucene-analysis-kuromoji" % V.lucene
     )
   )
 
@@ -82,9 +82,8 @@ lazy val coreKorean = module("ject-ko", Some("core-ko"))
     fork := true,
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "org.apache.lucene" % "lucene-analyzers-nori" % V.lucene,
+      "org.apache.lucene" % "lucene-analysis-nori" % V.lucene,
       "com.softwaremill.sttp.client3" %% "zio" % V.sttp,
-      "org.jsoup" % "jsoup" % V.jsoup,
       "org.slf4j" % "slf4j-nop" % V.slf4j
     )
   )

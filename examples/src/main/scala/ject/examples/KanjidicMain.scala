@@ -1,6 +1,7 @@
 package ject.examples
 
-import ject.ja.io.{KanjidicIO, RadicalIO}
+import ject.ja.io.KanjidicIO
+import ject.ja.io.RadicalIO
 import ject.ja.lucene.KanjiWriter
 import ject.utils.IOExtensions.*
 import zio.*
@@ -8,9 +9,9 @@ import zio.Console.printLine
 
 import java.nio.file.Paths
 
-object KanjidicMain extends zio.ZIOAppDefault {
+object KanjidicMain extends ZIOAppDefault {
 
-  def run: URIO[Any, ExitCode] =
+  def run: UIO[Unit] =
     (for {
       radicals <- RadicalIO.load(Paths.get("data/radicals.dat"))
       targetPath = Paths.get("data/dictionary/kanjidic.xml")
@@ -37,6 +38,8 @@ object KanjidicMain extends zio.ZIOAppDefault {
       _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
 
-    } yield ()).exitCode
+    } yield ()).tapError { t =>
+      ZIO.succeed(t.printStackTrace())
+    }.exitCode.flatMap(exit)
 
 }

@@ -10,9 +10,9 @@ import zio.Console.printLine
 import java.io.File
 import java.nio.file.{Files, Paths}
 
-object JMDictMain extends zio.ZIOAppDefault {
+object JMDictMain extends ZIOAppDefault {
 
-  def run: URIO[Any, ExitCode] = {
+  def run: UIO[Unit] = {
     val targetPath = Paths.get("data/dictionary/JMDict_e.xml")
 
     (for {
@@ -48,7 +48,9 @@ object JMDictMain extends zio.ZIOAppDefault {
       _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
 
-    } yield ()).exitCode
+    } yield ()).tapError { t =>
+      ZIO.succeed(t.printStackTrace())
+    }.exitCode.flatMap(exit)
   }
 
 }
