@@ -1,7 +1,7 @@
 package ject.examples
 
 import ject.ja.docs.WordDoc
-import ject.ja.io.JMDictIO
+import ject.tools.jmdict.JMDictIO
 import ject.ja.lucene.WordWriter
 import ject.utils.IOExtensions.*
 import zio.*
@@ -36,7 +36,7 @@ object JMDictMain extends ZIOAppDefault {
                                                .mapZIO { case (entry, n) =>
                                                  for {
                                                    _ <- printLine(s"Imported $n entries...").when(
-                                                          n > 0 && n % 10000 == 0
+                                                          n > 0 && n % 10_000 == 0
                                                         )
                                                    _ <- index.add(entry)
                                                  } yield n
@@ -47,7 +47,6 @@ object JMDictMain extends ZIOAppDefault {
                                 }.timed
       _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
-
     } yield ()).tapError { t =>
       ZIO.succeed(t.printStackTrace())
     }.exitCode.flatMap(exit)

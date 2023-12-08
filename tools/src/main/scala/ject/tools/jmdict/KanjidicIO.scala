@@ -1,4 +1,4 @@
-package ject.ja.io
+package ject.tools.jmdict
 
 import ject.ja.docs.KanjiDoc
 import ject.ja.entity.Radical

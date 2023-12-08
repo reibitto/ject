@@ -1,4 +1,6 @@
 object V {
+  val circe = "0.14.6"
+
   val enumeratum = "1.7.3"
 
   val lucene = "9.9.0"

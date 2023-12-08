@@ -17,13 +17,16 @@ final case class WordDoc(
     hanjaTerms: Seq[String],
     pronunciation: Seq[String],
     definitionsEnglish: Seq[String],
+    definitionsJapanese: Seq[String],
     definitionsKorean: Seq[String],
     partsOfSpeech: Seq[String]
 ) {
 
+  def definitions: Seq[String] = definitionsKorean ++ definitionsJapanese ++ definitionsEnglish
+
   def render: String = {
     val terms = (hangulTerms ++ hanjaTerms).mkString(" ")
-    s"$terms: ${definitionsEnglish.mkString("\n")}"
+    s"$terms\n${definitions.mkString("\n")}"
   }
 }
 
@@ -39,6 +42,7 @@ object WordDoc {
         hanjaTerms = document.getValues(WordField.HanjaTerm.entryName).toIndexedSeq,
         pronunciation = document.getValues(WordField.Pronunciation.entryName).toIndexedSeq,
         definitionsEnglish = document.getValues(WordField.DefinitionEnglish.entryName).toIndexedSeq,
+        definitionsJapanese = document.getValues(WordField.DefinitionJapanese.entryName).toIndexedSeq,
         definitionsKorean = document.getValues(WordField.DefinitionKorean.entryName).toIndexedSeq,
         partsOfSpeech = document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq
       )
@@ -67,6 +71,11 @@ object WordDoc {
       a.definitionsEnglish.foreach { value =>
         doc.add(new TextField(WordField.DefinitionEnglish.entryName, value, Field.Store.YES))
         doc.add(new TextField(WordField.DefinitionEnglishOther.entryName, value, Field.Store.NO))
+      }
+
+      a.definitionsJapanese.foreach { value =>
+        doc.add(new TextField(WordField.DefinitionJapanese.entryName, value, Field.Store.YES))
+        doc.add(new TextField(WordField.DefinitionJapaneseOther.entryName, value, Field.Store.NO))
       }
 
       a.definitionsKorean.foreach { value =>

@@ -18,14 +18,14 @@ final case class LuceneReader[A: DocDecoder](
   val decoder: DocDecoder[A] = implicitly[DocDecoder[A]]
 
   def headOption(query: Query): Task[Option[A]] =
-    ZIO.attempt {
+    ZIO.attemptBlocking {
       searcher.search(query, 1).scoreDocs.headOption.map { hit =>
         decoder.decode(searcher.storedFields().document(hit.doc))
       }
     }
 
   def take(query: Query, n: Int): Task[Seq[ScoredDoc[A]]] =
-    ZIO.attempt {
+    ZIO.attemptBlocking {
       val hits = searcher.search(query, n).scoreDocs
 
       hits.map { hit =>
@@ -36,7 +36,7 @@ final case class LuceneReader[A: DocDecoder](
 
   def search(query: Query, hitsPerPage: Int = 10): ZStream[Any, Throwable, ScoredDoc[A]] =
     ZStream.unfoldChunkZIO(Option.empty[ScoreDoc]) { state =>
-      ZIO.attempt {
+      ZIO.attemptBlocking {
         val docs = state match {
           case Some(scoreDoc) =>
             searcher.searchAfter(scoreDoc, query, hitsPerPage)
@@ -60,7 +60,7 @@ final case class LuceneReader[A: DocDecoder](
 
   def searchSorted(query: Query, sort: Sort, hitsPerPage: Int = 10): ZStream[Any, Throwable, ScoredDoc[A]] =
     ZStream.unfoldChunkZIO(Option.empty[ScoreDoc]) { state =>
-      ZIO.attempt {
+      ZIO.attemptBlocking {
         val docs = state match {
           case Some(scoreDoc) =>
             searcher.searchAfter(scoreDoc, query, hitsPerPage, sort, true)
@@ -111,6 +111,10 @@ final case class LuceneReader[A: DocDecoder](
     } yield results
   }
 
+  def list: ZStream[Any, Throwable, ScoredDoc[A]] = {
+    searchRaw("*:*")
+  }
+
   def buildQuery(queryString: String, defaultField: LuceneField = LuceneField.none): Query =
     new QueryParser(defaultField.entryName, decoder.analyzer).parse(queryString)
 
@@ -119,7 +123,7 @@ final case class LuceneReader[A: DocDecoder](
       val config = new IndexWriterConfig(decoder.analyzer)
       new IndexWriter(directory, config)
     }.withFinalizer { writer =>
-      ZIO.attempt {
+      ZIO.attemptBlocking {
         if (autoCommitOnRelease) {
           writer.commit()
         }
@@ -137,7 +141,7 @@ object LuceneReader {
       reader   <- ZIO.attempt(DirectoryReader.open(index))
       searcher <- ZIO.attempt(new IndexSearcher(reader))
     } yield new LuceneReader[A](index, reader, searcher)).withFinalizer { index =>
-      ZIO.attempt {
+      ZIO.attemptBlocking {
         index.directory.close()
         index.reader.close()
       }.orDie

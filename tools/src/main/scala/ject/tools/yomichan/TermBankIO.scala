@@ -1,0 +1,57 @@
+package ject.tools.yomichan
+
+import io.circe.Json
+import zio.*
+import zio.stream.ZPipeline
+import zio.stream.ZStream
+
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Path
+import scala.jdk.StreamConverters.*
+
+object TermBankIO {
+
+  def load(dictionaryDirectory: Path): ZStream[Any, Throwable, TermBankEntry] = {
+    val files = Files.list(dictionaryDirectory).toScala(Chunk).filter { f =>
+      val filename = f.getFileName.toString
+      filename.startsWith("term_bank_") && filename.endsWith(".json")
+    }
+
+    ZStream.concatAll(
+      files.map { file =>
+        ZStream
+          .fromIterableZIO(
+            for {
+              rawJson <- ZIO.blocking(ZIO.succeed(Files.readString(file, StandardCharsets.UTF_8)))
+              json    <- ZIO.blocking(ZIO.fromEither(io.circe.parser.parse(rawJson)))
+              array   <- ZIO.fromOption(json.asArray).orElseFail(new Exception("Term bank must be an array"))
+            } yield array
+          )
+          .mapZIO { entry =>
+            ZIO.fromOption(entry.asArray).orElseFail(new Exception("Term bank entry must be an array"))
+          }
+          .map { fields =>
+            TermBankEntry(
+              term = fields(0).asString.getOrElse(throw new Exception("Term is empty")),
+              reading = fields(1).asString,
+              definitionTags = fields(2).asString.map(_.split(' ').toSeq).getOrElse(Seq.empty),
+              inflection = fields(3).asString.map(_.split(' ').toSeq).getOrElse(Seq.empty),
+              popularity = fields(4).asNumber.map(_.toDouble).getOrElse(0),
+              definitions = fields(5).asArray.map(_.map(convertDefinition)).getOrElse(Seq.empty),
+              sequenceNumber = fields(6).asNumber.flatMap(_.toInt).getOrElse(0),
+              termTags = fields(7).asString.map(_.split(' ').toSeq).getOrElse(Seq.empty)
+            )
+          }
+      }
+    )
+
+  }
+
+  private def convertDefinition(json: Json): String =
+    json.asString match {
+      case Some(s) => s
+      case None    => throw new Exception(s"Unsupported format: ${json}")
+    }
+
+}

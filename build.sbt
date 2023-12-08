@@ -15,7 +15,7 @@ inThisBuild(
 
 lazy val root = project
   .in(file("."))
-  .aggregate(core, coreJapanese, coreKorean, examples)
+  .aggregate(core, coreJapanese, coreKorean, tools, examples)
   .settings(
     name := "ject",
     addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll"),
@@ -55,7 +55,6 @@ lazy val core = module("ject", Some("core"))
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio" % V.zio,
       "dev.zio" %% "zio-streams" % V.zio,
-      "dev.zio" %% "zio-process" % V.zioProcess,
       "com.beachape" %% "enumeratum" % V.enumeratum,
       "org.apache.lucene" % "lucene-core" % V.lucene,
       "org.apache.lucene" % "lucene-analysis-common" % V.lucene,
@@ -71,7 +70,6 @@ lazy val coreJapanese = module("ject-ja", Some("core-ja"))
     fork := true,
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "org.scala-lang.modules" %% "scala-xml" % V.scalaXml,
       "org.apache.lucene" % "lucene-analysis-kuromoji" % V.lucene
     )
   )
@@ -82,18 +80,34 @@ lazy val coreKorean = module("ject-ko", Some("core-ko"))
     fork := true,
     run / baseDirectory := file("."),
     libraryDependencies ++= Seq(
-      "org.apache.lucene" % "lucene-analysis-nori" % V.lucene,
+      "org.apache.lucene" % "lucene-analysis-nori" % V.lucene
+    )
+  )
+
+lazy val tools = module("ject-tools", Some("tools"))
+  .dependsOn(coreJapanese, coreKorean)
+  .settings(
+    fork := true,
+    run / baseDirectory := file("."),
+    libraryDependencies ++= Seq(
+      "dev.zio" %% "zio-process" % V.zioProcess,
+      "org.scala-lang.modules" %% "scala-xml" % V.scalaXml,
       "com.softwaremill.sttp.client3" %% "zio" % V.sttp,
+      "io.circe" %% "circe-core" % V.circe,
+      "io.circe" %% "circe-parser" % V.circe,
       "org.slf4j" % "slf4j-nop" % V.slf4j
     )
   )
 
 lazy val examples = module("examples")
-  .dependsOn(coreJapanese, coreKorean)
+  .dependsOn(tools)
   .settings(
     fork := true,
     run / baseDirectory := file("."),
-    publish / skip := true
+    publish / skip := true,
+    javaOptions ++= Seq(
+      "-Dorg.apache.lucene.store.MMapDirectory.enableMemorySegments=false"
+    )
   )
 
 def module(projectId: String, moduleFile: Option[String] = None): Project =

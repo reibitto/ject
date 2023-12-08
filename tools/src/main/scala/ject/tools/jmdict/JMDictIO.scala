@@ -1,4 +1,4 @@
-package ject.ja.io
+package ject.tools.jmdict
 
 import ject.ja.docs.WordDoc
 import zio.*

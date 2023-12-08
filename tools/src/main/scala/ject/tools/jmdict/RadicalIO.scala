@@ -1,4 +1,4 @@
-package ject.ja.io
+package ject.tools.jmdict
 
 import ject.ja.entity.Radical
 import zio.stream.{ZPipeline, ZStream}
