@@ -2,7 +2,6 @@ package ject.tools.yomichan
 
 import io.circe.Json
 import zio.*
-import zio.stream.ZPipeline
 import zio.stream.ZStream
 
 import java.nio.charset.StandardCharsets
@@ -33,14 +32,14 @@ object TermBankIO {
           }
           .map { fields =>
             TermBankEntry(
-              term = fields(0).asString.getOrElse(throw new Exception("Term is empty")),
-              reading = fields(1).asString,
-              definitionTags = fields(2).asString.map(_.split(' ').toSeq).getOrElse(Seq.empty),
-              inflection = fields(3).asString.map(_.split(' ').toSeq).getOrElse(Seq.empty),
+              term = fields(0).asString.map(_.trim).getOrElse(throw new Exception("Term is empty")),
+              reading = fields(1).asString.map(_.trim),
+              definitionTags = fields(2).asString.map(_.trim.split(' ').filter(_.nonEmpty).toSeq).getOrElse(Seq.empty),
+              inflection = fields(3).asString.map(_.trim.split(' ').filter(_.nonEmpty).toSeq).getOrElse(Seq.empty),
               popularity = fields(4).asNumber.map(_.toDouble).getOrElse(0),
               definitions = fields(5).asArray.map(_.map(convertDefinition)).getOrElse(Seq.empty),
               sequenceNumber = fields(6).asNumber.flatMap(_.toInt).getOrElse(0),
-              termTags = fields(7).asString.map(_.split(' ').toSeq).getOrElse(Seq.empty)
+              termTags = fields(7).asString.map(_.trim.split(' ').filter(_.nonEmpty).toSeq).getOrElse(Seq.empty)
             )
           }
       }
@@ -50,7 +49,7 @@ object TermBankIO {
 
   private def convertDefinition(json: Json): String =
     json.asString match {
-      case Some(s) => s
+      case Some(s) => s.trim
       case None    => throw new Exception(s"Unsupported format: ${json}")
     }
 

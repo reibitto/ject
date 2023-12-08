@@ -1,21 +1,29 @@
 package ject.lucene
 
 import ject.lucene.field.LuceneField
-import org.apache.lucene.index.{DirectoryReader, IndexWriter, IndexWriterConfig}
+import org.apache.lucene.index.DirectoryReader
+import org.apache.lucene.index.IndexWriter
+import org.apache.lucene.index.IndexWriterConfig
 import org.apache.lucene.queryparser.classic.QueryParser
-import org.apache.lucene.search.{IndexSearcher, Query, ScoreDoc, Sort}
+import org.apache.lucene.search.IndexSearcher
+import org.apache.lucene.search.Query
+import org.apache.lucene.search.ScoreDoc
+import org.apache.lucene.search.Sort
 import org.apache.lucene.store.MMapDirectory
-import zio.{Chunk, Scope, Task, ZIO}
+import zio.Chunk
+import zio.Scope
+import zio.Task
+import zio.ZIO
 import zio.stream.ZStream
 
 import java.nio.file.Path
 
-final case class LuceneReader[A: DocDecoder](
-    directory: MMapDirectory,
-    reader: DirectoryReader,
-    searcher: IndexSearcher
-) {
-  val decoder: DocDecoder[A] = implicitly[DocDecoder[A]]
+abstract class LuceneReader[A: DocDecoder] {
+  def directory: MMapDirectory
+  def reader: DirectoryReader
+  def searcher: IndexSearcher
+
+  private val decoder: DocDecoder[A] = implicitly[DocDecoder[A]]
 
   def headOption(query: Query): Task[Option[A]] =
     ZIO.attemptBlocking {
@@ -111,9 +119,8 @@ final case class LuceneReader[A: DocDecoder](
     } yield results
   }
 
-  def list: ZStream[Any, Throwable, ScoredDoc[A]] = {
+  def list: ZStream[Any, Throwable, ScoredDoc[A]] =
     searchRaw("*:*")
-  }
 
   def buildQuery(queryString: String, defaultField: LuceneField = LuceneField.none): Query =
     new QueryParser(defaultField.entryName, decoder.analyzer).parse(queryString)
@@ -135,15 +142,18 @@ final case class LuceneReader[A: DocDecoder](
 
 object LuceneReader {
 
-  def make[A: DocDecoder](directory: Path): ZIO[Scope, Throwable, LuceneReader[A]] =
+  def makeReader[A <: LuceneReader[?]](directory: Path)(makeFn: (MMapDirectory, DirectoryReader, IndexSearcher) => A): ZIO[Scope, Throwable, A] = {
     (for {
       index    <- ZIO.attempt(new MMapDirectory(directory))
       reader   <- ZIO.attempt(DirectoryReader.open(index))
       searcher <- ZIO.attempt(new IndexSearcher(reader))
-    } yield new LuceneReader[A](index, reader, searcher)).withFinalizer { index =>
+      luceneReader = makeFn(index, reader, searcher)
+    } yield luceneReader).withFinalizer { index =>
       ZIO.attemptBlocking {
         index.directory.close()
         index.reader.close()
       }.orDie
     }
+  }
+
 }

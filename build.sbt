@@ -105,6 +105,9 @@ lazy val examples = module("examples")
     fork := true,
     run / baseDirectory := file("."),
     publish / skip := true,
+    libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "pprint" % "0.7.0"
+    ),
     javaOptions ++= Seq(
       "-Dorg.apache.lucene.store.MMapDirectory.enableMemorySegments=false"
     )
