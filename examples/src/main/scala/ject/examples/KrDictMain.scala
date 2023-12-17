@@ -10,6 +10,8 @@ import java.nio.file.Paths
 
 object KrDictMain extends ZIOAppDefault {
 
+  val dryRun: Boolean = false
+
   def run: UIO[Unit] =
     (for {
       _ <- printLine(s"Starting to index dictionary: KrDict")
@@ -23,17 +25,18 @@ object KrDictMain extends ZIOAppDefault {
                                     index <- WordWriter.make(luceneDirectory)
                                     count <- KrDictIO
                                                .load(targetPath, definitionLanguage)
+                                               .grouped(100)
+                                               .mapZIO { entries =>
+                                                 index.addBulk(entries*).unless(dryRun).as(entries)
+                                               }
+                                               .flattenChunks
                                                .zipWithIndex
-                                               .mapZIO { case (entry, n) =>
-                                                 for {
-                                                   _ <- printLine(s"Imported $n entries...").when(
-                                                          n > 0 && n % 10_000 == 0
-                                                        )
-                                                   _ <- index.add(entry)
-                                                 } yield n
+                                               .mapZIO { case (_, n) =>
+                                                 printLine(s"Imported $n entries...")
+                                                   .when(n > 0 && n % 10_000 == 0)
+                                                   .as(n)
                                                }
                                                .runLast
-                                               .map(_.getOrElse(0))
                                   } yield count
                                 }.timed
       _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")

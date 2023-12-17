@@ -11,6 +11,8 @@ import java.nio.file.Paths
 
 object YomichanMain extends ZIOAppDefault {
 
+  val dryRun: Boolean = false
+
   final case class DictionaryInfo(name: String, priority: Long, shouldSanitize: Boolean)
 
   def run: UIO[Unit] = {
@@ -41,12 +43,17 @@ object YomichanMain extends ZIOAppDefault {
                                                        if (dictionary.shouldSanitize)
                                                          e.definitions.headOption match {
                                                            case Some(a) =>
-                                                             (a.asText.linesIterator.toVector
-                                                               .drop(1)
-                                                               .mkString("\n")
-                                                               .trim +: e.definitions.tail.map(_.asText))
-                                                               .map(_.trim)
-                                                               .filter(_.nonEmpty)
+                                                             val lines = a.asText.linesIterator.toVector
+
+                                                             if (lines.length > 1)
+                                                               (lines
+                                                                 .drop(1)
+                                                                 .mkString("\n")
+                                                                 .trim +: e.definitions.tail.map(_.asText))
+                                                                 .map(_.trim)
+                                                                 .filter(_.nonEmpty)
+                                                             else
+                                                               lines
 
                                                            case None =>
                                                              Vector.empty
@@ -66,20 +73,22 @@ object YomichanMain extends ZIOAppDefault {
                                                        popularity = dictionary.priority
                                                      )
                                                    }
+                                                   .grouped(100)
+                                                   .mapZIO { entries =>
+                                                     index.addBulk(entries*).unless(dryRun).as(entries)
+                                                   }
+                                                   .flattenChunks
                                                    .zipWithIndex
-                                                   .mapZIO { case (entry, n) =>
-                                                     for {
-                                                       _ <- printLine(s"Imported $n entries...").when(
-                                                              n > 0 && n % 10_000 == 0
-                                                            )
-                                                       _ <- index.add(entry)
-                                                     } yield n
+                                                   .mapZIO { case (_, n) =>
+                                                     printLine(s"Imported $n entries...")
+                                                       .when(n > 0 && n % 10_000 == 0)
+                                                       .as(n)
                                                    }
                                                    .runLast
                                                    .map(_.getOrElse(0))
                                       } yield count
                                     }.timed
-          _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
+          _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render}) (dryRun: ${dryRun})")
           _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
         } yield ()
       }

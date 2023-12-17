@@ -11,6 +11,8 @@ import java.nio.file.Paths
 
 object KanjidicMain extends ZIOAppDefault {
 
+  val dryRun: Boolean = false
+
   def run: UIO[Unit] =
     (for {
       _        <- printLine(s"Starting to index dictionary: Kanjidic")
@@ -24,13 +26,16 @@ object KanjidicMain extends ZIOAppDefault {
                                     index <- KanjiWriter.make(luceneDirectory)
                                     count <- KanjidicIO
                                                .load(targetPath, radicals)
+                                               .grouped(100)
+                                               .mapZIO { entries =>
+                                                 index.addBulk(entries*).unless(dryRun).as(entries)
+                                               }
+                                               .flattenChunks
                                                .zipWithIndex
-                                               .mapZIO { case (entry, n) =>
-                                                 for {
-                                                   _ <-
-                                                     printLine(s"Imported $n entries...").when(n > 0 && n % 1000 == 0)
-                                                   _ <- index.add(entry)
-                                                 } yield n
+                                               .mapZIO { case (_, n) =>
+                                                 printLine(s"Imported $n entries...")
+                                                   .when(n > 0 && n % 10_000 == 0)
+                                                   .as(n)
                                                }
                                                .runLast
                                                .map(_.getOrElse(0))
