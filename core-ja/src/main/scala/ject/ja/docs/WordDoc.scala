@@ -9,9 +9,12 @@ import ject.lucene.DocEncoder
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
+import org.apache.lucene.document.NumericDocValuesField
+import org.apache.lucene.document.StoredField
 import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
-import zio.{Task, ZIO}
+import zio.Task
+import zio.ZIO
 
 final case class WordDoc(
     id: String,
@@ -19,7 +22,8 @@ final case class WordDoc(
     readingTerms: Seq[String],
     definitions: Seq[String],
     tags: Seq[String],
-    partsOfSpeech: Seq[String]
+    partsOfSpeech: Seq[String],
+    popularity: Long
 ) {
 
   def render: String = {
@@ -40,7 +44,8 @@ object WordDoc {
         readingTerms = document.getValues(WordField.ReadingTerm.entryName).toIndexedSeq,
         definitions = document.getValues(WordField.Definition.entryName).toIndexedSeq,
         tags = document.getValues(WordField.Tags.entryName).toIndexedSeq,
-        partsOfSpeech = document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq
+        partsOfSpeech = document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq,
+        popularity = document.get(WordField.Popularity.entryName).toLong
       )
   }
 
@@ -73,6 +78,9 @@ object WordDoc {
                a.partsOfSpeech.foreach { value =>
                  doc.add(new StringField(WordField.PartOfSpeech.entryName, value, Field.Store.YES))
                }
+
+               doc.add(new StoredField(WordField.Popularity.entryName, a.popularity))
+               doc.add(new NumericDocValuesField(WordField.Popularity.entryName, a.popularity))
 
                doc
              }

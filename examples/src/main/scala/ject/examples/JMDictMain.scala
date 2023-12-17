@@ -8,26 +8,27 @@ import zio.*
 import zio.Console.printLine
 
 import java.io.File
-import java.nio.file.{Files, Paths}
+import java.nio.file.Files
+import java.nio.file.Paths
 
 object JMDictMain extends ZIOAppDefault {
 
-  def run: UIO[Unit] = {
-    val targetPath = Paths.get("data/dictionary/JMDict_e.xml")
-
+  def run: UIO[Unit] =
     (for {
+      _ <- printLine(s"Starting to index dictionary: JMDict")
+      targetPath = Paths.get("data/dictionary/JMDict_e.xml")
       _        <- targetPath.ensureDirectoryExists()
       tempFile <- ZIO.attempt(File.createTempFile("JMDict", ""))
       _        <- JMDictIO.download(tempFile.toPath).unless(targetPath.toFile.exists())
       _        <- JMDictIO.normalize(tempFile.toPath, targetPath).unless(targetPath.toFile.exists())
       fileTime <- ZIO.attempt(Files.getLastModifiedTime(targetPath))
       _        <- printLine(s"Using JMDict file from $fileTime")
-      luceneDirectory = Paths.get("data/lucene")
+      luceneDirectory = Paths.get("data/lucene/word-ja")
       (timeTaken, totalDocs) <- ZIO.scoped {
                                   for {
                                     index <- WordWriter
                                                .make(
-                                                 luceneDirectory.resolve("word-ja"),
+                                                 luceneDirectory,
                                                  WordDoc.docEncoder(includeInflections = true)
                                                )
                                     count <- JMDictIO
@@ -50,6 +51,5 @@ object JMDictMain extends ZIOAppDefault {
     } yield ()).tapError { t =>
       ZIO.succeed(t.printStackTrace())
     }.exitCode.flatMap(exit)
-  }
 
 }

@@ -114,8 +114,13 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
       }
     }
 
+    val sort = new Sort(
+      SortField.FIELD_SCORE,
+      new SortedNumericSortField(WordField.Popularity.entryName, SortField.Type.DOUBLE, true)
+    )
+
     ZStream.unwrap(
-      booleanQueryTask.map(b => search(b.build()))
+      booleanQueryTask.map(b => searchSorted(b.build(), sort))
     )
   }
 }

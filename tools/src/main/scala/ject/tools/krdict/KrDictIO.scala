@@ -14,9 +14,10 @@ object KrDictIO {
       .load(dictionaryDirectory)
       // There are some weird duplicate entries in the source. Detecting that with this rule and filtering them out.
       .filter(_.reading.map(!_.endsWith("]")).getOrElse(true))
-      .map { entry =>
+      .zipWithIndex
+      .map { case (entry, i) =>
         WordDoc(
-          id = s"${dictionaryDirectory.getFileName}/${entry.sequenceNumber}",
+          id = s"${dictionaryDirectory.getFileName}/${i + 1}",
           hangulTerms = Seq(entry.term),
           hanjaTerms = Seq.empty,
           pronunciation = entry.reading.toSeq,

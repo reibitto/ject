@@ -74,12 +74,13 @@ object JMDictIO {
         entryNodes = xml \ "entry"
       } yield entryNodes.iterator.map { n =>
         WordDoc(
-          (n \ "ent_seq").map(_.text).head,
-          (n \ "k_ele" \ "keb").map(_.text),
-          (n \ "r_ele" \ "reb").map(_.text),
-          (n \ "sense").map(s => (s \ "gloss").map(_.text).mkString("; ")),
-          (n \ "sense" \ "dial").map(_.text).distinct,
-          (n \ "sense" \ "pos").map(_.text).distinct
+          id = s"jmdict/${(n \ "ent_seq").map(_.text).head}",
+          kanjiTerms = (n \ "k_ele" \ "keb").map(_.text),
+          readingTerms = (n \ "r_ele" \ "reb").map(_.text),
+          definitions = (n \ "sense").map(s => (s \ "gloss").map(_.text).mkString("; ")),
+          tags = (n \ "sense" \ "dial").map(_.text).distinct,
+          partsOfSpeech = (n \ "sense" \ "pos").map(_.text).distinct,
+          popularity = 5
         )
       }
     }
