@@ -30,7 +30,7 @@ final case class TermBankEntry(
     definitionTags: Seq[String],
     inflection: Seq[String],
     popularity: Double,
-    definitions: Seq[String],
+    definitions: Vector[Content],
     sequenceNumber: Int,
     termTags: Seq[String]
 )

@@ -42,11 +42,16 @@ object Build {
       javaOptions += "-Dfile.encoding=UTF-8",
       scalacOptions := ScalacOptions,
       ThisBuild / scalaVersion := ScalaVersion,
+      outputStrategy := Some(StdoutOutput), // Remove prefixes like `[info]`
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
+      libraryDependencies ++= Seq(
+        "dev.zio" %% "zio-test" % V.zio % Test,
+        "dev.zio" %% "zio-test-sbt" % V.zio % Test
+      ),
       incOptions ~= (_.withLogRecompileOnMacro(false)),
       autoAPIMappings := true,
       resolvers := Resolvers,
-      testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+      testFrameworks := Seq(TestFrameworks.ZIOTest),
       Test / fork := true,
       Test / logBuffered := false
     )

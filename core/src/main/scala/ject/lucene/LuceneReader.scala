@@ -10,11 +10,11 @@ import org.apache.lucene.search.Query
 import org.apache.lucene.search.ScoreDoc
 import org.apache.lucene.search.Sort
 import org.apache.lucene.store.MMapDirectory
+import zio.stream.ZStream
 import zio.Chunk
 import zio.Scope
 import zio.Task
 import zio.ZIO
-import zio.stream.ZStream
 
 import java.nio.file.Path
 
@@ -142,7 +142,9 @@ abstract class LuceneReader[A: DocDecoder] {
 
 object LuceneReader {
 
-  def makeReader[A <: LuceneReader[?]](directory: Path)(makeFn: (MMapDirectory, DirectoryReader, IndexSearcher) => A): ZIO[Scope, Throwable, A] = {
+  def makeReader[A <: LuceneReader[?]](
+      directory: Path
+  )(makeFn: (MMapDirectory, DirectoryReader, IndexSearcher) => A): ZIO[Scope, Throwable, A] =
     (for {
       index    <- ZIO.attempt(new MMapDirectory(directory))
       reader   <- ZIO.attempt(DirectoryReader.open(index))
@@ -154,6 +156,5 @@ object LuceneReader {
         index.reader.close()
       }.orDie
     }
-  }
 
 }

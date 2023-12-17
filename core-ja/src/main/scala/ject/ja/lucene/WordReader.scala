@@ -1,23 +1,23 @@
 package ject.ja.lucene
 
-import ject.SearchPattern
-import ject.ja.JapaneseText
 import ject.ja.docs.WordDoc
-import ject.ja.lucene.WordReader.SearchType
 import ject.ja.lucene.field.WordField
+import ject.ja.lucene.WordReader.SearchType
+import ject.ja.JapaneseText
+import ject.lucene.field.LuceneField
 import ject.lucene.AnalyzerExtensions.*
 import ject.lucene.BooleanQueryBuilderExtensions.*
 import ject.lucene.LuceneReader
 import ject.lucene.ScoredDoc
-import ject.lucene.field.LuceneField
+import ject.SearchPattern
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.store.MMapDirectory
 import org.apache.lucene.util.QueryBuilder
+import zio.stream.ZStream
 import zio.Scope
 import zio.ZIO
-import zio.stream.ZStream
 
 import java.nio.file.Path
 

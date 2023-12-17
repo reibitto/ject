@@ -1,8 +1,8 @@
 package ject.examples
 
+import ject.ja.lucene.KanjiWriter
 import ject.tools.jmdict.KanjidicIO
 import ject.tools.jmdict.RadicalIO
-import ject.ja.lucene.KanjiWriter
 import ject.utils.IOExtensions.*
 import zio.*
 import zio.Console.printLine

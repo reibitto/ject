@@ -17,7 +17,7 @@ import zio.ZIO
 import java.nio.file.Path
 
 final case class KanjiReader(directory: MMapDirectory, reader: DirectoryReader, searcher: IndexSearcher)
-  extends LuceneReader[KanjiDoc] {
+    extends LuceneReader[KanjiDoc] {
   val builder = new QueryBuilder(KanjiDoc.docDecoder.analyzer)
 
   def getByKanji(kanji: String): Task[Option[KanjiDoc]] = {

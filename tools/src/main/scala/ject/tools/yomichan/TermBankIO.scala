@@ -1,6 +1,5 @@
 package ject.tools.yomichan
 
-import io.circe.Json
 import zio.*
 import zio.stream.ZStream
 
@@ -33,11 +32,13 @@ object TermBankIO {
           .map { fields =>
             TermBankEntry(
               term = fields(0).asString.map(_.trim).getOrElse(throw new Exception("Term is empty")),
-              reading = fields(1).asString.map(_.trim),
+              reading = fields(1).asString.map(_.trim).filter(_.nonEmpty),
               definitionTags = fields(2).asString.map(_.trim.split(' ').filter(_.nonEmpty).toSeq).getOrElse(Seq.empty),
               inflection = fields(3).asString.map(_.trim.split(' ').filter(_.nonEmpty).toSeq).getOrElse(Seq.empty),
               popularity = fields(4).asNumber.map(_.toDouble).getOrElse(0),
-              definitions = fields(5).asArray.map(_.map(convertDefinition)).getOrElse(Seq.empty),
+              definitions = fields(5)
+                .as[Vector[Content]]
+                .getOrElse(throw new Exception(s"Could not decode definitions: ${fields(5)}")),
               sequenceNumber = fields(6).asNumber.flatMap(_.toInt).getOrElse(0),
               termTags = fields(7).asString.map(_.trim.split(' ').filter(_.nonEmpty).toSeq).getOrElse(Seq.empty)
             )
@@ -46,11 +47,5 @@ object TermBankIO {
     )
 
   }
-
-  private def convertDefinition(json: Json): String =
-    json.asString match {
-      case Some(s) => s.trim
-      case None    => throw new Exception(s"Unsupported format: ${json}")
-    }
 
 }

@@ -1,8 +1,8 @@
 package ject.examples
 
 import ject.ja.docs.WordDoc
-import ject.tools.jmdict.JMDictIO
 import ject.ja.lucene.WordWriter
+import ject.tools.jmdict.JMDictIO
 import ject.utils.IOExtensions.*
 import zio.*
 import zio.Console.printLine
