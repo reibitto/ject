@@ -1,8 +1,8 @@
 package ject.examples
 
+import ject.ja.JapaneseText
 import ject.ja.docs.WordDoc
 import ject.ja.lucene.WordWriter
-import ject.ja.JapaneseText
 import ject.tools.yomichan.TermBankIO
 import zio.*
 import zio.Console.printLine
@@ -30,64 +30,65 @@ object YomichanMain extends ZIOAppDefault {
         for {
           _               <- printLine(s"Starting to index dictionary: ${dictionary.name}")
           luceneDirectory <- ZIO.succeed(Paths.get("data/lucene/word-ja"))
-          (timeTaken, totalDocs) <- ZIO.scoped {
-                                      for {
-                                        index <- WordWriter.make(luceneDirectory)
-                                        count <- TermBankIO
-                                                   .load(targetPath)
-                                                   .zipWithIndex
-                                                   .map { case (e, i) =>
-                                                     // val sanitizedDefinitions = e.definitions.flatMap(_.asText.trim.split("\n{2,}").toVector)
+          (timeTaken, totalDocs) <-
+            ZIO.scoped {
+              for {
+                index <- WordWriter.make(luceneDirectory)
+                count <- TermBankIO
+                           .load(targetPath)
+                           .zipWithIndex
+                           .map { case (e, i) =>
+                             // val sanitizedDefinitions = e.definitions.flatMap(_.asText.trim.split("\n{2,}").toVector)
 
-                                                     val sanitizedDefinitions =
-                                                       if (dictionary.shouldSanitize)
-                                                         e.definitions.headOption match {
-                                                           case Some(a) =>
-                                                             val lines = a.asText.linesIterator.toVector
+                             val sanitizedDefinitions =
+                               if (dictionary.shouldSanitize)
+                                 e.definitions.headOption match {
+                                   case Some(a) =>
+                                     val lines = a.asText.linesIterator.toVector
 
-                                                             if (lines.length > 1)
-                                                               (lines
-                                                                 .drop(1)
-                                                                 .mkString("\n")
-                                                                 .trim +: e.definitions.tail.map(_.asText))
-                                                                 .map(_.trim)
-                                                                 .filter(_.nonEmpty)
-                                                             else
-                                                               lines
+                                     if (lines.length > 1)
+                                       (lines
+                                         .drop(1)
+                                         .mkString("\n")
+                                         .trim +: e.definitions.tail.map(_.asText))
+                                         .map(_.trim)
+                                         .filter(_.nonEmpty)
+                                     else
+                                       lines
 
-                                                           case None =>
-                                                             Vector.empty
-                                                         }
-                                                       else
-                                                         e.definitions.map(_.asText)
+                                   case None =>
+                                     Vector.empty
+                                 }
+                               else
+                                 e.definitions.map(_.asText)
 
-                                                     // val sanitizedDefinitions2 = sanitizedDefinitions.flatMap(_.trim.split("\n{2,}").toVector)
+                             // val sanitizedDefinitions2 = sanitizedDefinitions.flatMap(_.trim.split("\n{2,}").toVector)
 
-                                                     WordDoc(
-                                                       id = s"${dictionary.name}/${i + 1}",
-                                                       kanjiTerms = Seq(e.term).filter(_.exists(JapaneseText.isKanji)),
-                                                       readingTerms = e.reading.toSeq,
-                                                       definitions = sanitizedDefinitions,
-                                                       tags = e.termTags ++ e.definitionTags,
-                                                       partsOfSpeech = e.inflection,
-                                                       popularity = dictionary.priority
-                                                     )
-                                                   }
-                                                   .grouped(100)
-                                                   .mapZIO { entries =>
-                                                     index.addBulk(entries*).unless(dryRun).as(entries)
-                                                   }
-                                                   .flattenChunks
-                                                   .zipWithIndex
-                                                   .mapZIO { case (_, n) =>
-                                                     printLine(s"Imported $n entries...")
-                                                       .when(n > 0 && n % 10_000 == 0)
-                                                       .as(n)
-                                                   }
-                                                   .runLast
-                                                   .map(_.getOrElse(0))
-                                      } yield count
-                                    }.timed
+                             WordDoc(
+                               id = s"${dictionary.name}/${i + 1}",
+                               kanjiTerms = Seq(e.term).filter(_.exists(JapaneseText.isKanji)),
+                               readingTerms = e.reading.toSeq,
+                               definitions = sanitizedDefinitions,
+                               tags = e.termTags ++ e.definitionTags,
+                               partsOfSpeech = e.inflection,
+                               popularity = dictionary.priority
+                             )
+                           }
+                           .grouped(100)
+                           .mapZIO { entries =>
+                             index.addBulk(entries*).unless(dryRun).as(entries)
+                           }
+                           .flattenChunks
+                           .zipWithIndex
+                           .mapZIO { case (_, n) =>
+                             printLine(s"Imported $n entries...")
+                               .when(n > 0 && n % 10_000 == 0)
+                               .as(n)
+                           }
+                           .runLast
+                           .map(_.getOrElse(0))
+              } yield count
+            }.timed
           _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render}) (dryRun: ${dryRun})")
           _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
         } yield ()
