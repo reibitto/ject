@@ -44,8 +44,8 @@ object KanjidicMain extends ZIOAppDefault {
       _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
 
-    } yield ()).tapError { t =>
-      ZIO.succeed(t.printStackTrace())
+    } yield ()).tapErrorCause { t =>
+      ZIO.succeed(t.squash.printStackTrace())
     }.exitCode.flatMap(exit)
 
 }

@@ -1,23 +1,24 @@
 package ject.ja.lucene
 
-import ject.ja.docs.WordDoc
-import ject.ja.lucene.field.WordField
-import ject.ja.lucene.WordReader.SearchType
+import ject.SearchPattern
 import ject.ja.JapaneseText
-import ject.lucene.field.LuceneField
+import ject.ja.docs.WordDoc
+import ject.ja.lucene.WordReader.SearchType
+import ject.ja.lucene.field.WordField
 import ject.lucene.AnalyzerExtensions.*
 import ject.lucene.BooleanQueryBuilderExtensions.*
 import ject.lucene.LuceneReader
 import ject.lucene.ScoredDoc
-import ject.SearchPattern
+import ject.lucene.field.LuceneField
 import org.apache.lucene.index.DirectoryReader
+import org.apache.lucene.queries.function.FunctionScoreQuery
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.store.MMapDirectory
 import org.apache.lucene.util.QueryBuilder
-import zio.stream.ZStream
 import zio.Scope
 import zio.ZIO
+import zio.stream.ZStream
 
 import java.nio.file.Path
 
@@ -116,11 +117,20 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
 
     val sort = new Sort(
       SortField.FIELD_SCORE,
-      new SortedNumericSortField(WordField.Popularity.entryName, SortField.Type.DOUBLE, true)
+      new SortedNumericSortField(WordField.Frequency.entryName, SortField.Type.INT),
+      new SortedNumericSortField(WordField.Priority.entryName, SortField.Type.INT, true)
     )
 
     ZStream.unwrap(
-      booleanQueryTask.map(b => searchSorted(b.build(), sort))
+      booleanQueryTask.map { b =>
+//        val query = FunctionScoreQuery.boostByValue(
+//          b.build(),
+//          DoubleValuesSource.fromLongField(WordField.Priority.entryName)
+//        )
+        val query = b.build()
+
+        searchSorted(query, sort)
+      }
     )
   }
 }

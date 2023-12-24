@@ -45,7 +45,6 @@ object TermBankIO {
           }
       }
     )
-
   }
 
 }

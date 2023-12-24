@@ -26,7 +26,8 @@ object WordField extends Enum[WordField] {
 
   case object PartOfSpeech extends WordField(Analyzers.standard)
 
-  case object Popularity extends WordField(Analyzers.standard)
+  case object Priority extends WordField(Analyzers.standard)
+  case object Frequency extends WordField(Analyzers.standard)
 
   val values: IndexedSeq[WordField] = findValues
 }

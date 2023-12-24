@@ -3,9 +3,9 @@ package ject.ja.docs
 import ject.ja.lucene.field.WordField
 import ject.ja.text.Inflection
 import ject.ja.text.WordType
-import ject.lucene.field.LuceneField
 import ject.lucene.DocDecoder
 import ject.lucene.DocEncoder
+import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
@@ -23,7 +23,8 @@ final case class WordDoc(
     definitions: Seq[String],
     tags: Seq[String],
     partsOfSpeech: Seq[String],
-    popularity: Long
+    priority: Int,
+    frequency: Int
 ) {
 
   def render: String = {
@@ -45,7 +46,8 @@ object WordDoc {
         definitions = document.getValues(WordField.Definition.entryName).toIndexedSeq,
         tags = document.getValues(WordField.Tags.entryName).toIndexedSeq,
         partsOfSpeech = document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq,
-        popularity = document.get(WordField.Popularity.entryName).toLong
+        priority = document.get(WordField.Priority.entryName).toInt,
+        frequency = document.get(WordField.Frequency.entryName).toInt
       )
   }
 
@@ -79,8 +81,11 @@ object WordDoc {
                  doc.add(new StringField(WordField.PartOfSpeech.entryName, value, Field.Store.YES))
                }
 
-               doc.add(new StoredField(WordField.Popularity.entryName, a.popularity))
-               doc.add(new NumericDocValuesField(WordField.Popularity.entryName, a.popularity))
+               doc.add(new StoredField(WordField.Priority.entryName, a.priority))
+               doc.add(new NumericDocValuesField(WordField.Priority.entryName, a.priority))
+
+               doc.add(new StoredField(WordField.Frequency.entryName, a.frequency))
+               doc.add(new NumericDocValuesField(WordField.Frequency.entryName, a.frequency))
 
                doc
              }
