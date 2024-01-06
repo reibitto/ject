@@ -34,6 +34,7 @@ object Godan {
     Sou.plain -> Transforms(changeBase(Dan.I, "そう")),
     Tai.plain -> Transforms(changeBase(Dan.I, "たい")),
     Progressive.plain -> Transforms(changeBase(Dan.I, "ている", "てる")),
+    Form.of(Progressive, Past) -> Transforms(changeBase(Dan.E, "ていた", "てた")),
     Form.of(Potential, Te) -> Transforms(changeBase(Dan.E, "て")),
     Form.of(Potential, Past) -> Transforms(changeBase(Dan.E, "た")),
     Form.of(Passive, Stem) -> Transforms(changeBase(Dan.A, "れ")),
@@ -54,6 +55,7 @@ object Godan {
     Alternative.polite -> Transforms(changeBase(Dan.I, "ましたり")),
     Imperative.polite -> Transforms(changeBase(Dan.I, "なさい")),
     Progressive.polite -> Transforms(changeBase(Dan.I, "ています", "てます")),
+    Form.of(Potential, Past).polite -> Transforms(changeBase(Dan.E, "ていました", "てました")),
     Form.of(Potential, Te).polite -> Transforms(changeBase(Dan.E, "まして")),
     Form.of(Potential, Past).polite -> Transforms(changeBase(Dan.E, "ました")),
     // Negative
@@ -73,6 +75,7 @@ object Godan {
     Form.of(Potential, Sou).negative -> Transforms(changeBase(Dan.E, "なさそう")),
     Tai.negative -> Transforms(changeBase(Dan.I, "たくない")),
     Progressive.negative -> Transforms(changeBase(Dan.I, "ていない", "てない")),
+    Form.of(Progressive, Past).negative -> Transforms(changeBase(Dan.I, "ていなかった", "てなかった")),
     Form.of(Tai, Sou).negative -> Transforms(changeBase(Dan.I, "たくなさそう")),
     Form.of(Potential, Te).negative -> Transforms(changeBase(Dan.E, "なくて")),
     Form.of(Potential, Past).negative -> Transforms(changeBase(Dan.E, "なかった")),
@@ -90,6 +93,7 @@ object Godan {
     Alternative.polite.negative -> Transforms(changeBase(Dan.I, "ませんでしたり")),
     Imperative.polite.negative -> Transforms(changeBase(Dan.I, "なさるな")),
     Progressive.polite.negative -> Transforms(changeBase(Dan.I, "ていません", "てません")),
+    Form.of(Progressive, Past).polite.negative -> Transforms(changeBase(Dan.E, "ていませんでした", "てませんでした")),
     Form.of(Potential, Te).polite.negative -> Transforms(changeBase(Dan.E, "ませんでして")),
     Form.of(Potential, Past).polite.negative -> Transforms(changeBase(Dan.E, "ませんでした")),
     // Other
