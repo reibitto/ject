@@ -25,7 +25,7 @@ object Content {
             // According to the term bank schema, can be either an array or object.
             c.downField("content")
               .as[Vector[ContentNode]]
-              .map(Content.Nodes)
+              .map(Content.Nodes.apply)
               .orElse(
                 c.downField("content").as[ContentNode].map(n => Content.Nodes(Vector(n)))
               )
