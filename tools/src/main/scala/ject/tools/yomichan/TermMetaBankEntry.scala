@@ -6,7 +6,9 @@ import zio.NonEmptyChunk
 sealed trait TermMetaBankEntry
 
 object TermMetaBankEntry {
+
   final case class Frequency(term: String, reading: String, frequency: Int) extends TermMetaBankEntry {
+
     def toFrequencyEntry: FrequencyEntry =
       FrequencyEntry(term, reading, frequency)
   }

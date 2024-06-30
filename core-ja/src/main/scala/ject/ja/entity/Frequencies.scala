@@ -10,13 +10,17 @@ final case class Frequencies(data: Map[String, Chunk[FrequencyEntry]]) {
     frequencyEntries.minByOption(_.frequency).getOrElse(FrequencyEntry.emptyFor(term))
   }
 
-  def find(terms: Seq[String], readings: Seq[String]): FrequencyEntry = {
-    Chunk.fromIterable(terms).map { term =>
-      data.getOrElse(term, Chunk.empty).filter { f =>
-        readings.contains(f.reading)
+  def find(terms: Seq[String], readings: Seq[String]): FrequencyEntry =
+    Chunk
+      .fromIterable(terms)
+      .map { term =>
+        data.getOrElse(term, Chunk.empty).filter { f =>
+          readings.contains(f.reading)
+        }
       }
-    }.flatten.minByOption(_.frequency).getOrElse(FrequencyEntry.emptyFor(""))
-  }
+      .flatten
+      .minByOption(_.frequency)
+      .getOrElse(FrequencyEntry.emptyFor(""))
 
   //  def find(terms: Seq[String], readings: Seq[String]): FrequencyEntry = {
 //    val frequencyEntries = (terms ++ readings).map { term =>

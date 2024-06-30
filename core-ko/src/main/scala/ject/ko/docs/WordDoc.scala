@@ -22,6 +22,8 @@ final case class WordDoc(
     partsOfSpeech: Seq[String]
 ) {
 
+  def terms: Seq[String] = hangulTerms ++ hanjaTerms
+
   def definitions: Seq[String] = definitionsKorean ++ definitionsJapanese ++ definitionsEnglish
 
   def render: String = {

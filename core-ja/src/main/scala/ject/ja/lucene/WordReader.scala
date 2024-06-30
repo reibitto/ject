@@ -1,24 +1,24 @@
 package ject.ja.lucene
 
-import ject.SearchPattern
-import ject.ja.JapaneseText
 import ject.ja.docs.WordDoc
-import ject.ja.lucene.WordReader.SearchType
 import ject.ja.lucene.field.WordField
+import ject.ja.lucene.WordReader.SearchType
+import ject.ja.JapaneseText
+import ject.lucene.field.LuceneField
 import ject.lucene.AnalyzerExtensions.*
 import ject.lucene.BooleanQueryBuilderExtensions.*
 import ject.lucene.LuceneReader
 import ject.lucene.ScoredDoc
-import ject.lucene.field.LuceneField
+import ject.SearchPattern
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.queries.function.FunctionScoreQuery
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.store.MMapDirectory
 import org.apache.lucene.util.QueryBuilder
+import zio.stream.ZStream
 import zio.Scope
 import zio.ZIO
-import zio.stream.ZStream
 
 import java.nio.file.Path
 
@@ -104,8 +104,18 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
 
           booleanQuery
 
+        case (pattern @ SearchPattern.Prefix(_), SearchType.Kanji | SearchType.Reading) =>
+          // Need to search both Kanji and Reading because the wildcard could be either of them
+          booleanQuery.addPrefixQuery(WordField.KanjiTerm, pattern.text, BooleanClause.Occur.SHOULD)
+          booleanQuery.addPrefixQuery(WordField.ReadingTerm, pattern.text, BooleanClause.Occur.SHOULD)
+
         case (pattern @ SearchPattern.Prefix(_), searchType) =>
           booleanQuery.addPrefixQuery(searchTypeToField(searchType), pattern.text, BooleanClause.Occur.SHOULD)
+
+        case (pattern @ SearchPattern.Wildcard(_), SearchType.Kanji | SearchType.Reading) =>
+          // Need to search both Kanji and Reading because the wildcard could be either of them
+          booleanQuery.addWildcardQuery(WordField.KanjiTerm, pattern.patternText, BooleanClause.Occur.SHOULD)
+          booleanQuery.addWildcardQuery(WordField.ReadingTerm, pattern.patternText, BooleanClause.Occur.SHOULD)
 
         case (pattern @ SearchPattern.Wildcard(_), searchType) =>
           booleanQuery.addWildcardQuery(searchTypeToField(searchType), pattern.patternText, BooleanClause.Occur.SHOULD)

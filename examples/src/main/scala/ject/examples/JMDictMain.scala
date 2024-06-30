@@ -21,8 +21,8 @@ object JMDictMain extends ZIOAppDefault {
     (for {
       entries <- TermMetaBankIO.loadFrequencies(Paths.get("data/dictionary/bccwj-luw")).runCollect
       frequencies = Frequencies(entries.groupBy(_.term).map { case (k, v) =>
-        k -> v.map(_.toFrequencyEntry)
-      })
+                      k -> v.map(_.toFrequencyEntry)
+                    })
       _ <- printLine(s"Starting to index dictionary: JMDict")
       targetPath = Paths.get("data/dictionary/JMDict_e.xml")
       _        <- targetPath.ensureDirectoryExists()

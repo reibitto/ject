@@ -43,7 +43,8 @@ object TermMetaBankIO {
                   .getOrElse(throw new Exception("frequency does not exist"))
                   .asNumber
                   .getOrElse(throw new Exception("frequency is not a string"))
-                  .toDouble.toInt
+                  .toDouble
+                  .toInt
 
                 (reading.getOrElse(term), frequency)
 

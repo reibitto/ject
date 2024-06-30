@@ -1,10 +1,10 @@
 package ject.examples
 
-import ject.ja.JapaneseText
 import ject.ja.docs.WordDoc
 import ject.ja.entity.Frequencies
 import ject.ja.entity.FrequencyEntry
 import ject.ja.lucene.WordWriter
+import ject.ja.JapaneseText
 import ject.tools.yomichan.TermBankIO
 import ject.tools.yomichan.TermMetaBankIO
 import zio.*
@@ -87,6 +87,8 @@ object YomichanMain extends ZIOAppDefault {
                                     frequency = frequencyEntry.frequency
                                   )
                                 }
+                                // TODO: Add support for 子 links
+                                .filterNot(_.tags.contains("子"))
                                 .grouped(100)
                                 .mapZIO { entries =>
                                   index.addBulk(entries*).unless(dryRun).as(entries)

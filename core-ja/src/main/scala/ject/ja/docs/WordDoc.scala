@@ -3,9 +3,9 @@ package ject.ja.docs
 import ject.ja.lucene.field.WordField
 import ject.ja.text.Inflection
 import ject.ja.text.WordType
+import ject.lucene.field.LuceneField
 import ject.lucene.DocDecoder
 import ject.lucene.DocEncoder
-import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
@@ -26,6 +26,8 @@ final case class WordDoc(
     priority: Int,
     frequency: Int
 ) {
+
+  def terms: Seq[String] = kanjiTerms ++ readingTerms
 
   def render: String = {
     val terms = (kanjiTerms ++ readingTerms).mkString(" ")
