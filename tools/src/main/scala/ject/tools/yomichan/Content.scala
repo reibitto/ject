@@ -30,10 +30,14 @@ object Content {
                 c.downField("content").as[ContentNode].map(n => Content.Nodes(Vector(n)))
               )
 
+          case "image" =>
+            // TODO: Support images
+            Right(Content.Text(""))
+
           case other =>
             Left(
               DecodingFailure(
-                DecodingFailure.Reason.CustomReason(s"Currently unsupported content type: ${other}"),
+                DecodingFailure.Reason.CustomReason(s"Currently unsupported content type: $other"),
                 c.downField("type")
               )
             )

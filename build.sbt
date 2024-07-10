@@ -44,6 +44,10 @@ lazy val root = project
         "examples/runMain ject.examples.KanjidicMain",
         "Download kanjidic and create Lucene index"
       ),
+      UsefulTask(
+        "examples/runMain ject.examples.YomichanMain",
+        "Use custom Yomichan dictionaries to create Lucene indexes"
+      ),
       UsefulTask("fmt", "Run scalafmt on the entire project")
     )
   )

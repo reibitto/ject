@@ -21,7 +21,7 @@ object TermBankIO {
         ZStream
           .fromIterableZIO(
             for {
-              rawJson <- ZIO.blocking(ZIO.succeed(Files.readString(file, StandardCharsets.UTF_8)))
+              rawJson <- ZIO.attemptBlocking(Files.readString(file, StandardCharsets.UTF_8))
               json    <- ZIO.blocking(ZIO.fromEither(io.circe.parser.parse(rawJson)))
               array   <- ZIO.fromOption(json.asArray).orElseFail(new Exception("Term bank must be an array"))
             } yield array
@@ -38,7 +38,7 @@ object TermBankIO {
               popularity = fields(4).asNumber.map(_.toDouble).getOrElse(0),
               definitions = fields(5)
                 .as[Vector[Content]]
-                .getOrElse(throw new Exception(s"Could not decode definitions: ${fields(5)}")),
+                .fold(t => throw new Exception(s"Could not decode definitions: ${fields(5)} because $t"), identity),
               sequenceNumber = fields(6).asNumber.flatMap(_.toInt).getOrElse(0),
               termTags = fields(7).asString.map(_.trim.split(' ').filter(_.nonEmpty).toSeq).getOrElse(Seq.empty)
             )

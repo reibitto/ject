@@ -24,7 +24,7 @@ object TermMetaBankIO {
         ZStream
           .fromIterableZIO(
             for {
-              rawJson <- ZIO.blocking(ZIO.succeed(Files.readString(file, StandardCharsets.UTF_8)))
+              rawJson <- ZIO.attemptBlocking(Files.readString(file, StandardCharsets.UTF_8))
               json    <- ZIO.blocking(ZIO.fromEither(io.circe.parser.parse(rawJson)))
               array   <- ZIO.fromOption(json.asArray).orElseFail(new Exception("Term meta bank must be an array"))
             } yield array
