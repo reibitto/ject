@@ -1,6 +1,6 @@
 package ject.utils
 
-import zio.{Task, ZIO}
+import zio.*
 
 import java.nio.file.Files
 import java.nio.file.Path

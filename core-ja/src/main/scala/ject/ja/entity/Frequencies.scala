@@ -21,14 +21,6 @@ final case class Frequencies(data: Map[String, Chunk[FrequencyEntry]]) {
       .flatten
       .minByOption(_.frequency)
       .getOrElse(FrequencyEntry.emptyFor(""))
-
-  //  def find(terms: Seq[String], readings: Seq[String]): FrequencyEntry = {
-//    val frequencyEntries = (terms ++ readings).map { term =>
-//      apply(term)
-//    }
-//
-//    frequencyEntries.minByOption(_.frequency).getOrElse(FrequencyEntry.emptyFor(""))
-//  }
 }
 
 object Frequencies {

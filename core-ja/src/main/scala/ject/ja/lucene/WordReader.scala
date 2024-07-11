@@ -133,10 +133,12 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
 
     ZStream.unwrap(
       booleanQueryTask.map { b =>
+        // TODO: Consider boosting
 //        val query = FunctionScoreQuery.boostByValue(
 //          b.build(),
 //          DoubleValuesSource.fromLongField(WordField.Priority.entryName)
 //        )
+
         val query = b.build()
 
         searchSorted(query, sort)

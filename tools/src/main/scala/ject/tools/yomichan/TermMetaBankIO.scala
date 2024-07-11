@@ -11,7 +11,8 @@ import scala.jdk.StreamConverters.*
 object TermMetaBankIO {
 
   def load(dictionaryDirectory: Path): ZStream[Any, Throwable, TermMetaBankEntry] =
-    ???
+    // TODO: Also load pitches
+    loadFrequencies(dictionaryDirectory)
 
   def loadFrequencies(dictionaryDirectory: Path): ZStream[Any, Throwable, TermMetaBankEntry.Frequency] = {
     val files = Files.list(dictionaryDirectory).toScala(Chunk).filter { f =>
@@ -69,5 +70,5 @@ object TermMetaBankIO {
   }
 
   def loadPitches(dictionaryDirectory: Path): ZStream[Any, Throwable, TermMetaBankEntry.Pitch] =
-    ???
+    throw new NotImplementedError("Pitch accent dictionaries not currently supported")
 }

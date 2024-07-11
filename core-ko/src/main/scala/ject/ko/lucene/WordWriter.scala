@@ -4,7 +4,7 @@ import ject.ko.docs.WordDoc
 import ject.lucene.{DocEncoder, DocWriter}
 import org.apache.lucene.index.{IndexWriter, IndexWriterConfig}
 import org.apache.lucene.store.MMapDirectory
-import zio.{RIO, Scope, ZIO}
+import zio.*
 
 import java.nio.file.Path
 
