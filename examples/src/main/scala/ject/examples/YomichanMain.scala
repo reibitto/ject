@@ -2,7 +2,6 @@ package ject.examples
 
 import ject.ja.docs.WordDoc
 import ject.ja.entity.Frequencies
-import ject.ja.entity.FrequencyEntry
 import ject.ja.lucene.WordWriter
 import ject.ja.JapaneseText
 import ject.tools.yomichan.TermBankIO

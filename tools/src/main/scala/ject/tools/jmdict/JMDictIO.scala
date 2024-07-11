@@ -4,7 +4,7 @@ import ject.ja.docs.WordDoc
 import ject.ja.entity.Frequencies
 import zio.*
 import zio.stream.{ZPipeline, ZSink, ZStream}
-import zio.Console.{printLine, readLine}
+import zio.Console.printLine
 
 import java.net.URI
 import java.nio.charset.StandardCharsets
