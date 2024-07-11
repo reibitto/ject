@@ -11,7 +11,6 @@ import ject.lucene.LuceneReader
 import ject.lucene.ScoredDoc
 import ject.SearchPattern
 import org.apache.lucene.index.DirectoryReader
-import org.apache.lucene.queries.function.FunctionScoreQuery
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.store.MMapDirectory
