@@ -4,24 +4,30 @@ import ject.ko.docs.WordDoc
 import ject.ko.lucene.field.WordField
 import ject.ko.lucene.WordReader.SearchType
 import ject.ko.KoreanText
-import ject.lucene.{LuceneReader, ScoredDoc}
 import ject.lucene.field.LuceneField
 import ject.lucene.AnalyzerExtensions.*
 import ject.lucene.BooleanQueryBuilderExtensions.*
+import ject.lucene.LuceneReader
+import ject.lucene.ScoredDoc
 import ject.SearchPattern
+import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
+import org.apache.lucene.store.MMapDirectory
 import org.apache.lucene.util.QueryBuilder
-import zio.{Scope, ZIO}
 import zio.stream.ZStream
+import zio.Scope
+import zio.ZIO
 
 import java.nio.file.Path
 
-final case class WordReader(index: LuceneReader[WordDoc]) {
+final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, searcher: IndexSearcher)
+    extends LuceneReader[WordDoc] {
   private val builder = new QueryBuilder(WordDoc.docDecoder.analyzer)
 
-  private val queryParser = new QueryParser(LuceneField.none.entryName, WordDoc.docDecoder.analyzer)
-  queryParser.setAllowLeadingWildcard(true)
+  private val queryParser: QueryParser = new QueryParser(LuceneField.none.entryName, WordDoc.docDecoder.analyzer) {
+    setAllowLeadingWildcard(true)
+  }
 
   def search(pattern: SearchPattern): ZStream[Any, Throwable, ScoredDoc[WordDoc]] = {
     val searchType =
@@ -89,7 +95,7 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
     }
 
     ZStream.unwrap(
-      booleanQueryTask.map(b => index.search(b.build()))
+      booleanQueryTask.map(b => search(b.build()))
     )
   }
 }
@@ -106,7 +112,6 @@ object WordReader {
   }
 
   def make(directory: Path): ZIO[Scope, Throwable, WordReader] =
-    for {
-      reader <- LuceneReader.make[WordDoc](directory)
-    } yield WordReader(reader)
+    LuceneReader.makeReader(directory)(WordReader.apply)
+
 }

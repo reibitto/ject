@@ -1,31 +1,30 @@
 package ject.examples
 
-import ject.ja.lucene.KanjiWriter
-import ject.tools.jmdict.KanjidicIO
-import ject.tools.jmdict.RadicalIO
-import ject.utils.IOExtensions.*
+import ject.ko.lucene.WordWriter
+import ject.tools.krdict.KrDictIO
+import ject.DefinitionLanguage
 import zio.*
 import zio.Console.printLine
 
 import java.nio.file.Paths
 
-object KanjidicMain extends ZIOAppDefault {
+object KrDictMain extends ZIOAppDefault {
 
   val dryRun: Boolean = false
 
   def run: UIO[Unit] =
     (for {
-      _        <- printLine(s"Starting to index dictionary: Kanjidic")
-      radicals <- RadicalIO.load(Paths.get("data/radicals.dat"))
-      targetPath = Paths.get("data/dictionary/kanjidic.xml")
-      _ <- targetPath.ensureDirectoryExists()
-      _ <- KanjidicIO.download(targetPath).unless(targetPath.toFile.exists())
-      luceneDirectory = Paths.get("data/lucene/kanji")
+      _ <- printLine(s"Starting to index dictionary: KrDict")
+      targetPath = Paths.get("data/dictionary/krdict-ja")
+      definitionLanguage = DefinitionLanguage.Japanese
+      // targetPath = Paths.get("data/dictionary/naver-kr-jp")
+      // definitionLanguage = DefinitionLanguage.Japanese
+      luceneDirectory <- ZIO.succeed(Paths.get("data/lucene/word-ko"))
       (timeTaken, totalDocs) <- ZIO.scoped {
                                   for {
-                                    index <- KanjiWriter.make(luceneDirectory)
-                                    count <- KanjidicIO
-                                               .load(targetPath, radicals)
+                                    index <- WordWriter.make(luceneDirectory)
+                                    count <- KrDictIO
+                                               .load(targetPath, definitionLanguage)
                                                .grouped(100)
                                                .mapZIO { entries =>
                                                  index.addBulk(entries*).unless(dryRun).as(entries)
@@ -38,12 +37,10 @@ object KanjidicMain extends ZIOAppDefault {
                                                    .as(n)
                                                }
                                                .runLast
-                                               .map(_.getOrElse(0))
                                   } yield count
                                 }.timed
       _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
-
     } yield ()).catchAllCause { t =>
       ZIO.succeed(t.squash.printStackTrace())
     }

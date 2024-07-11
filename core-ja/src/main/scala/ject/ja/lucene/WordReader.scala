@@ -4,24 +4,30 @@ import ject.ja.docs.WordDoc
 import ject.ja.lucene.field.WordField
 import ject.ja.lucene.WordReader.SearchType
 import ject.ja.JapaneseText
-import ject.lucene.{LuceneReader, ScoredDoc}
 import ject.lucene.field.LuceneField
 import ject.lucene.AnalyzerExtensions.*
 import ject.lucene.BooleanQueryBuilderExtensions.*
+import ject.lucene.LuceneReader
+import ject.lucene.ScoredDoc
 import ject.SearchPattern
+import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
+import org.apache.lucene.store.MMapDirectory
 import org.apache.lucene.util.QueryBuilder
-import zio.{Scope, ZIO}
 import zio.stream.ZStream
+import zio.Scope
+import zio.ZIO
 
 import java.nio.file.Path
 
-final case class WordReader(index: LuceneReader[WordDoc]) {
+final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, searcher: IndexSearcher)
+    extends LuceneReader[WordDoc] {
   private val builder = new QueryBuilder(WordDoc.docDecoder.analyzer)
 
-  private val queryParser = new QueryParser(LuceneField.none.entryName, WordDoc.docDecoder.analyzer)
-  queryParser.setAllowLeadingWildcard(true)
+  private val queryParser: QueryParser = new QueryParser(LuceneField.none.entryName, WordDoc.docDecoder.analyzer) {
+    setAllowLeadingWildcard(true)
+  }
 
   def search(pattern: SearchPattern): ZStream[Any, Throwable, ScoredDoc[WordDoc]] = {
     val searchType =
@@ -97,8 +103,18 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
 
           booleanQuery
 
+        case (pattern @ SearchPattern.Prefix(_), SearchType.Kanji | SearchType.Reading) =>
+          // Need to search both Kanji and Reading because the wildcard could be either of them
+          booleanQuery.addPrefixQuery(WordField.KanjiTerm, pattern.text, BooleanClause.Occur.SHOULD)
+          booleanQuery.addPrefixQuery(WordField.ReadingTerm, pattern.text, BooleanClause.Occur.SHOULD)
+
         case (pattern @ SearchPattern.Prefix(_), searchType) =>
           booleanQuery.addPrefixQuery(searchTypeToField(searchType), pattern.text, BooleanClause.Occur.SHOULD)
+
+        case (pattern @ SearchPattern.Wildcard(_), SearchType.Kanji | SearchType.Reading) =>
+          // Need to search both Kanji and Reading because the wildcard could be either of them
+          booleanQuery.addWildcardQuery(WordField.KanjiTerm, pattern.patternText, BooleanClause.Occur.SHOULD)
+          booleanQuery.addWildcardQuery(WordField.ReadingTerm, pattern.patternText, BooleanClause.Occur.SHOULD)
 
         case (pattern @ SearchPattern.Wildcard(_), searchType) =>
           booleanQuery.addWildcardQuery(searchTypeToField(searchType), pattern.patternText, BooleanClause.Occur.SHOULD)
@@ -108,8 +124,24 @@ final case class WordReader(index: LuceneReader[WordDoc]) {
       }
     }
 
+    val sort = new Sort(
+      SortField.FIELD_SCORE,
+      new SortedNumericSortField(WordField.Frequency.entryName, SortField.Type.INT),
+      new SortedNumericSortField(WordField.Priority.entryName, SortField.Type.INT, true)
+    )
+
     ZStream.unwrap(
-      booleanQueryTask.map(b => index.search(b.build()))
+      booleanQueryTask.map { b =>
+        // TODO: Consider boosting
+//        val query = FunctionScoreQuery.boostByValue(
+//          b.build(),
+//          DoubleValuesSource.fromLongField(WordField.Priority.entryName)
+//        )
+
+        val query = b.build()
+
+        searchSorted(query, sort)
+      }
     )
   }
 }
@@ -126,7 +158,5 @@ object WordReader {
   }
 
   def make(directory: Path): ZIO[Scope, Throwable, WordReader] =
-    for {
-      reader <- LuceneReader.make[WordDoc](directory)
-    } yield WordReader(reader)
+    LuceneReader.makeReader(directory)(WordReader.apply)
 }

@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 
 object Build {
-  val ScalaVersion = "2.13.12"
+  val ScalaVersion = "2.13.14"
 
   lazy val ScalacOptions = Seq(
     "-encoding",
@@ -33,7 +33,7 @@ object Build {
       "-Ywarn-unused:locals", // Warn if a local definition is unused.
       "-Ywarn-unused:privates", // Warn if a private member is unused.
       "-Ywarn-unused:implicits" // Warn if an implicit parameter is unused.
-    ).filter(_ => shouldWarnForUnusedCode)
+    ).filter(_ => !lenientDevEnabled)
 
   def defaultSettings(projectName: String) =
     Seq(
@@ -42,11 +42,16 @@ object Build {
       javaOptions += "-Dfile.encoding=UTF-8",
       scalacOptions := ScalacOptions,
       ThisBuild / scalaVersion := ScalaVersion,
+      outputStrategy := Some(StdoutOutput), // Remove prefixes like `[info]`
       libraryDependencies ++= Plugins.BaseCompilerPlugins,
+      libraryDependencies ++= Seq(
+        "dev.zio" %% "zio-test" % V.zio % Test,
+        "dev.zio" %% "zio-test-sbt" % V.zio % Test
+      ),
       incOptions ~= (_.withLogRecompileOnMacro(false)),
       autoAPIMappings := true,
       resolvers := Resolvers,
-      testFrameworks := Seq(new TestFramework("zio.test.sbt.ZTestFramework")),
+      testFrameworks := Seq(TestFrameworks.ZIOTest),
       Test / fork := true,
       Test / logBuffered := false
     )
@@ -70,6 +75,10 @@ object Build {
     flagValue
   }
 
-  lazy val shouldWarnForUnusedCode: Boolean = compilerFlag("scalac.unused.enabled", false)
+  /** Uses more lenient rules for local development so that warnings for unused
+    * imports and so on doesn't get in your way when code is still a work in
+    * progress. CI has all the strict rules enabled.
+    */
+  lazy val lenientDevEnabled: Boolean = compilerFlag("scalac.lenientDev.enabled", true)
 
 }

@@ -1,6 +1,7 @@
-package ject.ja.io
+package ject.tools.jmdict
 
 import ject.ja.docs.WordDoc
+import ject.ja.entity.Frequencies
 import zio.*
 import zio.stream.{ZPipeline, ZSink, ZStream}
 import zio.Console.printLine
@@ -65,7 +66,7 @@ object JMDictIO {
         .run(ZSink.fromPath(output))
   }
 
-  def load(file: Path): ZStream[Any, Throwable, WordDoc] =
+  def load(file: Path, frequencies: Frequencies = Frequencies.empty): ZStream[Any, Throwable, WordDoc] =
     ZStream.fromIteratorZIO {
       java.lang.System.setProperty("jdk.xml.entityExpansionLimit", "0")
 
@@ -73,13 +74,20 @@ object JMDictIO {
         xml <- ZIO.attempt(xmlLoader.loadFile(file.toFile))
         entryNodes = xml \ "entry"
       } yield entryNodes.iterator.map { n =>
+        val kanjiTerms = (n \ "k_ele" \ "keb").map(_.text)
+        val readingTerms = (n \ "r_ele" \ "reb").map(_.text)
+        val frequencyEntry = frequencies.find(kanjiTerms, readingTerms)
+
         WordDoc(
-          (n \ "ent_seq").map(_.text).head,
-          (n \ "k_ele" \ "keb").map(_.text),
-          (n \ "r_ele" \ "reb").map(_.text),
-          (n \ "sense").map(s => (s \ "gloss").map(_.text).mkString("; ")),
-          (n \ "sense" \ "dial").map(_.text).distinct,
-          (n \ "sense" \ "pos").map(_.text).distinct
+          id = s"jmdict/${(n \ "ent_seq").map(_.text).head}",
+          kanjiTerms = kanjiTerms,
+          readingTerms = readingTerms,
+          definitions = (n \ "sense").map(s => (s \ "gloss").map(_.text).mkString("; ")),
+          tags = (n \ "sense" \ "dial").map(_.text).distinct,
+          partsOfSpeech = (n \ "sense" \ "pos").map(_.text).distinct,
+          // priority = 50, // TODO: Consider changing priority
+          priority = 0,
+          frequency = frequencyEntry.frequency
         )
       }
     }

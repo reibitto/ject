@@ -9,9 +9,12 @@ import ject.lucene.DocEncoder
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
+import org.apache.lucene.document.NumericDocValuesField
+import org.apache.lucene.document.StoredField
 import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
-import zio.{Task, ZIO}
+import zio.Task
+import zio.ZIO
 
 final case class WordDoc(
     id: String,
@@ -19,8 +22,12 @@ final case class WordDoc(
     readingTerms: Seq[String],
     definitions: Seq[String],
     tags: Seq[String],
-    partsOfSpeech: Seq[String]
+    partsOfSpeech: Seq[String],
+    priority: Int,
+    frequency: Int
 ) {
+
+  def terms: Seq[String] = kanjiTerms ++ readingTerms
 
   def render: String = {
     val terms = (kanjiTerms ++ readingTerms).mkString(" ")
@@ -40,7 +47,9 @@ object WordDoc {
         readingTerms = document.getValues(WordField.ReadingTerm.entryName).toIndexedSeq,
         definitions = document.getValues(WordField.Definition.entryName).toIndexedSeq,
         tags = document.getValues(WordField.Tags.entryName).toIndexedSeq,
-        partsOfSpeech = document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq
+        partsOfSpeech = document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq,
+        priority = document.get(WordField.Priority.entryName).toInt,
+        frequency = document.get(WordField.Frequency.entryName).toInt
       )
   }
 
@@ -73,6 +82,12 @@ object WordDoc {
                a.partsOfSpeech.foreach { value =>
                  doc.add(new StringField(WordField.PartOfSpeech.entryName, value, Field.Store.YES))
                }
+
+               doc.add(new StoredField(WordField.Priority.entryName, a.priority))
+               doc.add(new NumericDocValuesField(WordField.Priority.entryName, a.priority))
+
+               doc.add(new StoredField(WordField.Frequency.entryName, a.frequency))
+               doc.add(new NumericDocValuesField(WordField.Frequency.entryName, a.frequency))
 
                doc
              }
