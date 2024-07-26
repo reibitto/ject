@@ -3,6 +3,7 @@ package ject.ja.docs
 import ject.ja.lucene.field.WordField
 import ject.ja.text.Inflection
 import ject.ja.text.WordType
+import ject.ja.JapaneseText
 import ject.lucene.field.LuceneField
 import ject.lucene.DocDecoder
 import ject.lucene.DocEncoder
@@ -13,8 +14,7 @@ import org.apache.lucene.document.NumericDocValuesField
 import org.apache.lucene.document.StoredField
 import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
-import zio.Task
-import zio.ZIO
+import zio.*
 
 final case class WordDoc(
     id: String,
@@ -95,19 +95,23 @@ object WordDoc {
     } yield doc
 
   private def indexInflections(d: WordDoc, document: Document): Task[Unit] = {
-    def indexTerms(terms: Seq[String], field: WordField, wordType: WordType): Task[Unit] =
-      ZIO.foreachDiscard(terms) { value =>
-        ZIO.attempt {
-          Inflection.inflectAll(value, wordType).foreach {
-            case (_, Right(chunk)) =>
-              chunk.foreach { s =>
-                document.add(new StringField(field.entryName, s, Field.Store.NO))
-              }
+    def indexTerms(terms: Seq[String], field: WordField, wordType: WordType): Task[Unit] = {
+      val allInflections = terms.flatMap { value =>
+        Inflection.inflectAll(value, wordType).flatMap {
+          case (_, Right(chunk)) =>
+            (chunk ++ chunk.map(JapaneseText.toHiragana)).toChunk
 
-            case _ => ()
-          }
+          case _ =>
+            Chunk.empty
+        }
+      }.distinct
+
+      ZIO.foreachDiscard(allInflections) { value =>
+        ZIO.attempt {
+          document.add(new StringField(field.entryName, value, Field.Store.NO))
         }
       }
+    }
 
     val wordTypeOpt =
       if (d.partsOfSpeech.contains("adj-i"))

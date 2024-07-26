@@ -5,8 +5,7 @@ import ject.ja.entity.Radical
 import zio.stream.ZSink
 import zio.stream.ZStream
 import zio.Console.printLine
-import zio.RIO
-import zio.ZIO
+import zio.*
 
 import java.net.URI
 import java.nio.file.Path

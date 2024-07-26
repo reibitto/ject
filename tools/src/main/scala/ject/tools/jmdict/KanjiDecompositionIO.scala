@@ -2,7 +2,7 @@ package ject.tools.jmdict
 
 import ject.ja.entity.{KanjiComposition, KanjiPart}
 import zio.stream.{ZPipeline, ZStream}
-import zio.ZIO
+import zio.*
 
 import java.nio.file.Path
 

@@ -2,8 +2,7 @@ package ject.ja.text
 
 import ject.ja.text.Syllabary.Dan
 import ject.ja.JapaneseText
-import zio.Chunk
-import zio.NonEmptyChunk
+import zio.*
 
 object Transformation {
   type Transform = String => Either[String, NonEmptyChunk[String]]

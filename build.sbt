@@ -113,6 +113,7 @@ lazy val examples = module("examples")
       "com.lihaoyi" %% "pprint" % V.pprint
     ),
     javaOptions ++= Seq(
+      "--add-modules=jdk.incubator.vector",
       "-Dorg.apache.lucene.store.MMapDirectory.enableMemorySegments=false"
     )
   )

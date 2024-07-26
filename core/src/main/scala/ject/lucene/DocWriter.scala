@@ -1,7 +1,7 @@
 package ject.lucene
 
 import org.apache.lucene.index.IndexWriter
-import zio.{Task, ZIO}
+import zio.*
 
 trait DocWriter[A] {
   def writer: IndexWriter

@@ -1,6 +1,6 @@
 package ject.ja.entity
 
-import zio.Chunk
+import zio.*
 
 final case class Frequencies(data: Map[String, Chunk[FrequencyEntry]]) {
 
