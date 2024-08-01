@@ -15,8 +15,8 @@ import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.store.MMapDirectory
 import org.apache.lucene.util.QueryBuilder
-import zio.stream.ZStream
 import zio.*
+import zio.stream.ZStream
 
 import java.nio.file.Path
 

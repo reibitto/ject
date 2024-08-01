@@ -4,6 +4,7 @@ import zio.*
 import zio.test.*
 
 object JapaneseTextSpec extends ZIOSpecDefault {
+
   def spec: Spec[TestEnvironment & Scope, Any] =
     suite("JapaneseText")(
       test("convert to hiragana") {

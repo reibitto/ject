@@ -1,6 +1,7 @@
 package ject.ko.lucene.field
 
 import enumeratum.Enum
+import ject.ja.lucene.JapaneseAnalyzers
 import ject.ko.lucene.KoreanAnalyzers
 import ject.lucene.field.LuceneField
 import ject.lucene.Analyzers
@@ -22,7 +23,7 @@ object WordField extends Enum[WordField] {
   case object DefinitionEnglish extends WordField(Analyzers.english)
   case object DefinitionEnglishOther extends WordField(Analyzers.standard)
 
-  case object DefinitionJapanese extends WordField(Analyzers.english) // TODO:: Japanese
+  case object DefinitionJapanese extends WordField(JapaneseAnalyzers.japanese)
   case object DefinitionJapaneseOther extends WordField(Analyzers.standard)
 
   case object DefinitionKorean extends WordField(KoreanAnalyzers.korean)

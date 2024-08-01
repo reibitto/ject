@@ -85,8 +85,8 @@ object JMDictIO {
           definitions = (n \ "sense").map(s => (s \ "gloss").map(_.text).mkString("; ")),
           tags = (n \ "sense" \ "dial").map(_.text).distinct,
           partsOfSpeech = (n \ "sense" \ "pos").map(_.text).distinct,
-          // priority = 50, // TODO: Consider changing priority
-          priority = 0,
+          priority = 50, // TODO: Consider changing priority
+//          priority = 0,
           frequency = frequencyEntry.frequency
         )
       }

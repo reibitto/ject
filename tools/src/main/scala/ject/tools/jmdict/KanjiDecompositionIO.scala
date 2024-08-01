@@ -1,8 +1,8 @@
 package ject.tools.jmdict
 
 import ject.ja.entity.{KanjiComposition, KanjiPart}
-import zio.stream.{ZPipeline, ZStream}
 import zio.*
+import zio.stream.{ZPipeline, ZStream}
 
 import java.nio.file.Path
 
