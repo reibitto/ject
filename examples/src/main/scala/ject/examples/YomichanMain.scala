@@ -48,7 +48,10 @@ object YomichanMain extends ZIOAppDefault {
                                     if (dictionary.shouldSanitize)
                                       e.definitions.headOption match {
                                         case Some(a) =>
-                                          val lines = Sanitizer.sanitizeSpecific(a.asText).linesIterator.toVector
+                                          val lines = Sanitizer
+                                            .sanitizeForDictionary(dictionary.name)(a.asText)
+                                            .linesIterator
+                                            .toVector
 
                                           if (lines.length > 1)
                                             (lines

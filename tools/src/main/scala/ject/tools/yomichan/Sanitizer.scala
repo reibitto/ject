@@ -7,8 +7,13 @@ object Sanitizer {
   def sanitize(text: String): String =
     text.normalizeNewlines.replaceAll("\n{3,}", "\n\n").trim
 
-  // TODO:: Take in dictionary ADT (pixiv, etc)
-  def sanitizeSpecific(text: String): String =
+  def sanitizeForDictionary(dicitonaryId: String)(text: String) =
+    dicitonaryId match {
+      case "pixiv" => sanitizePixiv(text)
+      case _       => sanitize(text)
+    }
+
+  def sanitizePixiv(text: String): String =
     text
       .replace("pixivで読む", "")
       .normalizeNewlines
