@@ -79,7 +79,7 @@ lazy val coreJapanese = module("ject-ja", Some("core-ja"))
   )
 
 lazy val coreKorean = module("ject-ko", Some("core-ko"))
-  .dependsOn(core)
+  .dependsOn(coreJapanese)
   .settings(
     fork := true,
     run / baseDirectory := file("."),
@@ -113,6 +113,7 @@ lazy val examples = module("examples")
       "com.lihaoyi" %% "pprint" % V.pprint
     ),
     javaOptions ++= Seq(
+      "--add-modules=jdk.incubator.vector",
       "-Dorg.apache.lucene.store.MMapDirectory.enableMemorySegments=false"
     )
   )

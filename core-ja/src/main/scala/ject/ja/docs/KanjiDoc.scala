@@ -6,7 +6,7 @@ import ject.lucene.DocDecoder
 import ject.lucene.DocEncoder
 import org.apache.lucene.analysis.Analyzer
 import org.apache.lucene.document.*
-import zio.ZIO
+import zio.*
 
 final case class KanjiDoc(
     kanji: String,

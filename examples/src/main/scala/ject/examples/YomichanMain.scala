@@ -4,8 +4,7 @@ import ject.ja.docs.WordDoc
 import ject.ja.entity.Frequencies
 import ject.ja.lucene.WordWriter
 import ject.ja.JapaneseText
-import ject.tools.yomichan.TermBankIO
-import ject.tools.yomichan.TermMetaBankIO
+import ject.tools.yomichan.{Sanitizer, TermBankIO, TermMetaBankIO}
 import zio.*
 import zio.Console.printLine
 
@@ -45,17 +44,18 @@ object YomichanMain extends ZIOAppDefault {
                                 .filter(_.term.nonEmpty)
                                 .zipWithIndex
                                 .map { case (e, i) =>
-                                  // val sanitizedDefinitions = e.definitions.flatMap(_.asText.trim.split("\n{2,}").toVector)
-
                                   val sanitizedDefinitions =
                                     if (dictionary.shouldSanitize)
                                       e.definitions.headOption match {
                                         case Some(a) =>
-                                          val lines = a.asText.linesIterator.toVector
+                                          val lines = Sanitizer
+                                            .sanitizeForDictionary(dictionary.name)(a.asText)
+                                            .linesIterator
+                                            .toVector
 
                                           if (lines.length > 1)
                                             (lines
-                                              .drop(1)
+                                              .drop(if (dictionary.name == "pixiv") 0 else 1)
                                               .mkString("\n")
                                               .trim +: e.definitions.tail.map(_.asText))
                                               .map(_.trim)
@@ -68,8 +68,6 @@ object YomichanMain extends ZIOAppDefault {
                                       }
                                     else
                                       e.definitions.map(_.asText)
-
-                                  // val sanitizedDefinitions2 = sanitizedDefinitions.flatMap(_.trim.split("\n{2,}").toVector)
 
                                   val kanjiTerms = Seq(e.term).filter(_.exists(JapaneseText.isKanji))
                                   val readingTerms = e.reading.toSeq

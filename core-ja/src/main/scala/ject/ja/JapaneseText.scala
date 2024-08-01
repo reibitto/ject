@@ -36,4 +36,25 @@ object JapaneseText {
         true
       case _ => false
     }
+
+  def toHiragana(c: Char): Char =
+    c match {
+      case c if c >= 0x30a1 && c <= 0x30f3 => (c - 96).toChar
+      case 'ヵ'                             => 'か'
+      case 'ヶ'                             => 'け'
+      case 'ヴ'                             => 'ゔ'
+      case c                               => c
+    }
+
+  def toHiragana(s: String): String =
+    s.map(toHiragana)
+
+  def toKatakana(c: Char): Char =
+    c match {
+      case c if c >= 0x3041 && c <= 0x3093 => (c + 96).toChar
+      case c                               => c
+    }
+
+  def toKatakana(s: String): String =
+    s.map(toKatakana)
 }

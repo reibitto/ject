@@ -2,11 +2,10 @@ package ject.tools.jmdict
 
 import ject.ja.docs.KanjiDoc
 import ject.ja.entity.Radical
+import zio.*
 import zio.stream.ZSink
 import zio.stream.ZStream
 import zio.Console.printLine
-import zio.RIO
-import zio.ZIO
 
 import java.net.URI
 import java.nio.file.Path

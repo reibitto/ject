@@ -9,10 +9,8 @@ import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.search.*
 import org.apache.lucene.store.MMapDirectory
 import org.apache.lucene.util.QueryBuilder
+import zio.*
 import zio.stream.ZStream
-import zio.Scope
-import zio.Task
-import zio.ZIO
 
 import java.nio.file.Path
 

@@ -6,5 +6,8 @@ object StringExtensions {
 
     def isSurroundedWith(s: String): Boolean =
       self.startsWith(s) && self.endsWith(s)
+
+    def normalizeNewlines: String =
+      self.replaceAll("\\r\\n?", "\n")
   }
 }

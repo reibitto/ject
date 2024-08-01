@@ -10,11 +10,8 @@ import org.apache.lucene.search.Query
 import org.apache.lucene.search.ScoreDoc
 import org.apache.lucene.search.Sort
 import org.apache.lucene.store.MMapDirectory
+import zio.*
 import zio.stream.ZStream
-import zio.Chunk
-import zio.Scope
-import zio.Task
-import zio.ZIO
 
 import java.nio.file.Path
 

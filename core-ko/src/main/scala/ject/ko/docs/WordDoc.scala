@@ -9,7 +9,7 @@ import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
 import org.apache.lucene.document.StringField
 import org.apache.lucene.document.TextField
-import zio.ZIO
+import zio.*
 
 final case class WordDoc(
     id: String,
