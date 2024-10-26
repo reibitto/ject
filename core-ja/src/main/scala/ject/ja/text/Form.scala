@@ -28,6 +28,7 @@ object SubForm extends Enum[SubForm] {
   case object NonPast extends SubForm
   case object Past extends SubForm
   case object Te extends SubForm
+  case object Ge extends SubForm
   case object Conditional extends SubForm
   case object Provisional extends SubForm
   case object Potential extends SubForm
