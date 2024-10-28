@@ -26,9 +26,9 @@ object Transformation {
   }
 
   def godanStem: Transform = { s =>
-    if (s.length < 2) {
+    if (s.length < 2)
       Left("Verb must be greater than 1 character")
-    } else {
+    else
       s.last match {
         case 'く' | 'ぐ'       => Right(NonEmptyChunk.single(s"${s.init}い"))
         case 'る' | 'う' | 'つ' => Right(NonEmptyChunk.single(s"${s.init}っ"))
@@ -36,8 +36,29 @@ object Transformation {
         case 'す'             => Right(NonEmptyChunk.single(s"${s.init}し"))
         case _               => Left(s"$s is not a godan verb")
       }
-    }
   }
+
+  def godanStemTe: Transform =
+    Transforms.withInitial { s =>
+      NonEmptyChunk(
+        godanStem,
+        if (s.endsWith("ぐ") || s.endsWith("む") || s.endsWith("ぬ") || s.endsWith("ぶ"))
+          attach("で")
+        else
+          attach("て")
+      )
+    }
+
+  def godanStemTa: Transform =
+    Transforms.withInitial { s =>
+      NonEmptyChunk(
+        godanStem,
+        if (s.endsWith("ぐ") || s.endsWith("む") || s.endsWith("ぬ") || s.endsWith("ぶ"))
+          attach("だ")
+        else
+          attach("た")
+      )
+    }
 
   def suruStem: Transform = {
     case s if !s.endsWith("する") => Left("Verb must end in する")
@@ -58,35 +79,34 @@ object Transformation {
   }
 
   def changeBase(dan: Syllabary.Dan, suffix: String, suffixes: String*): Transform = { s =>
-    if (s.length < 2) {
+    if (s.length < 2)
       Left("Verb must be greater than 1 character")
-    } else {
+    else {
       val stem = s.init
       val last = s.last
 
-      if (dan == Dan.A && last == 'う') {
+      if (dan == Dan.A && last == 'う')
         Right(
           NonEmptyChunk(suffix, suffixes*).map(s => s"${stem}わ$s")
         )
-      } else {
+      else
         for {
           shifted <- Syllabary.shift(last, dan).toRight(s"Unable to shift '$last' to $dan")
         } yield NonEmptyChunk(suffix, suffixes*).map(s => s"$stem$shifted$s")
-      }
     }
   }
 
   def shiftBase(fromDan: Syllabary.Dan, toDan: Syllabary.Dan): Transform = { s =>
-    if (s.length < 2) {
+    if (s.length < 2)
       Left("Verb must be greater than 1 character")
-    } else {
+    else {
       val stem = s.init
       val last = s.last
 
       for {
-        _             <- Syllabary.danOf(last).toRight(s"${s} must end with ${fromDan}")
-        shiftedSuffix <- Syllabary.shift(last, toDan).toRight(s"Could not shift '${last}' to ${toDan}")
-      } yield NonEmptyChunk.single(s"${stem}${shiftedSuffix}")
+        _             <- Syllabary.danOf(last).toRight(s"$s must end with $fromDan")
+        shiftedSuffix <- Syllabary.shift(last, toDan).toRight(s"Could not shift '$last' to $toDan")
+      } yield NonEmptyChunk.single(s"$stem$shiftedSuffix")
     }
   }
 
@@ -95,26 +115,25 @@ object Transformation {
   }
 
   def attachGodanStem(detachSuffixes: String*): Transform = { s =>
-    if (s.length < 3) {
+    if (s.length < 3)
       Left("Verb must be greater than 2 character")
-    } else {
+    else
       detachSuffixes.find(ds => s.endsWith(ds)) match {
         case None => Left(s"$s is not a godan verb")
         case Some(suffix) =>
           val stem = s.substring(0, s.length - suffix.length - 1)
 
-          if (s.endsWith(s"い$suffix")) {
+          if (s.endsWith(s"い$suffix"))
             if (JapaneseText.hasDakuten(suffix.head))
               Right(NonEmptyChunk(s"${stem}ぐ"))
             else
               Right(NonEmptyChunk(s"${stem}く"))
-          } else if (s.endsWith(s"っ$suffix")) Right(NonEmptyChunk(s"${stem}う", s"${stem}つ", s"${stem}る"))
+          else if (s.endsWith(s"っ$suffix")) Right(NonEmptyChunk(s"${stem}う", s"${stem}つ", s"${stem}る"))
           else if (s.endsWith(s"ん$suffix")) Right(NonEmptyChunk(s"${stem}む", s"${stem}ぬ", s"${stem}ぶ"))
           else if (s.endsWith(s"し$suffix")) Right(NonEmptyChunk(s"${stem}す"))
           else Left(s"$s is not a godan verb")
       }
 
-    }
   }
 
   def ensureValidVerbEnding: Transform =
@@ -128,10 +147,9 @@ object Transformation {
   }
 
   def ensureSuffix(suffixes: String*): Transform = { s =>
-    if (suffixes.exists(suffix => s.endsWith(suffix))) {
+    if (suffixes.exists(suffix => s.endsWith(suffix)))
       Right(NonEmptyChunk.single(s))
-    } else {
+    else
       Left(s"Must end with one of the following suffixes: ${suffixes.mkString(", ")}")
-    }
   }
 }

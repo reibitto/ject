@@ -12,6 +12,7 @@ object AdjectiveI {
     NonPast.plain -> Transforms.identity,
     Past.plain -> Transforms(adjectiveIStem, attach("かった")),
     Te.plain -> Transforms(adjectiveIStem, attach("くて")),
+    Ge.plain -> Transforms(adjectiveIStem, attach("げ")),
     Conditional.plain -> Transforms(adjectiveIStem, attach("かったら")),
     Provisional.plain -> Transforms(adjectiveIStem, attach("ければ")),
     Alternative.plain -> Transforms(adjectiveIStem, attach("かったり")),
