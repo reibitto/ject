@@ -35,7 +35,6 @@ final case class KanjiReader(
       val kanjiQuery = new BooleanQuery.Builder()
 
       RadicalQuery.normalize(parts).foreach { part =>
-        // TODO:: new BoostQuery?
         kanjiQuery.add(
           new TermQuery(KanjiField.Kanji.term(part.toString)),
           BooleanClause.Occur.SHOULD
