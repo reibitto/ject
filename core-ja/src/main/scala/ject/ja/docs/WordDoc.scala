@@ -79,11 +79,8 @@ object WordDoc {
                doc.add(new StoredField(WordField.Priority.entryName, a.priority))
                doc.add(new DoubleDocValuesField(WordField.Priority.entryName, a.priority))
 
-//               doc.add(new FloatField(WordField.Priority.entryName, a.priority, Field.Store.YES))
-
                doc.add(new StoredField(WordField.Frequency.entryName, a.frequency))
                doc.add(new NumericDocValuesField(WordField.Frequency.entryName, a.frequency))
-//               doc.add(new IntField(WordField.Frequency.entryName, a.frequency, Field.Store.YES))
 
                doc
              }

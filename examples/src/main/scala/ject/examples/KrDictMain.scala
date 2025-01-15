@@ -33,7 +33,7 @@ object KrDictMain extends ZIOAppDefault {
                                                .flattenChunks
                                                .zipWithIndex
                                                .mapZIO { case (_, n) =>
-                                                 printLine(s"Imported ${n.withCommas} entries...")
+                                                 printLine(s"Imported ${n.groupSeparated} entries...")
                                                    .when(n > 0 && n % 10_000 == 0)
                                                    .as(n)
                                                }
@@ -41,7 +41,7 @@ object KrDictMain extends ZIOAppDefault {
                                                .map(_.getOrElse(0L))
                                   } yield count
                                 }.timed
-      _ <- printLine(s"Indexed ${totalDocs.withCommas} entries (completed in ${timeTaken.render})")
+      _ <- printLine(s"Indexed ${totalDocs.groupSeparated} entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
     } yield ()).catchAllCause { t =>
       ZIO.succeed(t.squash.printStackTrace())

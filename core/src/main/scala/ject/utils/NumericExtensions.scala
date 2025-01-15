@@ -6,13 +6,13 @@ object NumericExtensions {
 
   implicit class IntExtension(val self: Int) extends AnyVal {
 
-    def withCommas: String =
+    def groupSeparated: String =
       s"%,d".format(self)
   }
 
   implicit class LongExtension(val self: Long) extends AnyVal {
 
-    def withCommas: String =
+    def groupSeparated: String =
       s"%,d".format(self)
   }
 
