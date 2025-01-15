@@ -20,5 +20,7 @@ jobs:
           java-version: 21
           cache: sbt
 
+      - uses: sbt/setup-sbt@v1
+
       - name: Run tests
         run: sbt -Dscalac.lenientDev.enabled=false fmtCheck test
