@@ -2,6 +2,7 @@ package ject.examples
 
 import ject.ko.lucene.WordWriter
 import ject.tools.krdict.KrDictIO
+import ject.utils.NumericExtensions.LongExtension
 import ject.DefinitionLanguage
 import zio.*
 import zio.Console.printLine
@@ -32,14 +33,15 @@ object KrDictMain extends ZIOAppDefault {
                                                .flattenChunks
                                                .zipWithIndex
                                                .mapZIO { case (_, n) =>
-                                                 printLine(s"Imported $n entries...")
+                                                 printLine(s"Imported ${n.withCommas} entries...")
                                                    .when(n > 0 && n % 10_000 == 0)
                                                    .as(n)
                                                }
                                                .runLast
+                                               .map(_.getOrElse(0L))
                                   } yield count
                                 }.timed
-      _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
+      _ <- printLine(s"Indexed ${totalDocs.withCommas} entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
     } yield ()).catchAllCause { t =>
       ZIO.succeed(t.squash.printStackTrace())

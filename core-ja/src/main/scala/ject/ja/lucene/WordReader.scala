@@ -11,6 +11,7 @@ import ject.lucene.LuceneReader
 import ject.lucene.ScoredDoc
 import ject.SearchPattern
 import org.apache.lucene.index.DirectoryReader
+import org.apache.lucene.queries.function.FunctionScoreQuery
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
 import org.apache.lucene.store.MMapDirectory
@@ -55,13 +56,37 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
             case _ => 1000
           }
 
-          booleanQuery.addPrefixQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, prefixScoreBoost.toFloat)
+          Set(text, JapaneseText.toHiragana(text), JapaneseText.toKatakana(text)).map { t =>
+            val exactMatchBoost = if (text == t) 1.0f else 0.95f
 
-          booleanQuery.addPhraseQuery(builder)(WordField.KanjiTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
-          booleanQuery.addBooleanQuery(builder)(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 5)
-          booleanQuery.addBooleanQuery(builder)(WordField.KanjiTermAnalyzed, text, BooleanClause.Occur.SHOULD)
-          booleanQuery.addTermQuery(WordField.KanjiTermInflected, text, BooleanClause.Occur.SHOULD, 50)
-          booleanQuery.addTermQuery(WordField.KanjiTerm, text, BooleanClause.Occur.SHOULD, 10_000)
+            booleanQuery.addPrefixQuery(
+              WordField.KanjiTerm,
+              t,
+              BooleanClause.Occur.SHOULD,
+              prefixScoreBoost * exactMatchBoost
+            )
+
+            booleanQuery.addPhraseQuery(builder)(
+              WordField.KanjiTermAnalyzed,
+              t,
+              BooleanClause.Occur.SHOULD,
+              5 * exactMatchBoost
+            )
+            booleanQuery.addBooleanQuery(builder)(
+              WordField.KanjiTerm,
+              t,
+              BooleanClause.Occur.SHOULD,
+              5 * exactMatchBoost
+            )
+            booleanQuery.addBooleanQuery(builder)(
+              WordField.KanjiTermAnalyzed,
+              t,
+              BooleanClause.Occur.SHOULD,
+              1 * exactMatchBoost
+            )
+            booleanQuery.addTermQuery(WordField.KanjiTermInflected, t, BooleanClause.Occur.SHOULD, 50 * exactMatchBoost)
+            booleanQuery.addTermQuery(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, 10_000 * exactMatchBoost)
+          }.head
 
         case (SearchPattern.Default(text), SearchType.Reading) =>
           val prefixScoreBoost = text.length match {
@@ -71,13 +96,42 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
             case _ => 1000
           }
 
-          booleanQuery.addPrefixQuery(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, prefixScoreBoost.toFloat)
+          Set(text, JapaneseText.toHiragana(text), JapaneseText.toKatakana(text)).map { t =>
+            val exactMatchBoost = if (text == t) 1.0f else 0.95f
 
-          booleanQuery.addPhraseQuery(builder)(WordField.ReadingTermAnalyzed, text, BooleanClause.Occur.SHOULD, 5)
-          booleanQuery.addBooleanQuery(builder)(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 5)
-          booleanQuery.addBooleanQuery(builder)(WordField.ReadingTermAnalyzed, text, BooleanClause.Occur.SHOULD)
-          booleanQuery.addTermQuery(WordField.ReadingTermInflected, text, BooleanClause.Occur.SHOULD, 50)
-          booleanQuery.addTermQuery(WordField.ReadingTerm, text, BooleanClause.Occur.SHOULD, 10_000)
+            booleanQuery.addPrefixQuery(
+              WordField.ReadingTerm,
+              t,
+              BooleanClause.Occur.SHOULD,
+              prefixScoreBoost * exactMatchBoost
+            )
+
+            booleanQuery.addPhraseQuery(builder)(
+              WordField.ReadingTermAnalyzed,
+              t,
+              BooleanClause.Occur.SHOULD,
+              5 * exactMatchBoost
+            )
+            booleanQuery.addBooleanQuery(builder)(
+              WordField.ReadingTerm,
+              t,
+              BooleanClause.Occur.SHOULD,
+              5 * exactMatchBoost
+            )
+            booleanQuery.addBooleanQuery(builder)(
+              WordField.ReadingTermAnalyzed,
+              t,
+              BooleanClause.Occur.SHOULD,
+              1 * exactMatchBoost
+            )
+            booleanQuery.addTermQuery(
+              WordField.ReadingTermInflected,
+              t,
+              BooleanClause.Occur.SHOULD,
+              50 * exactMatchBoost
+            )
+            booleanQuery.addTermQuery(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, 10_000 * exactMatchBoost)
+          }.head
 
         case (SearchPattern.Exact(text), SearchType.Definition) =>
           booleanQuery.addPhraseQuery(builder)(WordField.Definition, text, BooleanClause.Occur.SHOULD)
@@ -123,23 +177,21 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
       }
     }
 
-    val sort = new Sort(
-      SortField.FIELD_SCORE,
-      new SortedNumericSortField(WordField.Frequency.entryName, SortField.Type.INT),
-      new SortedNumericSortField(WordField.Priority.entryName, SortField.Type.INT, true)
-    )
-
     ZStream.unwrap(
       booleanQueryTask.map { b =>
-        // TODO: Consider boosting
-//        val query = FunctionScoreQuery.boostByValue(
-//          b.build(),
-//          DoubleValuesSource.fromLongField(WordField.Priority.entryName)
-//        )
+        val query = FunctionScoreQuery.boostByValue(
+          b.build(),
+          DoubleValuesSource.fromDoubleField(WordField.Priority.entryName)
+        )
 
-        val query = b.build()
-
-        searchSorted(query, sort)
+        searchSorted(
+          query,
+          new Sort(
+            SortField.FIELD_SCORE,
+            new SortedNumericSortField(WordField.Frequency.entryName, SortField.Type.INT),
+            new SortedNumericSortField(WordField.Priority.entryName, SortField.Type.INT, true)
+          )
+        )
       }
     )
   }

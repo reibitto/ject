@@ -1,14 +1,10 @@
 package ject.ko.docs
 
 import ject.ko.lucene.field.WordField
+import ject.lucene.{DocDecoder, DocEncoder}
 import ject.lucene.field.LuceneField
-import ject.lucene.DocDecoder
-import ject.lucene.DocEncoder
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.document.Document
-import org.apache.lucene.document.Field
-import org.apache.lucene.document.StringField
-import org.apache.lucene.document.TextField
+import org.apache.lucene.document.{Document, Field, StringField, TextField}
 import zio.*
 
 final case class WordDoc(
