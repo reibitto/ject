@@ -35,7 +35,7 @@ object TermBankIO {
               reading = fields(1).asString.map(_.trim).filter(_.nonEmpty),
               definitionTags = fields(2).asString.map(_.trim.split(' ').filter(_.nonEmpty).toSeq).getOrElse(Seq.empty),
               inflection = fields(3).asString.map(_.trim.split(' ').filter(_.nonEmpty).toSeq).getOrElse(Seq.empty),
-              popularity = fields(4).asNumber.map(_.toDouble).getOrElse(0),
+              popularity = fields(4).asNumber.map(_.toDouble).getOrElse(0.0),
               definitions = fields(5)
                 .as[Vector[Content]]
                 .fold(t => throw new Exception(s"Could not decode definitions: ${fields(5)} because $t"), identity),

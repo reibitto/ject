@@ -1,19 +1,12 @@
 package ject.ja.docs
 
 import ject.ja.lucene.field.WordField
-import ject.ja.text.Inflection
-import ject.ja.text.WordType
+import ject.ja.text.{Inflection, WordType}
 import ject.ja.JapaneseText
+import ject.lucene.{DocDecoder, DocEncoder}
 import ject.lucene.field.LuceneField
-import ject.lucene.DocDecoder
-import ject.lucene.DocEncoder
 import org.apache.lucene.analysis.Analyzer
-import org.apache.lucene.document.Document
-import org.apache.lucene.document.Field
-import org.apache.lucene.document.NumericDocValuesField
-import org.apache.lucene.document.StoredField
-import org.apache.lucene.document.StringField
-import org.apache.lucene.document.TextField
+import org.apache.lucene.document.*
 import zio.*
 
 final case class WordDoc(
@@ -23,7 +16,7 @@ final case class WordDoc(
     definitions: Seq[String],
     tags: Seq[String],
     partsOfSpeech: Seq[String],
-    priority: Int,
+    priority: Double,
     frequency: Int
 ) {
 
@@ -48,7 +41,7 @@ object WordDoc {
         definitions = document.getValues(WordField.Definition.entryName).toIndexedSeq,
         tags = document.getValues(WordField.Tags.entryName).toIndexedSeq,
         partsOfSpeech = document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq,
-        priority = document.get(WordField.Priority.entryName).toInt,
+        priority = document.get(WordField.Priority.entryName).toDouble,
         frequency = document.get(WordField.Frequency.entryName).toInt
       )
   }
@@ -84,7 +77,7 @@ object WordDoc {
                }
 
                doc.add(new StoredField(WordField.Priority.entryName, a.priority))
-               doc.add(new NumericDocValuesField(WordField.Priority.entryName, a.priority))
+               doc.add(new DoubleDocValuesField(WordField.Priority.entryName, a.priority))
 
                doc.add(new StoredField(WordField.Frequency.entryName, a.frequency))
                doc.add(new NumericDocValuesField(WordField.Frequency.entryName, a.frequency))

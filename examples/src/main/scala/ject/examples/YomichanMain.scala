@@ -5,6 +5,7 @@ import ject.ja.entity.Frequencies
 import ject.ja.lucene.WordWriter
 import ject.ja.JapaneseText
 import ject.tools.yomichan.{Sanitizer, TermBankIO, TermMetaBankIO}
+import ject.utils.NumericExtensions.LongExtension
 import zio.*
 import zio.Console.printLine
 
@@ -14,14 +15,14 @@ object YomichanMain extends ZIOAppDefault {
 
   val dryRun: Boolean = false
 
-  final case class DictionaryInfo(name: String, priority: Int, shouldSanitize: Boolean)
+  final case class DictionaryInfo(name: String, priority: Double, shouldSanitize: Boolean)
 
   def run: UIO[Unit] = {
     val dictionaries = Seq(
-      DictionaryInfo("sanseido", 40, shouldSanitize = true),
-      DictionaryInfo("koujien", 30, shouldSanitize = true),
-      DictionaryInfo("daijisen", 20, shouldSanitize = true),
-      DictionaryInfo("pixiv", 10, shouldSanitize = true)
+      DictionaryInfo("sanseido", 0.8, shouldSanitize = true),
+      DictionaryInfo("koujien", 0.7, shouldSanitize = true),
+      DictionaryInfo("daijisen", 0.6, shouldSanitize = true),
+      DictionaryInfo("pixiv", 0.5, shouldSanitize = true)
     )
 
     (for {
@@ -93,15 +94,18 @@ object YomichanMain extends ZIOAppDefault {
                                 .flattenChunks
                                 .zipWithIndex
                                 .mapZIO { case (_, n) =>
-                                  printLine(s"Imported $n entries...")
+                                  printLine(s"Imported ${n.groupSeparated} entries...")
                                     .when(n > 0 && n % 10_000 == 0)
                                     .as(n)
                                 }
                                 .runLast
-                                .map(_.getOrElse(0))
+                                .map(_.getOrElse(0L))
                    } yield count
                  }.timed
-               _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render}) (dryRun: ${dryRun})")
+               _ <-
+                 printLine(
+                   s"Indexed ${totalDocs.groupSeparated} entries (completed in ${timeTaken.render}) (dryRun: ${dryRun})"
+                 )
                _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
              } yield ()
            }

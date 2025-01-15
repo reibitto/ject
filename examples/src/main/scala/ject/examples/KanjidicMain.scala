@@ -4,6 +4,7 @@ import ject.ja.lucene.KanjiWriter
 import ject.tools.jmdict.KanjidicIO
 import ject.tools.jmdict.RadicalIO
 import ject.utils.IOExtensions.*
+import ject.utils.NumericExtensions.LongExtension
 import zio.*
 import zio.Console.printLine
 
@@ -33,15 +34,15 @@ object KanjidicMain extends ZIOAppDefault {
                                                .flattenChunks
                                                .zipWithIndex
                                                .mapZIO { case (_, n) =>
-                                                 printLine(s"Imported $n entries...")
+                                                 printLine(s"Imported ${n.groupSeparated} entries...")
                                                    .when(n > 0 && n % 10_000 == 0)
                                                    .as(n)
                                                }
                                                .runLast
-                                               .map(_.getOrElse(0))
+                                               .map(_.getOrElse(0L))
                                   } yield count
                                 }.timed
-      _ <- printLine(s"Indexed $totalDocs entries (completed in ${timeTaken.render})")
+      _ <- printLine(s"Indexed ${totalDocs.groupSeparated} entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
 
     } yield ()).catchAllCause { t =>
