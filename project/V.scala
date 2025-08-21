@@ -13,7 +13,7 @@ object V {
 
   val sttp = "3.10.2"
 
-  val zio = "2.1.14"
+  val zio = "2.1.20"
 
   val zioProcess = "0.7.2"
 }
