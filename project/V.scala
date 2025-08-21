@@ -7,7 +7,7 @@ object V {
 
   val pprint = "0.9.0"
 
-  val scalaXml = "2.3.0"
+  val scalaXml = "2.4.0"
 
   val slf4j = "2.0.16"
 
