@@ -1,5 +1,5 @@
 object V {
-  val circe = "0.14.10"
+  val circe = "0.14.14"
 
   val enumeratum = "1.7.6"
 
