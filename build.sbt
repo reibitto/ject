@@ -123,3 +123,9 @@ def module(projectId: String, moduleFile: Option[String] = None): Project =
     .settings(Build.defaultSettings(projectId))
 
 ThisBuild / organization := "com.github.reibitto"
+
+ThisBuild / publishTo := {
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+  if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+  else localStaging.value
+}
