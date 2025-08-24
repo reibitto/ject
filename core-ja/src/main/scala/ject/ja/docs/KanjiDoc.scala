@@ -17,6 +17,7 @@ final case class KanjiDoc(
     koreanReadings: Seq[String],
     radicalId: Int,
     parts: Seq[String],
+    components: Seq[String],
     strokeCount: Seq[Int],
     frequency: Option[Int],
     jlpt: Option[Int],
@@ -40,6 +41,7 @@ object KanjiDoc {
         koreanReadings = document.getValues(KanjiField.KoreanReading.entryName).toIndexedSeq,
         radicalId = document.get(KanjiField.RadicalId.entryName).toInt,
         parts = document.getValues(KanjiField.Parts.entryName).toIndexedSeq,
+        components = document.getValues(KanjiField.Components.entryName).toIndexedSeq,
         strokeCount = document.getValues(KanjiField.StrokeCount.entryName).toIndexedSeq.map(_.toInt),
         frequency = Option(document.get(KanjiField.Frequency.entryName)).map(_.toInt),
         jlpt = Option(document.get(KanjiField.Jlpt.entryName)).map(_.toInt),
@@ -78,6 +80,10 @@ object KanjiDoc {
 
       a.parts.foreach { value =>
         doc.add(new StringField(KanjiField.Parts.entryName, value, Field.Store.YES))
+      }
+
+      a.components.foreach { value =>
+        doc.add(new StringField(KanjiField.Components.entryName, value, Field.Store.YES))
       }
 
       a.strokeCount.foreach { value =>

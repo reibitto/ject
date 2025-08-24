@@ -3,6 +3,7 @@ package ject.examples
 import ject.ja.lucene.KanjiWriter
 import ject.tools.jmdict.KanjidicIO
 import ject.tools.jmdict.RadicalIO
+import ject.tools.other.KanjiDecompositionIO
 import ject.utils.IOExtensions.*
 import ject.utils.NumericExtensions.LongExtension
 import zio.*
@@ -16,8 +17,9 @@ object KanjidicMain extends ZIOAppDefault {
 
   def run: UIO[Unit] =
     (for {
-      _        <- printLine(s"Starting to index dictionary: Kanjidic")
-      radicals <- RadicalIO.load(Paths.get("data/radicals.dat"))
+      _              <- printLine(s"Starting to index dictionary: Kanjidic")
+      radicals       <- RadicalIO.load(Paths.get("data/radicals.dat"))
+      decompositions <- KanjiDecompositionIO.load(Paths.get("data/kanji-decomposition.tsv"))
       targetPath = Paths.get("data/dictionary/kanjidic.xml")
       _ <- targetPath.ensureDirectoryExists()
       _ <- KanjidicIO.download(targetPath).unless(targetPath.toFile.exists())
@@ -26,7 +28,7 @@ object KanjidicMain extends ZIOAppDefault {
                                   for {
                                     index <- KanjiWriter.make(luceneDirectory)
                                     count <- KanjidicIO
-                                               .load(targetPath, radicals)
+                                               .load(targetPath, radicals, decompositions)
                                                .grouped(100)
                                                .mapZIO { entries =>
                                                  index.addBulk(entries*).unless(dryRun).as(entries)
@@ -44,7 +46,6 @@ object KanjidicMain extends ZIOAppDefault {
                                 }.timed
       _ <- printLine(s"Indexed ${totalDocs.groupSeparated} entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
-
     } yield ()).catchAllCause { t =>
       ZIO.succeed(t.squash.printStackTrace())
     }

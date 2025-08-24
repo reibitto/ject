@@ -25,6 +25,8 @@ object Suru {
     Tai.plain -> Transforms(suruStem, attach("したい")),
     Form.of(Potential, Te) -> Transforms(suruStem, attach("できて")),
     Form.of(Potential, Past) -> Transforms(suruStem, attach("できた")),
+    Form.of(Causative, Te) -> Transforms(suruStem, attach("させて")),
+    Form.of(Causative, Past) -> Transforms(suruStem, attach("させた")),
     Form.of(Tai, Te) -> Transforms(suruStem, attach("したくて")),
     // Polite
     NonPast.polite -> Transforms(suruStem, attach("します")),
@@ -41,6 +43,8 @@ object Suru {
     Imperative.polite -> Transforms(suruStem, attach("しなさい")),
     Form.of(Potential, Te).polite -> Transforms(suruStem, attach("できまして")),
     Form.of(Potential, Past).polite -> Transforms(suruStem, attach("できました")),
+    Form.of(Causative, Te).polite -> Transforms(suruStem, attach("させまして")),
+    Form.of(Causative, Past).polite -> Transforms(suruStem, attach("させました")),
     // Negative
     NonPast.negative -> Transforms(suruStem, attach("しない", "せぬ", "せず")),
     Past.negative -> Transforms(suruStem, attach("しなかった")),
@@ -60,6 +64,8 @@ object Suru {
     Form.of(Tai, Sou).negative -> Transforms(suruStem, attach("したくなさそう")),
     Form.of(Potential, Te).negative -> Transforms(suruStem, attach("できなくて")),
     Form.of(Potential, Past).negative -> Transforms(suruStem, attach("できなかった")),
+    Form.of(Causative, Te).negative -> Transforms(suruStem, attach("させなくて")),
+    Form.of(Causative, Past).negative -> Transforms(suruStem, attach("させなかった")),
     // Polite negative
     NonPast.polite.negative -> Transforms(suruStem, attach("しません")),
     Past.polite.negative -> Transforms(suruStem, attach("しませんでした")),
@@ -75,6 +81,8 @@ object Suru {
     Imperative.polite.negative -> Transforms(suruStem, attach("しなさるな")),
     Form.of(Potential, Te).polite.negative -> Transforms(suruStem, attach("でませんでして")),
     Form.of(Potential, Past).polite.negative -> Transforms(suruStem, attach("でませんでした")),
+    Form.of(Causative, Te).polite.negative -> Transforms(suruStem, attach("させませんでして")),
+    Form.of(Causative, Past).polite.negative -> Transforms(suruStem, attach("させませんでした")),
     // Other
     Form.of(Stem) -> attach("し")
   )

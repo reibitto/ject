@@ -5,6 +5,7 @@ import ject.ja.docs.KanjiDoc
 import ject.ja.lucene.field.KanjiField
 import ject.lucene.LuceneReader
 import ject.lucene.ScoredDoc
+import ject.utils.StringExtensions.StringExtension
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.search.*
 import org.apache.lucene.store.MMapDirectory
@@ -34,34 +35,41 @@ final case class KanjiReader(
     ZStream.unwrap {
       val kanjiQuery = new BooleanQuery.Builder()
 
-      RadicalQuery.normalize(parts).foreach { part =>
+      val primaryParts = RadicalQuery.normalize(parts).codePointIterator.toSeq
+
+      primaryParts.foreach { part =>
         kanjiQuery.add(
-          new TermQuery(KanjiField.Kanji.term(part.toString)),
+          new TermQuery(KanjiField.Kanji.term(part)),
           BooleanClause.Occur.SHOULD
         )
       }
 
-      val lookalikes = parts.flatMap { kanji =>
-        kanjiLookalikeMap.get(kanji.toString)
+      val lookalikes = parts.codePointIterator.flatMap { kanji =>
+        kanjiLookalikeMap.get(kanji)
       }.flatten
 
       for {
         combinedParts <- search(kanjiQuery.build)
-                           .map(d => Set(d.doc.parts*) + d.doc.kanji)
+                           .map(d => d.doc.parts.toSet + d.doc.kanji)
                            .runFold(Set.empty[String])(_ ++ _)
         queryBuilder = new BooleanQuery.Builder()
         _ = combinedParts.foreach { part =>
               queryBuilder.add(
-                new TermQuery(KanjiField.Parts.term(part)),
+                new BoostQuery(new TermQuery(KanjiField.Parts.term(part)), 0.25f),
                 BooleanClause.Occur.SHOULD
               )
-
-              lookalikes.foreach { lookalike =>
-                queryBuilder.add(
-                  new TermQuery(KanjiField.Kanji.term(lookalike)),
-                  BooleanClause.Occur.SHOULD
-                )
-              }
+            }
+        _ = primaryParts.foreach { part =>
+              queryBuilder.add(
+                new BoostQuery(new TermQuery(KanjiField.Components.term(part)), 2.5f),
+                BooleanClause.Occur.SHOULD
+              )
+            }
+        _ = lookalikes.foreach { lookalike =>
+              queryBuilder.add(
+                new BoostQuery(new TermQuery(KanjiField.Kanji.term(lookalike)), 0.75f),
+                BooleanClause.Occur.SHOULD
+              )
             }
         sort = new Sort(
                  SortField.FIELD_SCORE,

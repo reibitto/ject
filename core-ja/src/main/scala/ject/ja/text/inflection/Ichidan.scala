@@ -31,6 +31,9 @@ object Ichidan {
     Form.of(Passive, Stem) -> Transforms(ichidanStem, attach("られ")),
     Form.of(Passive, Te) -> Transforms(ichidanStem, attach("られて")),
     Form.of(Passive, Past) -> Transforms(ichidanStem, attach("られた")),
+    Form.of(Causative, Stem) -> Transforms(ichidanStem, attach("させ")),
+    Form.of(Causative, Te) -> Transforms(ichidanStem, attach("させて")),
+    Form.of(Causative, Past) -> Transforms(ichidanStem, attach("させた")),
     Form.of(Tai, Te) -> Transforms(ichidanStem, attach("たくて")),
     // Polite
     NonPast.polite -> Transforms(ichidanStem, attach("ます")),
@@ -49,6 +52,8 @@ object Ichidan {
     Form.of(Progressive, Past).polite -> Transforms(ichidanStem, attach("ていました", "てました")),
     Form.of(Potential, Te).polite -> Transforms(ichidanStem, attach("られまして")),
     Form.of(Potential, Past).polite -> Transforms(ichidanStem, attach("られました")),
+    Form.of(Causative, Te).polite -> Transforms(ichidanStem, attach("させまして")),
+    Form.of(Causative, Past).polite -> Transforms(ichidanStem, attach("させました")),
     // Negative
     NonPast.negative -> Transforms(ichidanStem, attach("ない", "ぬ", "ず")),
     Past.negative -> Transforms(ichidanStem, attach("なかった")),
@@ -70,6 +75,8 @@ object Ichidan {
     Form.of(Tai, Sou).negative -> Transforms(ichidanStem, attach("たくなさそう")),
     Form.of(Potential, Te).negative -> Transforms(ichidanStem, attach("られなくて")),
     Form.of(Potential, Past).negative -> Transforms(ichidanStem, attach("られなかった")),
+    Form.of(Causative, Te).negative -> Transforms(ichidanStem, attach("させなくて")),
+    Form.of(Causative, Past).negative -> Transforms(ichidanStem, attach("させなかった")),
     // Polite negative
     NonPast.polite.negative -> Transforms(ichidanStem, attach("ません")),
     Past.polite.negative -> Transforms(ichidanStem, attach("ませんでした")),
@@ -87,6 +94,8 @@ object Ichidan {
     Form.of(Progressive, Past).polite.negative -> Transforms(ichidanStem, attach("ていませんでした", "てませんでした")),
     Form.of(Potential, Te).polite.negative -> Transforms(ichidanStem, attach("られませんでして")),
     Form.of(Potential, Past).polite.negative -> Transforms(ichidanStem, attach("られませんでした")),
+    Form.of(Causative, Te).polite.negative -> Transforms(ichidanStem, attach("させませんでして")),
+    Form.of(Causative, Past).polite.negative -> Transforms(ichidanStem, attach("させませんでした")),
     // Other
     Form.of(Stem) -> Transforms(ichidanStem)
   )

@@ -20,7 +20,7 @@ object KrDictMain extends ZIOAppDefault {
       definitionLanguage = DefinitionLanguage.Japanese
       // targetPath = Paths.get("data/dictionary/naver-kr-jp")
       // definitionLanguage = DefinitionLanguage.Japanese
-      luceneDirectory <- ZIO.succeed(Paths.get("data/lucene/word-ko"))
+      luceneDirectory        <- ZIO.succeed(Paths.get("data/lucene/word-ko"))
       (timeTaken, totalDocs) <- ZIO.scoped {
                                   for {
                                     index <- WordWriter.make(luceneDirectory)

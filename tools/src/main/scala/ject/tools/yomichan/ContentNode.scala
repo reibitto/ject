@@ -79,8 +79,8 @@ object ContentNode {
 
     implicit val decoder: Decoder[LinkTag] = Decoder.instance { c =>
       for {
-        tag  <- c.get[String]("tag")
-        href <- c.get[String]("href")
+        tag     <- c.get[String]("tag")
+        href    <- c.get[String]("href")
         content <- c.get[Vector[ContentNode]]("content")
                      .orElse(
                        c.get[ContentNode]("content").map(Vector(_))
@@ -96,7 +96,7 @@ object ContentNode {
 
     implicit val decoder: Decoder[ContainerTag] = Decoder.instance { c =>
       for {
-        tag <- c.get[String]("tag")
+        tag     <- c.get[String]("tag")
         content <- c.get[Vector[ContentNode]]("content")
                      .orElse(
                        c.get[ContentNode]("content").map(Vector(_))

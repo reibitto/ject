@@ -25,12 +25,12 @@ object Inflection {
 
   private def inflectionsFor(wordType: WordType): Map[Form, Transform] =
     wordType match {
-      case WordType.VerbIchidan => Ichidan.inflections
-      case WordType.VerbGodan   => Godan.inflections
-      case WordType.VerbSuru    => Suru.inflections
-      case WordType.VerbAru     => Aru.inflections
-      case WordType.VerbIku     => Iku.inflections
-      case WordType.AdjectiveI  => AdjectiveI.inflections
+      case WordType.VerbIchidan            => Ichidan.inflections
+      case WordType.VerbGodan              => Godan.inflections
+      case WordType.VerbSuru               => Suru.inflections
+      case WordType.VerbAru                => Aru.inflections
+      case WordType.VerbIku                => Iku.inflections
+      case WordType.AdjectiveI             => AdjectiveI.inflections
       case wordType @ WordType.AdjectiveNa =>
         throw new NotImplementedError(s"Deinflections for $wordType not yet supported.")
     }

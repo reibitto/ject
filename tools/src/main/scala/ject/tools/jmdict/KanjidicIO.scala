@@ -1,7 +1,7 @@
 package ject.tools.jmdict
 
 import ject.ja.docs.KanjiDoc
-import ject.ja.entity.Radical
+import ject.ja.entity.{KanjiDecomposition, Radical}
 import zio.*
 import zio.stream.ZSink
 import zio.stream.ZStream
@@ -46,7 +46,11 @@ object KanjidicIO {
     }
   }
 
-  def load(file: Path, radicals: Map[String, Radical]): ZStream[Any, Throwable, KanjiDoc] =
+  def load(
+      file: Path,
+      radicals: Map[String, Radical],
+      decompositions: Map[String, KanjiDecomposition]
+  ): ZStream[Any, Throwable, KanjiDoc] =
     ZStream.fromIteratorZIO {
       for {
         xml <- ZIO.attempt(xmlLoader.loadFile(file.toFile))
@@ -73,6 +77,7 @@ object KanjidicIO {
             .get
             .toInt,
           parts = radicals.values.filter(_.kanji.contains(kanji)).map(_.radical).toSeq,
+          components = decompositions.get(kanji).map(_.components).getOrElse(Set.empty).toSeq,
           strokeCount = (n \ "misc" \ "stroke_count").map(_.text.toInt),
           frequency = (n \ "misc" \ "freq").headOption.map(_.text.toInt),
           jlpt = (n \ "misc" \ "jlpt").headOption.map(_.text.toInt),
