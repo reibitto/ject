@@ -1,7 +1,7 @@
 object V {
   val circe = "0.14.14"
 
-  val enumeratum = "1.7.6"
+  val enumeratum = "1.9.0"
 
   val lucene = "10.2.2"
 
@@ -11,7 +11,7 @@ object V {
 
   val slf4j = "2.0.17"
 
-  val sttp = "3.10.3"
+  val sttp = "3.11.0"
 
   val zio = "2.1.20"
 
