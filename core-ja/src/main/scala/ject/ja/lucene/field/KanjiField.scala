@@ -16,6 +16,7 @@ object KanjiField extends Enum[KanjiField] {
   case object KoreanReading extends KanjiField(Analyzers.standard)
   case object RadicalId extends KanjiField(Analyzers.standard)
   case object Parts extends KanjiField(Analyzers.standard)
+  case object Components extends KanjiField(Analyzers.standard)
   case object StrokeCount extends KanjiField(Analyzers.standard)
   case object Frequency extends KanjiField(Analyzers.standard)
   case object Jlpt extends KanjiField(Analyzers.standard)

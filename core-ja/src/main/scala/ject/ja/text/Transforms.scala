@@ -8,7 +8,7 @@ object Transforms {
 
   def apply(transforms: Transform*): Transform = { (s: String) =>
     transforms.headOption match {
-      case None => Right(NonEmptyChunk.single(s))
+      case None                => Right(NonEmptyChunk.single(s))
       case Some(headTransform) =>
         transforms.tail.foldLeft(headTransform(s)) { case (acc, f) =>
           acc.flatMap(b => multiParam(f)(b))

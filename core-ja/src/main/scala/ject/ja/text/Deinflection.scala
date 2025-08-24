@@ -32,12 +32,12 @@ object Deinflection {
 
   private def deinflectionsFor(wordType: WordType): Map[Form, Transform] =
     wordType match {
-      case WordType.VerbIchidan => Ichidan.deinflections
-      case WordType.VerbGodan   => Godan.deinflections
-      case WordType.VerbSuru    => Suru.deinflections
-      case WordType.VerbAru     => Aru.deinflections
-      case WordType.VerbIku     => Iku.deinflections
-      case WordType.AdjectiveI  => AdjectiveI.deinflections
+      case WordType.VerbIchidan            => Ichidan.deinflections
+      case WordType.VerbGodan              => Godan.deinflections
+      case WordType.VerbSuru               => Suru.deinflections
+      case WordType.VerbAru                => Aru.deinflections
+      case WordType.VerbIku                => Iku.deinflections
+      case WordType.AdjectiveI             => AdjectiveI.deinflections
       case wordType @ WordType.AdjectiveNa =>
         throw new NotImplementedError(s"Deinflections for $wordType not yet supported.")
     }

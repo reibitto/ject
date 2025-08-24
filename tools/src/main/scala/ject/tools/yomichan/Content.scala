@@ -19,7 +19,7 @@ object Content {
   implicit val decoder: Decoder[Content] = Decoder.instance { c =>
     c.as[String] match {
       case Right(s) => Right(Content.Text(s))
-      case Left(_) =>
+      case Left(_)  =>
         c.downField("type").as[String].flatMap {
           case "structured-content" =>
             // According to the term bank schema, can be either an array or object.

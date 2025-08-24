@@ -34,8 +34,8 @@ object YomichanMain extends ZIOAppDefault {
              val targetPath = Paths.get(s"data/dictionary/${dictionary.name}")
 
              for {
-               _               <- printLine(s"Starting to index dictionary: ${dictionary.name}")
-               luceneDirectory <- ZIO.succeed(Paths.get("data/lucene/word-ja"))
+               _                      <- printLine(s"Starting to index dictionary: ${dictionary.name}")
+               luceneDirectory        <- ZIO.succeed(Paths.get("data/lucene/word-ja"))
                (timeTaken, totalDocs) <-
                  ZIO.scoped {
                    for {

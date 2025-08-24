@@ -119,7 +119,7 @@ object Transformation {
       Left("Verb must be greater than 2 character")
     else
       detachSuffixes.find(ds => s.endsWith(ds)) match {
-        case None => Left(s"$s is not a godan verb")
+        case None         => Left(s"$s is not a godan verb")
         case Some(suffix) =>
           val stem = s.substring(0, s.length - suffix.length - 1)
 
