@@ -69,6 +69,7 @@ object JMDictIO {
   def load(file: Path, frequencies: Frequencies = Frequencies.empty): ZStream[Any, Throwable, WordDoc] =
     ZStream.fromIteratorZIO {
       java.lang.System.setProperty("jdk.xml.entityExpansionLimit", "0")
+      java.lang.System.setProperty("jdk.xml.totalEntitySizeLimit", "0")
 
       for {
         xml <- ZIO.attempt(xmlLoader.loadFile(file.toFile))
