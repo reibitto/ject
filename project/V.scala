@@ -11,7 +11,7 @@ object V {
 
   val slf4j = "2.0.17"
 
-  val sttp = "3.10.3"
+  val sttp = "3.11.0"
 
   val zio = "2.1.20"
 
