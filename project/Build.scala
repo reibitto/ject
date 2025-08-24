@@ -57,10 +57,13 @@ object Build {
     )
 
   // Order of resolvers affects resolution time. More general purpose repositories should come first.
-  lazy val Resolvers = Resolver.sonatypeOssRepos("releases") ++ Seq(
-    Resolver.typesafeRepo("releases"),
-    Resolver.jcenterRepo
-  ) ++ Resolver.sonatypeOssRepos("snapshots")
+  lazy val Resolvers =
+    Seq(
+      Resolver.sonatypeCentralSnapshots,
+      Resolver.typesafeRepo("releases"),
+      Resolver.jcenterRepo,
+      Resolver.mavenLocal
+    )
 
   def compilerFlag(key: String, default: Boolean): Boolean = {
     val flag = sys.props.get(key).orElse {
