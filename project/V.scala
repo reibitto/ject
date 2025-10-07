@@ -3,7 +3,7 @@ object V {
 
   val enumeratum = "1.9.0"
 
-  val lucene = "10.3.0"
+  val lucene = "10.3.1"
 
   val pprint = "0.9.4"
 
