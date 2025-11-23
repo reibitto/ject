@@ -1,7 +1,7 @@
 object V {
   val circe = "0.14.15"
 
-  val enumeratum = "1.9.0"
+  val enumeratum = "1.9.1"
 
   val lucene = "10.3.1"
 
