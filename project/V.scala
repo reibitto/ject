@@ -5,7 +5,7 @@ object V {
 
   val lucene = "10.3.1"
 
-  val pprint = "0.9.4"
+  val pprint = "0.9.5"
 
   val scalaXml = "2.4.0"
 
