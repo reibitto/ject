@@ -9,7 +9,7 @@ object V {
 
   val scalaXml = "2.4.0"
 
-  val slf4j = "2.0.17"
+  val slf4j = "2.0.18"
 
   val sttp = "3.11.0"
 
