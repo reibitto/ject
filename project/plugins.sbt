@@ -4,7 +4,7 @@ addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.4")
 
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "2.3.1")
 
-addSbtPlugin("com.github.reibitto" % "sbt-welcome" % "0.5.0")
+addSbtPlugin("com.github.reibitto" % "sbt-welcome" % "0.6.0")
 
 addSbtPlugin("com.github.sbt" % "sbt-ci-release" % "1.11.2")
 
