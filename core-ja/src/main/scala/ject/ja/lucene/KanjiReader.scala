@@ -42,8 +42,8 @@ final case class KanjiReader(
     *      both a direct part (田 in 果) and one nested arbitrarily deep (刀 in 昭,
     *      via 昭 -> 召 -> 刀).
     *   2. Via the input character's own components, if it's itself a real kanji
-    *      — so typing "利" (which decomposes into 禾+刂) still finds 和, whose
-    *      actual part is 禾, even though 利 itself is never anyone's component.
+    *      — so typing "秒" (which decomposes into 禾+少) still finds 和, whose
+    *      actual part is 禾, even though 秒 itself is never anyone's component.
     *   3. Via known lookalikes of the input character — so typing the
     *      easier-to-type-but-technically-wrong 冫 still finds 泪, whose real part
     *      is the visually similar 氵.
@@ -56,19 +56,18 @@ final case class KanjiReader(
       val inputChars = RadicalQuery.normalize(parts).codePointIterator.toSeq.distinct
 
       for {
-        inputCharComponents <- ZIO.foreach(inputChars)(getByKanji).map(_.flatten.flatMap(_.components).toSet)
+        inputCharComponents <-
+          ZIO
+            .foreach(inputChars)(c => getByKanji(c).map(doc => c -> doc.toSeq.flatMap(_.components).toSet))
+            .map(_.toMap)
 
-        weightedComponents = {
-          val direct = inputChars.map(_ -> directComponentBoost)
-          val subComponents = inputCharComponents.toSeq.map(_ -> subComponentBoost)
-          val lookalikes = inputChars.flatMap(kanjiLookalikeMap.getOrElse(_, Seq.empty)).map(_ -> lookalikeBoost)
+        lookalikesOf = inputChars.map(c => c -> kanjiLookalikeMap.getOrElse(c, Seq.empty).toSet).toMap
 
-          (direct ++ subComponents ++ lookalikes).groupMapReduce(_._1)(_._2)(_ max _)
-        }
+        allQueryComponents = inputChars.toSet ++ inputCharComponents.values.flatten ++ lookalikesOf.values.flatten
 
         candidates <-
-          if (weightedComponents.isEmpty) ZIO.succeed(Seq.empty) else findCandidates(weightedComponents.keySet)
-      } yield ZStream.fromIterable(rankByParts(candidates, weightedComponents))
+          if (allQueryComponents.isEmpty) ZIO.succeed(Seq.empty) else findCandidates(allQueryComponents)
+      } yield ZStream.fromIterable(rankByParts(candidates, inputChars, inputCharComponents, lookalikesOf))
     }
 
   /** Finds every doc whose `Components` field contains at least one of the
@@ -111,39 +110,78 @@ object KanjiReader {
     * this candidate only has one of them" or "this candidate also has five
     * other components nobody asked about."
     *
-    * `score` is the sum of the matched components' boosts, scaled down by two
-    * independent fractions:
+    * Matching is done per *input character* rather than per flattened component
+    * term, and each input character contributes at most once, taking its best
+    * tier (direct > subcomponent > lookalike, see `searchByParts`'s doc). This
+    * matters because an input character that itself decomposes into several
+    * components (e.g. 秒 -> 禾+少) would otherwise inflate the query into one term
+    * per subcomponent — and any candidate that happens to contain that input
+    * character *literally* (e.g. a kanji built from 秒) would then match all of
+    * those terms at once, heavily outscoring a candidate that only shares the
+    * one subcomponent the mechanism was meant to surface (e.g. 和, via 秒's 禾).
+    * Scoring one input character as one unit avoids that double-counting.
     *
-    *   1. `queryCoverage`: how many of the *query's* (distinct) components this
-    *      candidate matched. A candidate matching every typed part outscores
-    *      one matching only some of them, even if the partial match is
-    *      otherwise a "purer" one — someone who typed two parts is looking for
-    *      a kanji with both.
-    *   2. `candidatePurity`: how many of the *candidate's own* components were
-    *      actually matched. A kanji made up almost entirely of queried parts
-    *      outranks one that buries a single matched part among several
-    *      unrelated ones.
+    * `score` is the sum of the matched input characters' boosts, scaled down by
+    * two independent fractions:
+    *
+    *   1. `queryCoverage`: how many of the *input characters* this candidate
+    *      matched, in any tier. A candidate matching every typed character
+    *      outscores one matching only some of them, even if the partial match
+    *      is otherwise a "purer" one — someone who typed two parts is looking
+    *      for a kanji with both.
+    *   2. `candidatePurity`: how much of the *candidate's own* component set is
+    *      accounted for by those matches. A kanji made up almost entirely of
+    *      queried parts outranks one that buries a single matched part among
+    *      several unrelated ones.
     */
   private def rankByParts(
       candidates: Seq[KanjiDoc],
-      weightedComponents: Map[String, Float]
+      inputChars: Seq[String],
+      inputCharComponents: Map[String, Set[String]],
+      lookalikesOf: Map[String, Set[String]]
   ): Seq[ScoredDoc[KanjiDoc]] =
-    candidates.map { doc =>
-      val matched = doc.components.filter(weightedComponents.contains)
-      val matchedBoost = matched.map(weightedComponents).sum
-      val queryCoverage = matched.size.toDouble / weightedComponents.size
-      val candidatePurity = matched.size.toDouble / doc.components.size
-      val score = matchedBoost * queryCoverage * candidatePurity
+    candidates.flatMap { doc =>
+      val docComponents = doc.components.toSet
 
-      ScoredDoc(doc, score)
-    }.sortBy { scored =>
-      (
-        -scored.score,
-        scored.doc.strokeCount.minOption.getOrElse(Int.MaxValue),
-        scored.doc.grade.getOrElse(Int.MaxValue),
-        scored.doc.frequency.getOrElse(Int.MaxValue)
-      )
+      // One entry per input character that matched, in its best tier: the boost for that tier, and the
+      // subset of the candidate's own components which that match accounts for (used for candidatePurity).
+      val matches = inputChars.flatMap { c =>
+        val ownComponents = inputCharComponents.getOrElse(c, Set.empty)
+
+        if (docComponents.contains(c))
+          Some(directComponentBoost -> (Set(c) ++ ownComponents.intersect(docComponents)))
+        else {
+          val subMatch = ownComponents.intersect(docComponents)
+          if (subMatch.nonEmpty) Some(subComponentBoost -> subMatch)
+          else {
+            val lookalikeMatch = lookalikesOf.getOrElse(c, Set.empty).intersect(docComponents)
+            Option.when(lookalikeMatch.nonEmpty)(lookalikeBoost -> lookalikeMatch)
+          }
+        }
+      }
+
+      Option.when(matches.nonEmpty) {
+        val boostSum = matches.map(_._1).sum
+        val explained = matches.flatMap(_._2).toSet
+        val queryCoverage = matches.size.toDouble / inputChars.size
+        val candidatePurity = explained.size.toDouble / doc.components.size
+
+        ScoredDoc(doc, boostSum * queryCoverage * candidatePurity)
+      }
     }
+      // Below relevance, tiebreak on how *common* a kanji is (frequency, then grade) before falling back to
+      // stroke count. Ties are common among kanji that are equally good matches for the query, and plenty of
+      // real but obscure/dialectal variant characters (no frequency or grade at all) tie with the everyday
+      // kanji someone is actually looking for — stroke count alone doesn't reliably favor the latter, since a
+      // rare variant can easily have fewer strokes than the common kanji it's tied with.
+      .sortBy { scored =>
+        (
+          -scored.score,
+          scored.doc.frequency.getOrElse(Int.MaxValue),
+          scored.doc.grade.getOrElse(Int.MaxValue),
+          scored.doc.strokeCount.minOption.getOrElse(Int.MaxValue)
+        )
+      }
 
   private val defaultKanjiLookalikeMap: Task[Map[String, Seq[String]]] =
     KanjiLookalikes.load.runCollect.map(_.map(v => (v.kanji, v.lookalikes)).toMap)

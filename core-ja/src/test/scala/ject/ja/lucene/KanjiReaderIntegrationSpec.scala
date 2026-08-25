@@ -50,7 +50,50 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
         .toMap
     }
 
-  private def kanjiDoc(kanji: String, strokeCount: Int, decompositions: Map[String, KanjiDecomposition]): KanjiDoc =
+  // A minimal, dependency-free scan of kanjidic.xml for just `freq`/`grade` — real "how common is this
+  // kanji" signals that `rankByParts` uses as a tiebreaker below relevance, and which the decomposition TSV
+  // has no equivalent of. Without these, the test index can't tell a common kanji apart from an obscure
+  // variant that happens to tie with it on score and stroke count. Line-based rather than a real XML parser
+  // since kanjidic2.xml already has one element per line and `<literal>` always precedes `<freq>`/`<grade>`
+  // within an entry, making a tag's *most recently seen* `<literal>` an unambiguous owner.
+  private def loadFrequenciesAndGrades(file: String): Task[Map[String, (Option[Int], Option[Int])]] =
+    ZIO.attempt {
+      val literalTag = "<literal>(.*)</literal>".r
+      val freqTag = "<freq>(\\d+)</freq>".r
+      val gradeTag = "<grade>(\\d+)</grade>".r
+
+      val result = Map.newBuilder[String, (Option[Int], Option[Int])]
+      var currentKanji: Option[String] = None
+      var currentFreq: Option[Int] = None
+      var currentGrade: Option[Int] = None
+
+      def flush(): Unit = currentKanji.foreach(k => result += k -> (currentFreq, currentGrade))
+
+      Files.readAllLines(Paths.get(file)).asScala.foreach { line =>
+        line.trim match {
+          case literalTag(kanji) =>
+            flush()
+            currentKanji = Some(kanji)
+            currentFreq = None
+            currentGrade = None
+          case freqTag(freq)   => currentFreq = Some(freq.toInt)
+          case gradeTag(grade) => currentGrade = Some(grade.toInt)
+          case _               => ()
+        }
+      }
+      flush()
+
+      result.result()
+    }
+
+  private def kanjiDoc(
+      kanji: String,
+      strokeCount: Int,
+      decompositions: Map[String, KanjiDecomposition],
+      frequenciesAndGrades: Map[String, (Option[Int], Option[Int])]
+  ): KanjiDoc = {
+    val (frequency, grade) = frequenciesAndGrades.getOrElse(kanji, (None, None))
+
     KanjiDoc(
       kanji = kanji,
       meaning = Seq.empty,
@@ -62,10 +105,11 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
       parts = Seq.empty,
       components = KanjiDecomposition.transitiveComponents(kanji, decompositions).toSeq,
       strokeCount = Seq(strokeCount),
-      frequency = None,
+      frequency = frequency,
       jlpt = None,
-      grade = None
+      grade = grade
     )
+  }
 
   // Only 冫 -> 氵 is needed for these tests. Injected explicitly rather than relying on the bundled
   // kanji-lookalikes.txt resource, so this suite doesn't depend on that file's exact contents.
@@ -79,10 +123,11 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
   private val kanjiReaderLayer: ZLayer[Any, Throwable, KanjiReader] =
     ZLayer.scoped {
       for {
-        rows <- loadDecompositions("data/kanji-decomposition.tsv")
+        rows                 <- loadDecompositions("data/kanji-decomposition.tsv")
+        frequenciesAndGrades <- loadFrequenciesAndGrades("data/dictionary/kanjidic.xml")
         decompositions = rows.map { case (kanji, (_, decomposition)) => kanji -> decomposition }
         entries = rows.map { case (kanji, (strokeCount, _)) =>
-                    kanjiDoc(kanji, strokeCount, decompositions)
+                    kanjiDoc(kanji, strokeCount, decompositions, frequenciesAndGrades)
                   }.toSeq
         directory <- LuceneDirectory.inMemory
         _         <- ZIO.scoped(KanjiWriter.make(directory).flatMap(_.addBulk(entries*)))
@@ -106,9 +151,13 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
     suite("KanjiReader.searchByParts")(
       test("finds 瑞 via its direct components 山王")(ranksNear("山王", "瑞")),
       test("finds 瑞 via all three of its direct components 山王而")(ranksNear("山王而", "瑞")),
-      test("finds 和 via 秒口, where 秒 is not itself a component of 和 but shares 和's actual component 禾")(
-        ranksNear("秒口", "和")
-      ),
+      test("finds 和 via 利口, where 利 is not itself a component of 和 but shares 和's actual component 禾") {
+        // 利 is also, unhelpfully, a literal component of many other real kanji (唎, 梨, ...), which used to
+        // crowd 和 far down the results by matching both 利 itself *and* (redundantly) all of 利's own
+        // subcomponents. It's still reasonable for those to rank above 和 — they're exact matches on both
+        // typed characters — but 和 should be right behind them, not buried dozens of results down.
+        ranksNear("利口", "和")
+      },
       test("finds 昨 via its direct components 日作, where 作 shares 昨's actual component 乍")(
         ranksNear("日作", "昨")
       ),
