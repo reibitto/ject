@@ -22,7 +22,7 @@ object YomichanMain extends ZIOAppDefault {
       DictionaryInfo("sanseido", 0.8, shouldSanitize = true),
       DictionaryInfo("koujien", 0.7, shouldSanitize = true),
       DictionaryInfo("daijisen", 0.6, shouldSanitize = true),
-      DictionaryInfo("pixiv", 0.5, shouldSanitize = true)
+      DictionaryInfo("pixiv-light", 0.5, shouldSanitize = true)
     )
 
     for {
@@ -56,7 +56,7 @@ object YomichanMain extends ZIOAppDefault {
 
                                           if (lines.length > 1)
                                             (lines
-                                              .drop(if (dictionary.name == "pixiv") 0 else 1)
+                                              .drop(if (dictionary.name.startsWith("pixiv")) 0 else 1)
                                               .mkString("\n")
                                               .trim +: e.definitions.tail.map(_.asText))
                                               .map(_.trim)

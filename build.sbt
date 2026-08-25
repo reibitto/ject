@@ -47,6 +47,14 @@ lazy val root = project
         "examples/runMain ject.examples.YomichanMain",
         "Use custom Yomichan dictionaries to create Lucene indexes"
       ),
+      UsefulTask(
+        "examples/runMain ject.examples.KrDictMain",
+        "Import kr-dict Korean -> English/Japanese dictionary"
+      ),
+      UsefulTask(
+        "examples/runMain ject.examples.ImportAllMain",
+        "Import all dictionaries in sequence"
+      ),
       UsefulTask("fmt", "Run scalafmt on the entire project")
     )
   )
