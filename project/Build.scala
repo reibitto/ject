@@ -43,7 +43,7 @@ object Build {
       scalacOptions := ScalacOptions,
       ThisBuild / scalaVersion := ScalaVersion,
       outputStrategy := Some(StdoutOutput), // Remove prefixes like `[info]`
-      libraryDependencies ++= Plugins.BaseCompilerPlugins,
+      libraryDependencies ++= CompilerPlugins.BaseCompilerPlugins,
       libraryDependencies ++= Seq(
         "dev.zio" %% "zio-test" % V.zio % Test,
         "dev.zio" %% "zio-test-sbt" % V.zio % Test
@@ -61,7 +61,6 @@ object Build {
     Seq(
       Resolver.sonatypeCentralSnapshots,
       Resolver.typesafeRepo("releases"),
-      Resolver.jcenterRepo,
       Resolver.mavenLocal
     )
 

@@ -1,14 +1,12 @@
-import sbt.*
-import sbt.Keys.*
 import sbtwelcome.*
 
 inThisBuild(
   List(
     organization := "com.github.reibitto",
-    homepage := Some(url("https://github.com/reibitto/ject")),
-    licenses := List("Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
+    homepage := Some(uri("https://github.com/reibitto/ject")),
+    licenses := List("Apache-2.0" -> uri("https://www.apache.org/licenses/LICENSE-2.0")),
     developers := List(
-      Developer("reibitto", "reibitto", "reibitto@users.noreply.github.com", url("https://reibitto.github.io"))
+      Developer("reibitto", "reibitto", "reibitto@users.noreply.github.com", uri("https://reibitto.github.io"))
     )
   )
 )
@@ -17,7 +15,8 @@ lazy val root = project
   .in(file("."))
   .aggregate(core, coreJapanese, coreKorean, tools, examples)
   .settings(
-    name := "ject",
+    name := "ject-root",
+    publish / skip := true,
     addCommandAlias("fmt", "all root/scalafmtSbt root/scalafmtAll"),
     addCommandAlias("fmtCheck", "all root/scalafmtSbtCheck root/scalafmtCheckAll"),
     logo :=
