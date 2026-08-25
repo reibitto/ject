@@ -48,10 +48,8 @@ final case class KanjiReader(
     *      easier-to-type-but-technically-wrong 冫 still finds 泪, whose real part
     *      is the visually similar 氵.
     *
-    * Matches from multiple input characters (or multiple mechanisms above)
-    * accumulate in the score, so kanji matching more parts — and more
-    * specific/less common ones, since Lucene's own scoring already favors rarer
-    * terms — naturally rank higher.
+    * Ranking is done in `rankByParts` rather than Lucene's own relevance score
+    * (see that method's doc for why).
     */
   def searchByParts(parts: String): ZStream[Any, Throwable, ScoredDoc[KanjiDoc]] =
     ZStream.unwrap {
@@ -68,24 +66,27 @@ final case class KanjiReader(
           (direct ++ subComponents ++ lookalikes).groupMapReduce(_._1)(_._2)(_ max _)
         }
 
-        queryBuilder = new BooleanQuery.Builder()
-        _ = weightedComponents.foreach { case (component, boost) =>
-              queryBuilder.add(
-                new BoostQuery(new TermQuery(KanjiField.Components.term(component)), boost),
-                BooleanClause.Occur.SHOULD
-              )
-            }
-
-        sort = new Sort(
-                 SortField.FIELD_SCORE,
-                 new SortedNumericSortField(KanjiField.StrokeCount.entryName, SortField.Type.INT),
-                 new SortedNumericSortField(KanjiField.Grade.entryName, SortField.Type.INT),
-                 new SortedNumericSortField(KanjiField.Frequency.entryName, SortField.Type.INT)
-               )
-      } yield
-        if (weightedComponents.isEmpty) ZStream.empty
-        else searchSorted(queryBuilder.build, sort)
+        candidates <-
+          if (weightedComponents.isEmpty) ZIO.succeed(Seq.empty) else findCandidates(weightedComponents.keySet)
+      } yield ZStream.fromIterable(rankByParts(candidates, weightedComponents))
     }
+
+  /** Finds every doc whose `Components` field contains at least one of the
+    * given components. Lucene's own relevance score isn't used for anything
+    * here (see `rankByParts`) — this is retrieval only, so plain, unboosted
+    * `SHOULD` clauses are enough.
+    */
+  private def findCandidates(components: Set[String]): Task[Seq[KanjiDoc]] = {
+    val query = new BooleanQuery.Builder()
+    components.foreach(component =>
+      query.add(new TermQuery(KanjiField.Components.term(component)), BooleanClause.Occur.SHOULD)
+    )
+    val builtQuery = query.build()
+
+    ZIO.attemptBlocking(searcher.count(builtQuery)).flatMap { count =>
+      if (count == 0) ZIO.succeed(Seq.empty) else take(builtQuery, count).map(_.map(_.doc))
+    }
+  }
 }
 
 object KanjiReader {
@@ -93,6 +94,56 @@ object KanjiReader {
   private val directComponentBoost: Float = 3.0f
   private val subComponentBoost: Float = 1.5f
   private val lookalikeBoost: Float = 1.0f
+
+  /** Ranks candidates by how well their own `components` set overlaps with the
+    * query, rather than relying on Lucene's own term-frequency/IDF-based
+    * relevance score.
+    *
+    * Lucene's default similarity turns out to be a poor fit for this field.
+    * `Components` is indexed as a `StringField`, which omits norms — so how
+    * many components a kanji has makes no difference to its score. And because
+    * a handful of common radicals (十, 一, 口, ...) each appear in a huge fraction
+    * of the ~20,000-entry decomposition graph, their IDF collapses to nearly
+    * zero, so matching them barely moves the score at all. Combined, this means
+    * a kanji that only coincidentally shares one common radical with the query
+    * can score identically to — or higher than — a kanji that matches every
+    * queried component: Lucene has no notion of "the input had two parts and
+    * this candidate only has one of them" or "this candidate also has five
+    * other components nobody asked about."
+    *
+    * `score` is the sum of the matched components' boosts, scaled down by two
+    * independent fractions:
+    *
+    *   1. `queryCoverage`: how many of the *query's* (distinct) components this
+    *      candidate matched. A candidate matching every typed part outscores
+    *      one matching only some of them, even if the partial match is
+    *      otherwise a "purer" one — someone who typed two parts is looking for
+    *      a kanji with both.
+    *   2. `candidatePurity`: how many of the *candidate's own* components were
+    *      actually matched. A kanji made up almost entirely of queried parts
+    *      outranks one that buries a single matched part among several
+    *      unrelated ones.
+    */
+  private def rankByParts(
+      candidates: Seq[KanjiDoc],
+      weightedComponents: Map[String, Float]
+  ): Seq[ScoredDoc[KanjiDoc]] =
+    candidates.map { doc =>
+      val matched = doc.components.filter(weightedComponents.contains)
+      val matchedBoost = matched.map(weightedComponents).sum
+      val queryCoverage = matched.size.toDouble / weightedComponents.size
+      val candidatePurity = matched.size.toDouble / doc.components.size
+      val score = matchedBoost * queryCoverage * candidatePurity
+
+      ScoredDoc(doc, score)
+    }.sortBy { scored =>
+      (
+        -scored.score,
+        scored.doc.strokeCount.minOption.getOrElse(Int.MaxValue),
+        scored.doc.grade.getOrElse(Int.MaxValue),
+        scored.doc.frequency.getOrElse(Int.MaxValue)
+      )
+    }
 
   private val defaultKanjiLookalikeMap: Task[Map[String, Seq[String]]] =
     KanjiLookalikes.load.runCollect.map(_.map(v => (v.kanji, v.lookalikes)).toMap)

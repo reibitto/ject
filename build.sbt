@@ -80,6 +80,7 @@ lazy val coreJapanese = module("ject-ja", Some("core-ja"))
   .settings(
     fork := true,
     run / baseDirectory := file("."),
+    Test / baseDirectory := file("."),
     libraryDependencies ++= Seq(
       "org.apache.lucene" % "lucene-analysis-kuromoji" % V.lucene
     )
@@ -134,6 +135,7 @@ def module(projectId: String, moduleFile: Option[String] = None): Project =
 Global / excludeLintKeys ++= Set(
   core / run / baseDirectory,
   coreJapanese / run / baseDirectory,
+  coreJapanese / Test / baseDirectory,
   coreKorean / run / baseDirectory,
   tools / run / baseDirectory,
   examples / run / baseDirectory
