@@ -66,10 +66,10 @@ object Transformation {
     case s                      => Right(NonEmptyChunk.single(s.stripSuffix("する")))
   }
 
-  def stemOf(stem: String): Transform = {
-    case s if !s.endsWith(stem)       => Left(s"Verb must end in $stem")
-    case s if s.length <= stem.length => Left(s"Verb must be longer than $stem")
-    case s                            => Right(NonEmptyChunk.single(s.dropRight(stem.length)))
+  def stemOf(stem: String, allowEmptyStem: Boolean = false): Transform = {
+    case s if !s.endsWith(stem)                          => Left(s"Verb must end in $stem")
+    case s if !allowEmptyStem && s.length == stem.length => Left(s"Verb must be longer than $stem")
+    case s                                               => Right(NonEmptyChunk.single(s.dropRight(stem.length)))
   }
 
   def adjectiveIStem: Transform = {
@@ -104,7 +104,8 @@ object Transformation {
       val last = s.last
 
       for {
-        _             <- Syllabary.danOf(last).toRight(s"$s must end with $fromDan")
+        actualDan     <- Syllabary.danOf(last).toRight(s"$s must end with $fromDan")
+        _             <- Either.cond(actualDan == fromDan, (), s"$s must end with $fromDan, but ends with $actualDan")
         shiftedSuffix <- Syllabary.shift(last, toDan).toRight(s"Could not shift '$last' to $toDan")
       } yield NonEmptyChunk.single(s"$stem$shiftedSuffix")
     }

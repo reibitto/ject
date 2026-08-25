@@ -29,6 +29,25 @@ object JapaneseText {
 
   def isJapanese(c: Char): Boolean = isKana(c) || isKanji(c)
 
+  // Small kana that can never legally start a word in standard Japanese orthography (they only ever modify
+  // the preceding mora, e.g. きゃ, かった). A word beginning with one of these is never valid.
+  private val invalidWordInitialKana: Set[Char] =
+    Set(
+      'ぁ', 'ぃ', 'ぅ', 'ぇ', 'ぉ', 'っ', 'ゃ', 'ゅ', 'ょ', 'ゎ', 'ァ', 'ィ', 'ゥ', 'ェ', 'ォ', 'ッ', 'ャ', 'ュ', 'ョ', 'ヮ'
+    )
+
+  /** A cheap, dictionary-free sanity check for whether `word` could plausibly
+    * be a real Japanese word: every character must be kana or kanji, and it
+    * must not begin with a kana that can only ever modify a preceding mora.
+    * This can't confirm a word actually exists (that requires a dictionary
+    * lookup), but it can cheaply reject strings that certainly aren't valid,
+    * e.g. output containing stray Latin characters or digits from malformed
+    * input, or a reconstruction bug that left a dangling small-tsu at the front
+    * of a word.
+    */
+  def isPlausibleWord(word: String): Boolean =
+    word.nonEmpty && word.forall(isJapanese) && !invalidWordInitialKana.contains(word.head)
+
   def hasDakuten(c: Char): Boolean =
     c match {
       case 'が' | 'ぎ' | 'ぐ' | 'げ' | 'ご' | 'ざ' | 'じ' | 'ず' | 'ぜ' | 'ぞ' | 'だ' | 'ぢ' | 'づ' | 'で' | 'ど' | 'ば' | 'び' | 'ぶ' |

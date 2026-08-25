@@ -1,176 +1,131 @@
 package ject.ja.text.inflection
 
+import ject.ja.text.{DanShiftConjugator, GodanTaConjugator, GodanTeConjugator, ReversibleTransform, Transforms}
 import ject.ja.text.Form
 import ject.ja.text.SubForm.*
 import ject.ja.text.Syllabary.Dan
 import ject.ja.text.Transformation.*
-import ject.ja.text.Transforms
 
 object Godan {
 
-  val inflections: Map[Form, Transform] = Map(
+  // Endings attached after shifting the verb's final kana to a fixed dan within its own row, e.g. 書く -> 書け(ば).
+  private val aDan = DanShiftConjugator(Dan.A)
+  private val eDan = DanShiftConjugator(Dan.E)
+  private val iDan = DanShiftConjugator(Dan.I)
+  private val oDan = DanShiftConjugator(Dan.O)
+
+  private val conjugations: Map[Form, ReversibleTransform] = Map(
     // Plain
-    NonPast.plain -> Transforms.identity,
-    Past.plain -> Transforms(godanStemTa),
-    Te.plain -> godanStemTe,
-    Conditional.plain -> Transforms(godanStemTa, attach("ら")),
-    Provisional.plain -> Transforms(changeBase(Dan.E, "ば")),
-    Potential.plain -> Transforms(changeBase(Dan.E, "る")),
-    Passive.plain -> Transforms(changeBase(Dan.A, "れる")),
-    Causative.plain -> Transforms(changeBase(Dan.A, "せる")),
-    CausativePassive.plain -> Transforms(changeBase(Dan.A, "せられる")),
-    Volitional.plain -> Transforms(changeBase(Dan.O, "う")),
-    Alternative.plain -> Transforms(godanStemTa, attach("り")),
-    Imperative.plain -> Transforms(changeBase(Dan.E, "")),
-    Sou.plain -> Transforms(changeBase(Dan.I, "そう")),
-    Tai.plain -> Transforms(changeBase(Dan.I, "たい")),
-    Progressive.plain -> Transforms(godanStemTe, attach("いる", "る")),
-    Form.of(Progressive, Past) -> Transforms(godanStemTe, attach("いた", "た")),
-    Form.of(Potential, Te) -> Transforms(changeBase(Dan.E, "て")),
-    Form.of(Potential, Past) -> Transforms(changeBase(Dan.E, "た")),
-    Form.of(Passive, Stem) -> Transforms(changeBase(Dan.A, "れ")),
-    Form.of(Passive, Te) -> Transforms(changeBase(Dan.A, "れて")),
-    Form.of(Passive, Past) -> Transforms(changeBase(Dan.A, "れた")),
-    Form.of(Causative, Te) -> Transforms(changeBase(Dan.A, "せて")),
-    Form.of(Causative, Past) -> Transforms(changeBase(Dan.A, "せた")),
-    Form.of(Tai, Te) -> Transforms(changeBase(Dan.I, "たくて")),
+    Past.plain -> GodanTaConjugator(""),
+    Te.plain -> GodanTeConjugator(""),
+    Conditional.plain -> GodanTaConjugator("ら"),
+    Provisional.plain -> eDan("ば"),
+    Potential.plain -> eDan("る"),
+    Passive.plain -> aDan("れる"),
+    Causative.plain -> aDan("せる"),
+    CausativePassive.plain -> aDan("せられる"),
+    Volitional.plain -> oDan("う"),
+    Alternative.plain -> GodanTaConjugator("り"),
+    Imperative.plain -> eDan(""),
+    Sou.plain -> iDan("そう"),
+    Tai.plain -> iDan("たい"),
+    Progressive.plain -> GodanTeConjugator("いる", "る"),
+    Form.of(Progressive, Past) -> GodanTeConjugator("いた", "た"),
+    Form.of(Potential, Te) -> eDan("て"),
+    Form.of(Potential, Past) -> eDan("た"),
+    Form.of(Passive, Stem) -> aDan("れ"),
+    Form.of(Passive, Te) -> aDan("れて"),
+    Form.of(Passive, Past) -> aDan("れた"),
+    Form.of(Causative, Te) -> aDan("せて"),
+    Form.of(Causative, Past) -> aDan("せた"),
+    Form.of(Tai, Te) -> iDan("たくて"),
     // Polite
-    NonPast.polite -> Transforms(changeBase(Dan.I, "ます")),
-    Past.polite -> Transforms(changeBase(Dan.I, "ました")),
-    Te.polite -> Transforms(godanStemTe, attach("まして")),
-    Conditional.polite -> Transforms(changeBase(Dan.I, "ましたら")),
-    Provisional.polite -> Transforms(changeBase(Dan.I, "ますなら")),
-    Potential.polite -> Transforms(changeBase(Dan.E, "ます")),
-    Passive.polite -> Transforms(changeBase(Dan.A, "れます")),
-    Causative.polite -> Transforms(changeBase(Dan.A, "せます")),
-    CausativePassive.polite -> Transforms(changeBase(Dan.A, "せられます")),
-    Volitional.polite -> Transforms(changeBase(Dan.I, "ましょう")),
-    Alternative.polite -> Transforms(changeBase(Dan.I, "ましたり")),
-    Imperative.polite -> Transforms(changeBase(Dan.I, "なさい")),
-    Progressive.polite -> Transforms(godanStemTe, attach("います", "ます")),
-    Form.of(Progressive, Past).polite -> Transforms(changeBase(Dan.E, "ていました", "てました")),
-    Form.of(Potential, Te).polite -> Transforms(changeBase(Dan.E, "まして")),
-    Form.of(Potential, Past).polite -> Transforms(changeBase(Dan.E, "ました")),
-    Form.of(Causative, Te).polite -> Transforms(changeBase(Dan.A, "せまして")),
-    Form.of(Causative, Past).polite -> Transforms(changeBase(Dan.A, "せました")),
+    NonPast.polite -> iDan("ます"),
+    Past.polite -> iDan("ました"),
+    Te.polite -> GodanTeConjugator("まして"),
+    Conditional.polite -> iDan("ましたら"),
+    Provisional.polite -> iDan("ますなら"),
+    Potential.polite -> eDan("ます"),
+    Passive.polite -> aDan("れます"),
+    Causative.polite -> aDan("せます"),
+    CausativePassive.polite -> aDan("せられます"),
+    Volitional.polite -> iDan("ましょう"),
+    Alternative.polite -> iDan("ましたり"),
+    Imperative.polite -> iDan("なさい"),
+    Progressive.polite -> GodanTeConjugator("います", "ます"),
+    Form.of(Progressive, Past).polite -> GodanTeConjugator("いました", "ました"),
+    Form.of(Potential, Te).polite -> eDan("まして"),
+    Form.of(Potential, Past).polite -> eDan("ました"),
+    Form.of(Causative, Te).polite -> aDan("せまして"),
+    Form.of(Causative, Past).polite -> aDan("せました"),
     // Negative
-    NonPast.negative -> Transforms(changeBase(Dan.A, "ない", "ぬ", "ず")),
-    Past.negative -> Transforms(changeBase(Dan.A, "なかった")),
-    Te.negative -> Transforms(changeBase(Dan.A, "なくて", "ないで")),
-    Conditional.negative -> Transforms(changeBase(Dan.A, "なかったら")),
-    Provisional.negative -> Transforms(changeBase(Dan.A, "なければ")),
-    Potential.negative -> Transforms(changeBase(Dan.E, "ない")),
-    Passive.negative -> Transforms(changeBase(Dan.A, "れない")),
-    Causative.negative -> Transforms(changeBase(Dan.A, "せない")),
-    CausativePassive.negative -> Transforms(changeBase(Dan.A, "せられない")),
-    Volitional.negative -> Transforms(attach("まい")),
-    Alternative.negative -> Transforms(changeBase(Dan.A, "なかったり")),
-    Imperative.negative -> Transforms(attach("な")),
-    Sou.negative -> Transforms(changeBase(Dan.I, "なさそう")),
-    Form.of(Potential, Sou).negative -> Transforms(changeBase(Dan.E, "なさそう")),
-    Tai.negative -> Transforms(changeBase(Dan.I, "たくない")),
-    Progressive.negative -> Transforms(godanStemTa, attach("いない", "ない")),
-    Form.of(Progressive, Past).negative -> Transforms(godanStemTa, attach("いなかった", "なかった")),
-    Form.of(Tai, Sou).negative -> Transforms(changeBase(Dan.I, "たくなさそう")),
-    Form.of(Potential, Te).negative -> Transforms(changeBase(Dan.E, "なくて")),
-    Form.of(Potential, Past).negative -> Transforms(changeBase(Dan.E, "なかった")),
-    Form.of(Causative, Te).negative -> Transforms(changeBase(Dan.A, "せなくて")),
-    Form.of(Causative, Past).negative -> Transforms(changeBase(Dan.A, "せなかった")),
+    NonPast.negative -> aDan("ない", "ぬ", "ず"),
+    Past.negative -> aDan("なかった"),
+    Te.negative -> aDan("なくて", "ないで"),
+    Conditional.negative -> aDan("なかったら"),
+    Provisional.negative -> aDan("なければ"),
+    Potential.negative -> eDan("ない"),
+    Passive.negative -> aDan("れない"),
+    Causative.negative -> aDan("せない"),
+    CausativePassive.negative -> aDan("せられない"),
+    Alternative.negative -> aDan("なかったり"),
+    Sou.negative -> iDan("なさそう"),
+    Form.of(Potential, Sou).negative -> eDan("なさそう"),
+    Tai.negative -> iDan("たくない"),
+    Progressive.negative -> GodanTeConjugator("いない", "ない"),
+    Form.of(Progressive, Past).negative -> GodanTeConjugator("いなかった", "なかった"),
+    Form.of(Tai, Sou).negative -> iDan("たくなさそう"),
+    Form.of(Potential, Te).negative -> eDan("なくて"),
+    Form.of(Potential, Past).negative -> eDan("なかった"),
+    Form.of(Causative, Te).negative -> aDan("せなくて"),
+    Form.of(Causative, Past).negative -> aDan("せなかった"),
     // Polite negative
-    NonPast.polite.negative -> Transforms(changeBase(Dan.I, "ません")),
-    Past.polite.negative -> Transforms(changeBase(Dan.I, "ませんでした")),
-    Te.polite.negative -> Transforms(changeBase(Dan.I, "ませんで")),
-    Conditional.polite.negative -> Transforms(changeBase(Dan.I, "ませんでしたら")),
-    Provisional.polite.negative -> Transforms(changeBase(Dan.I, "ませんなら")),
-    Potential.polite.negative -> Transforms(changeBase(Dan.E, "ません")),
-    Passive.polite.negative -> Transforms(changeBase(Dan.A, "れません")),
-    Causative.polite.negative -> Transforms(changeBase(Dan.A, "せません")),
-    CausativePassive.polite.negative -> Transforms(changeBase(Dan.A, "せられません")),
-    Volitional.polite.negative -> Transforms(changeBase(Dan.I, "ますまい")),
-    Alternative.polite.negative -> Transforms(changeBase(Dan.I, "ませんでしたり")),
-    Imperative.polite.negative -> Transforms(changeBase(Dan.I, "なさるな")),
-    Progressive.polite.negative -> Transforms(godanStemTe, attach("いません", "ません")),
-    Form.of(Progressive, Past).polite.negative -> Transforms(godanStemTe, attach("いませんでした", "ませんでした")),
-    Form.of(Potential, Te).polite.negative -> Transforms(changeBase(Dan.E, "ませんでして")),
-    Form.of(Potential, Past).polite.negative -> Transforms(changeBase(Dan.E, "ませんでした")),
-    Form.of(Causative, Te).polite.negative -> Transforms(changeBase(Dan.A, "せませんでして")),
-    Form.of(Causative, Past).polite.negative -> Transforms(changeBase(Dan.A, "せませんでした")),
+    NonPast.polite.negative -> iDan("ません"),
+    Past.polite.negative -> iDan("ませんでした"),
+    Te.polite.negative -> iDan("ませんで"),
+    Conditional.polite.negative -> iDan("ませんでしたら"),
+    Provisional.polite.negative -> iDan("ませんなら"),
+    Potential.polite.negative -> eDan("ません"),
+    Passive.polite.negative -> aDan("れません"),
+    Causative.polite.negative -> aDan("せません"),
+    CausativePassive.polite.negative -> aDan("せられません"),
+    Volitional.polite.negative -> iDan("ますまい"),
+    Alternative.polite.negative -> iDan("ませんでしたり"),
+    Imperative.polite.negative -> iDan("なさるな"),
+    Progressive.polite.negative -> GodanTeConjugator("いません", "ません"),
+    Form.of(Progressive, Past).polite.negative -> GodanTeConjugator("いませんでした", "ませんでした"),
+    Form.of(Potential, Te).polite.negative -> eDan("ませんでして"),
+    Form.of(Potential, Past).polite.negative -> eDan("ませんでした"),
+    Form.of(Causative, Te).polite.negative -> aDan("せませんでして"),
+    Form.of(Causative, Past).polite.negative -> aDan("せませんでした"),
     // Other
-    Form.of(Stem) -> Transforms(changeBase(Dan.I, ""))
+    Form.of(Stem) -> iDan("")
   )
 
-  val deinflections: Map[Form, Transform] = Map(
-    // Plain
-    NonPast.plain -> Transforms(ensureValidVerbEnding),
-    Past.plain -> Transforms(attachGodanStem("た", "だ")),
-    Te.plain -> Transforms(attachGodanStem("て", "で")),
-    Conditional.plain -> Transforms(attachGodanStem("たら", "だら")),
-    Provisional.plain -> Transforms(detach("ば"), shiftBase(Dan.E, Dan.U)),
-    Potential.plain -> Transforms(detach("る"), shiftBase(Dan.E, Dan.U)),
-    Passive.plain -> Transforms(detach("れる"), shiftBase(Dan.A, Dan.U)),
-    Causative.plain -> Transforms(detach("せる"), shiftBase(Dan.A, Dan.U)),
-    CausativePassive.plain -> Transforms(detach("せられる"), shiftBase(Dan.A, Dan.U)),
-    Volitional.plain -> Transforms(detach("う"), shiftBase(Dan.O, Dan.U)),
-    Alternative.plain -> Transforms(detach("たり", "だり"), shiftBase(Dan.E, Dan.U)),
-    Imperative.plain -> Transforms(shiftBase(Dan.E, Dan.U)),
-    Sou.plain -> Transforms(detach("そう"), shiftBase(Dan.I, Dan.U)),
-    Tai.plain -> Transforms(detach("たい"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Potential, Te) -> Transforms(detach("て"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Potential, Past) -> Transforms(detach("た"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Passive, Stem) -> Transforms(detach("れ"), shiftBase(Dan.A, Dan.U)),
-    Form.of(Passive, Te) -> Transforms(detach("れて"), shiftBase(Dan.A, Dan.U)),
-    Form.of(Passive, Past) -> Transforms(detach("れた"), shiftBase(Dan.A, Dan.U)),
-    Form.of(Tai, Te) -> Transforms(detach("たくて"), shiftBase(Dan.I, Dan.U)),
-    // Polite
-    NonPast.polite -> Transforms(detach("ます"), shiftBase(Dan.I, Dan.U)),
-    Past.polite -> Transforms(detach("ました"), shiftBase(Dan.I, Dan.U)),
-    Te.polite -> Transforms(detach("まして"), shiftBase(Dan.I, Dan.U)),
-    Conditional.polite -> Transforms(detach("ましたら"), shiftBase(Dan.I, Dan.U)),
-    Provisional.polite -> Transforms(detach("ますなら"), shiftBase(Dan.I, Dan.U)),
-    Potential.polite -> Transforms(detach("ます"), shiftBase(Dan.E, Dan.U)),
-    Passive.polite -> Transforms(detach("れます"), shiftBase(Dan.A, Dan.U)),
-    Causative.polite -> Transforms(detach("せます"), shiftBase(Dan.A, Dan.U)),
-    CausativePassive.polite -> Transforms(detach("せられます"), shiftBase(Dan.A, Dan.U)),
-    Volitional.polite -> Transforms(detach("ましょう"), shiftBase(Dan.I, Dan.U)),
-    Alternative.polite -> Transforms(detach("ましたり"), shiftBase(Dan.I, Dan.U)),
-    Imperative.polite -> Transforms(detach("なさい"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Potential, Te).polite -> Transforms(detach("まして"), shiftBase(Dan.E, Dan.U)),
-    Form.of(Potential, Past).polite -> Transforms(detach("ました"), shiftBase(Dan.E, Dan.U)),
-    // Negative
-    NonPast.negative -> Transforms(detach("ない", "ぬ", "ず"), shiftBase(Dan.A, Dan.U)),
-    Past.negative -> Transforms(detach("なかった"), shiftBase(Dan.A, Dan.U)),
-    Te.negative -> Transforms(detach("なくて", "ないで"), shiftBase(Dan.A, Dan.U)),
-    Conditional.negative -> Transforms(detach("なかったら"), shiftBase(Dan.A, Dan.U)),
-    Provisional.negative -> Transforms(detach("なければ"), shiftBase(Dan.A, Dan.U)),
-    Potential.negative -> Transforms(detach("ない"), shiftBase(Dan.E, Dan.U)),
-    Passive.negative -> Transforms(detach("れない"), shiftBase(Dan.A, Dan.U)),
-    Causative.negative -> Transforms(detach("せない"), shiftBase(Dan.A, Dan.U)),
-    CausativePassive.negative -> Transforms(detach("せられない"), shiftBase(Dan.A, Dan.U)),
-    Volitional.negative -> Transforms(detach("まい"), ensureValidVerbEnding),
-    Alternative.negative -> Transforms(detach("なかったり"), shiftBase(Dan.A, Dan.U)),
-    Imperative.negative -> Transforms(detach("な"), ensureValidVerbEnding),
-    Sou.negative -> Transforms(detach("なさそう"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Potential, Sou).negative -> Transforms(detach("なさそう"), shiftBase(Dan.E, Dan.U)),
-    Tai.negative -> Transforms(detach("たくない"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Tai, Sou).negative -> Transforms(detach("たくなさそう"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Potential, Te).negative -> Transforms(detach("なくて"), shiftBase(Dan.E, Dan.U)),
-    Form.of(Potential, Past).negative -> Transforms(detach("なかった"), shiftBase(Dan.E, Dan.U)),
-    // Polite negative
-    NonPast.polite.negative -> Transforms(detach("ません"), shiftBase(Dan.I, Dan.U)),
-    Past.polite.negative -> Transforms(detach("ませんでした"), shiftBase(Dan.I, Dan.U)),
-    Te.polite.negative -> Transforms(detach("ませんで"), shiftBase(Dan.I, Dan.U)),
-    Conditional.polite.negative -> Transforms(detach("ませんでしたら"), shiftBase(Dan.I, Dan.U)),
-    Provisional.polite.negative -> Transforms(detach("ませんなら"), shiftBase(Dan.I, Dan.U)),
-    Potential.polite.negative -> Transforms(detach("ません"), shiftBase(Dan.E, Dan.U)),
-    Passive.polite.negative -> Transforms(detach("れません"), shiftBase(Dan.A, Dan.U)),
-    Causative.polite.negative -> Transforms(detach("せません"), shiftBase(Dan.A, Dan.U)),
-    CausativePassive.polite.negative -> Transforms(detach("せられません"), shiftBase(Dan.A, Dan.U)),
-    Volitional.polite.negative -> Transforms(detach("ますまい"), shiftBase(Dan.I, Dan.U)),
-    Alternative.polite.negative -> Transforms(detach("ませんでしたり"), shiftBase(Dan.I, Dan.U)),
-    Imperative.polite.negative -> Transforms(detach("なさるな"), shiftBase(Dan.I, Dan.U)),
-    Form.of(Potential, Te).polite.negative -> Transforms(detach("ませんでして"), shiftBase(Dan.E, Dan.U)),
-    Form.of(Potential, Past).polite.negative -> Transforms(detach("ませんでした"), shiftBase(Dan.E, Dan.U)),
-    // Other
-    Form.of(Stem) -> Transforms(shiftBase(Dan.I, Dan.U))
+  // まい and な both attach directly to the plain dictionary form unlike every other ending above, so they can't be
+  // expressed via the shared conjugators.
+  private val volitionalNegative: ReversibleTransform =
+    ReversibleTransform(
+      forward = Transforms(attach("まい")),
+      backward = Transforms(detach("まい"), ensureValidVerbEnding)
+    )
+
+  private val imperativeNegative: ReversibleTransform =
+    ReversibleTransform(
+      forward = Transforms(attach("な")),
+      backward = Transforms(detach("な"), ensureValidVerbEnding)
+    )
+
+  private val specialCases: Map[Form, ReversibleTransform] = Map(
+    Volitional.negative -> volitionalNegative,
+    Imperative.negative -> imperativeNegative
   )
+
+  val inflections: Map[Form, Transform] =
+    Map(NonPast.plain -> Transforms.identity) ++
+      (conjugations ++ specialCases).view.mapValues(_.forward)
+
+  val deinflections: Map[Form, Transform] =
+    Map(NonPast.plain -> Transforms(ensureValidVerbEnding)) ++
+      (conjugations ++ specialCases).view.mapValues(_.backward)
 }

@@ -2,9 +2,15 @@ package ject.ja.text
 
 import ject.ja.text.inflection.{AdjectiveI, Aru, Godan, Ichidan, Iku, Suru}
 import ject.ja.text.Transformation.Transform
+import ject.ja.JapaneseText
 import zio.NonEmptyChunk
 
 object Deinflection {
+
+  // Deinflection candidates are generated purely by string manipulation, with no dictionary to confirm they're
+  // real words, so this filters out results that certainly can't be valid Japanese (see JapaneseText.isPlausibleWord).
+  private def filterPlausible(candidates: NonEmptyChunk[String]): Option[NonEmptyChunk[String]] =
+    NonEmptyChunk.fromChunk(candidates.filter(JapaneseText.isPlausibleWord))
 
   def deinflect(word: String): Map[(Form, WordType), NonEmptyChunk[String]] = {
     val wordTypes: Seq[WordType] = Seq(WordType.VerbIchidan, WordType.VerbGodan)
@@ -17,16 +23,16 @@ object Deinflection {
   def deinflect(word: String, wordType: WordType): Map[Form, NonEmptyChunk[String]] = {
     val deinflections = deinflectionsFor(wordType)
 
-    deinflections.map { case (form, transform) =>
-      transform(word).map(form -> _)
-    }.collect { case Right(v) => v }.toMap
+    deinflections.flatMap { case (form, transform) =>
+      transform(word).toOption.flatMap(filterPlausible).map(form -> _)
+    }
   }
 
   def deinflect(word: String, wordType: WordType, targetForm: Form): Option[NonEmptyChunk[String]] = {
     val deinflections = deinflectionsFor(wordType)
 
     deinflections.get(targetForm).flatMap { transform =>
-      transform(word).toOption
+      transform(word).toOption.flatMap(filterPlausible)
     }
   }
 

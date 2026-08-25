@@ -1,58 +1,41 @@
 package ject.ja.text.inflection
 
+import ject.ja.text.{ReversibleTransform, SuffixConjugator, Transforms}
 import ject.ja.text.Form
 import ject.ja.text.SubForm.*
 import ject.ja.text.Transformation.*
-import ject.ja.text.Transforms
 
 object AdjectiveI {
 
-  val inflections: Map[Form, Transform] = Map(
+  private val conjugate = SuffixConjugator(adjectiveIStem, "い")
+
+  private val conjugations: Map[Form, ReversibleTransform] = Map(
     // Plain
-    NonPast.plain -> Transforms.identity,
-    Past.plain -> Transforms(adjectiveIStem, attach("かった")),
-    Te.plain -> Transforms(adjectiveIStem, attach("くて")),
-    Ge.plain -> Transforms(adjectiveIStem, attach("げ")),
-    Conditional.plain -> Transforms(adjectiveIStem, attach("かったら")),
-    Provisional.plain -> Transforms(adjectiveIStem, attach("ければ")),
-    Alternative.plain -> Transforms(adjectiveIStem, attach("かったり")),
-    Sou.plain -> Transforms(adjectiveIStem, attach("そう")),
-    Adverb.plain -> Transforms(adjectiveIStem, attach("く")),
-    Ki.plain -> Transforms(adjectiveIStem, attach("き")),
+    Past.plain -> conjugate("かった"),
+    Te.plain -> conjugate("くて"),
+    Ge.plain -> conjugate("げ"),
+    Conditional.plain -> conjugate("かったら"),
+    Provisional.plain -> conjugate("ければ"),
+    Alternative.plain -> conjugate("かったり"),
+    Sou.plain -> conjugate("そう"),
+    Adverb.plain -> conjugate("く"),
+    Ki.plain -> conjugate("き"),
     // Negative
-    NonPast.negative -> Transforms(adjectiveIStem, attach("くない")),
-    Past.negative -> Transforms(adjectiveIStem, attach("くなかった")),
-    Te.negative -> Transforms(adjectiveIStem, attach("くなくて")),
-    Conditional.negative -> Transforms(adjectiveIStem, attach("くなかったら")),
-    Provisional.negative -> Transforms(adjectiveIStem, attach("くなければ")),
-    Alternative.negative -> Transforms(adjectiveIStem, attach("くなかったり")),
-    Sou.negative -> Transforms(adjectiveIStem, attach("くなさそう")),
-    Adverb.negative -> Transforms(adjectiveIStem, attach("くなく")),
+    NonPast.negative -> conjugate("くない"),
+    Past.negative -> conjugate("くなかった"),
+    Te.negative -> conjugate("くなくて"),
+    Conditional.negative -> conjugate("くなかったら"),
+    Provisional.negative -> conjugate("くなければ"),
+    Alternative.negative -> conjugate("くなかったり"),
+    Sou.negative -> conjugate("くなさそう"),
+    Adverb.negative -> conjugate("くなく"),
     // Other
-    Noun.plain -> Transforms(adjectiveIStem, attach("さ"))
+    Noun.plain -> conjugate("さ")
   )
 
-  val deinflections: Map[Form, Transform] = Map(
-    // Plain
-    NonPast.plain -> Transforms.identity,
-    Past.plain -> Transforms(detach("かった"), attach("い")),
-    Te.plain -> Transforms(detach("くて"), attach("い")),
-    Conditional.plain -> Transforms(detach("かったら"), attach("い")),
-    Provisional.plain -> Transforms(detach("ければ"), attach("い")),
-    Alternative.plain -> Transforms(detach("かったり"), attach("い")),
-    Sou.plain -> Transforms(detach("そう"), attach("い")),
-    Adverb.plain -> Transforms(detach("く"), attach("い")),
-    Ki.plain -> Transforms(detach("き"), attach("い")),
-    // Negative
-    NonPast.negative -> Transforms(detach("くない"), attach("い")),
-    Past.negative -> Transforms(detach("くなかった"), attach("い")),
-    Te.negative -> Transforms(detach("くなくて"), attach("い")),
-    Conditional.negative -> Transforms(detach("くなかったら"), attach("い")),
-    Provisional.negative -> Transforms(detach("くなければ"), attach("い")),
-    Alternative.negative -> Transforms(detach("くなかったり"), attach("い")),
-    Sou.negative -> Transforms(detach("くなさそう"), attach("い")),
-    Adverb.negative -> Transforms(detach("くなく"), attach("い")),
-    // Other
-    Noun.plain -> Transforms(detach("さ"), attach("い"))
-  )
+  val inflections: Map[Form, Transform] =
+    Map(NonPast.plain -> Transforms.identity) ++ conjugations.view.mapValues(_.forward)
+
+  val deinflections: Map[Form, Transform] =
+    Map(NonPast.plain -> Transforms.identity) ++ conjugations.view.mapValues(_.backward)
 }
