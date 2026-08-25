@@ -146,7 +146,7 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
         case (SearchPattern.Prefix(text), SearchType.Definition) =>
           val tokens = WordField.Definition.analyzer.tokensFor(text)
 
-          tokens.init.foreach { token =>
+          tokens.dropRight(1).foreach { token =>
             booleanQuery.addTermQuery(WordField.Definition, token, BooleanClause.Occur.SHOULD)
           }
 

@@ -17,17 +17,17 @@ object KanjiWriter {
       encoder: DocEncoder[KanjiDoc] = KanjiDoc.docEncoder,
       autoCommitOnRelease: Boolean = true
   ): ZIO[Scope, Throwable, KanjiWriter] =
-    (for {
-      config <- ZIO.attempt(new IndexWriterConfig(KanjiDoc.docDecoder.analyzer))
-      index  <- ZIO.attempt(new MMapDirectory(directory))
-      writer <- ZIO.attempt(new IndexWriter(index, config))
-    } yield KanjiWriter(writer, encoder)).withFinalizer { writer =>
-      ZIO.attempt {
-        if (autoCommitOnRelease) {
-          writer.writer.commit()
-        }
+    for {
+      index <- ZIO.fromAutoCloseable(ZIO.attempt(new MMapDirectory(directory)))
+      config = new IndexWriterConfig(KanjiDoc.docDecoder.analyzer)
+      writer <- ZIO.acquireRelease(ZIO.attempt(new IndexWriter(index, config))) { writer =>
+                  ZIO.attemptBlocking {
+                    if (autoCommitOnRelease) {
+                      writer.commit()
+                    }
 
-        writer.writer.close()
-      }.orDie
-    }
+                    writer.close()
+                  }.orDie
+                }
+    } yield KanjiWriter(writer, encoder)
 }

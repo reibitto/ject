@@ -53,7 +53,7 @@ object KanjidicIO {
   ): ZStream[Any, Throwable, KanjiDoc] =
     ZStream.fromIteratorZIO {
       for {
-        xml <- ZIO.attempt(xmlLoader.loadFile(file.toFile))
+        xml <- ZIO.attemptBlocking(xmlLoader.loadFile(file.toFile))
         characterNodes = xml \ "character"
       } yield characterNodes.iterator.map { n =>
         val kanji = (n \ "literal").text
@@ -74,7 +74,7 @@ object KanjidicIO {
           radicalId = (n \ "radical" \ "rad_value")
             .find(_.attribute("rad_type").exists(_.text == "classical"))
             .map(_.text)
-            .get
+            .getOrElse(throw new Exception(s"Kanji '$kanji' has no classical radical value"))
             .toInt,
           parts = radicals.values.filter(_.kanji.contains(kanji)).map(_.radical).toSeq,
           components = decompositions.get(kanji).map(_.components).getOrElse(Set.empty).toSeq,

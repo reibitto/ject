@@ -15,6 +15,7 @@ final case class WordDoc(
     definitionsEnglish: Seq[String],
     definitionsJapanese: Seq[String],
     definitionsKorean: Seq[String],
+    tags: Seq[String],
     partsOfSpeech: Seq[String]
 ) {
 
@@ -42,6 +43,7 @@ object WordDoc {
         definitionsEnglish = document.getValues(WordField.DefinitionEnglish.entryName).toIndexedSeq,
         definitionsJapanese = document.getValues(WordField.DefinitionJapanese.entryName).toIndexedSeq,
         definitionsKorean = document.getValues(WordField.DefinitionKorean.entryName).toIndexedSeq,
+        tags = document.getValues(WordField.Tags.entryName).toIndexedSeq,
         partsOfSpeech = document.getValues(WordField.PartOfSpeech.entryName).toIndexedSeq
       )
   }
@@ -79,6 +81,10 @@ object WordDoc {
       a.definitionsKorean.foreach { value =>
         doc.add(new TextField(WordField.DefinitionKorean.entryName, value, Field.Store.YES))
         doc.add(new TextField(WordField.DefinitionKoreanOther.entryName, value, Field.Store.NO))
+      }
+
+      a.tags.foreach { value =>
+        doc.add(new StringField(WordField.Tags.entryName, value, Field.Store.YES))
       }
 
       a.partsOfSpeech.foreach { value =>

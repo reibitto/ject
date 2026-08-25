@@ -15,8 +15,8 @@ object KanjidicMain extends ZIOAppDefault {
 
   val dryRun: Boolean = false
 
-  def run: UIO[Unit] =
-    (for {
+  def run: Task[Unit] =
+    for {
       _              <- printLine(s"Starting to index dictionary: Kanjidic")
       radicals       <- RadicalIO.load(Paths.get("data/radicals.dat"))
       decompositions <- KanjiDecompositionIO.load(Paths.get("data/kanji-decomposition.tsv"))
@@ -46,8 +46,6 @@ object KanjidicMain extends ZIOAppDefault {
                                 }.timed
       _ <- printLine(s"Indexed ${totalDocs.groupSeparated} entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
-    } yield ()).catchAllCause { t =>
-      ZIO.succeed(t.squash.printStackTrace())
-    }
+    } yield ()
 
 }

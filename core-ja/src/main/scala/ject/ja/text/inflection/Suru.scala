@@ -79,8 +79,8 @@ object Suru {
     Volitional.polite.negative -> Transforms(suruStem, attach("しますまい")),
     Alternative.polite.negative -> Transforms(suruStem, attach("しませんでしたり")),
     Imperative.polite.negative -> Transforms(suruStem, attach("しなさるな")),
-    Form.of(Potential, Te).polite.negative -> Transforms(suruStem, attach("でませんでして")),
-    Form.of(Potential, Past).polite.negative -> Transforms(suruStem, attach("でませんでした")),
+    Form.of(Potential, Te).polite.negative -> Transforms(suruStem, attach("できませんでして")),
+    Form.of(Potential, Past).polite.negative -> Transforms(suruStem, attach("できませんでした")),
     Form.of(Causative, Te).polite.negative -> Transforms(suruStem, attach("させませんでして")),
     Form.of(Causative, Past).polite.negative -> Transforms(suruStem, attach("させませんでした")),
     // Other
@@ -153,8 +153,8 @@ object Suru {
     Volitional.polite.negative -> Transforms(detach("しますまい"), attach("する")),
     Alternative.polite.negative -> Transforms(detach("しませんでしたり"), attach("する")),
     Imperative.polite.negative -> Transforms(detach("しなさるな"), attach("する")),
-    Form.of(Potential, Te).polite.negative -> Transforms(detach("でませんでして"), attach("する")),
-    Form.of(Potential, Past).polite.negative -> Transforms(detach("でませんでした"), attach("する")),
+    Form.of(Potential, Te).polite.negative -> Transforms(detach("できませんでして"), attach("する")),
+    Form.of(Potential, Past).polite.negative -> Transforms(detach("できませんでした"), attach("する")),
     // Other
     Form.of(Stem) -> Transforms(detach("し"), attach("する"))
   )

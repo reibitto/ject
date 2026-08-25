@@ -67,9 +67,9 @@ object Transformation {
   }
 
   def stemOf(stem: String): Transform = {
-    case s if !s.endsWith(stem) => Left(s"Verb must end in $stem")
-    case s if s.length < 2      => Left("Verb must be greater than 1 character")
-    case s                      => Right(NonEmptyChunk.single(s.init))
+    case s if !s.endsWith(stem)       => Left(s"Verb must end in $stem")
+    case s if s.length <= stem.length => Left(s"Verb must be longer than $stem")
+    case s                            => Right(NonEmptyChunk.single(s.dropRight(stem.length)))
   }
 
   def adjectiveIStem: Transform = {

@@ -32,9 +32,10 @@ abstract class LuceneReader[A: DocDecoder] {
   def take(query: Query, n: Int): Task[Seq[ScoredDoc[A]]] =
     ZIO.attemptBlocking {
       val hits = searcher.search(query, n).scoreDocs
+      val storedFields = searcher.storedFields()
 
       hits.map { hit =>
-        val doc = searcher.storedFields().document(hit.doc)
+        val doc = storedFields.document(hit.doc)
         ScoredDoc(decoder.decode(doc), hit.score)
       }.toSeq
     }
@@ -52,9 +53,10 @@ abstract class LuceneReader[A: DocDecoder] {
 
         Option.when(docs.scoreDocs.nonEmpty) {
           val hits = docs.scoreDocs
+          val storedFields = searcher.storedFields()
 
           val decodedDocs = hits.map { hit =>
-            val doc = searcher.storedFields().document(hit.doc)
+            val doc = storedFields.document(hit.doc)
             ScoredDoc(decoder.decode(doc), hit.score)
           }
 
@@ -76,9 +78,10 @@ abstract class LuceneReader[A: DocDecoder] {
 
         Option.when(docs.scoreDocs.nonEmpty) {
           val hits = docs.scoreDocs
+          val storedFields = searcher.storedFields()
 
           val decodedDocs = hits.map { hit =>
-            val doc = searcher.storedFields().document(hit.doc)
+            val doc = storedFields.document(hit.doc)
             ScoredDoc(decoder.decode(doc), hit.score)
           }
 
@@ -119,8 +122,8 @@ abstract class LuceneReader[A: DocDecoder] {
   def list: ZStream[Any, Throwable, ScoredDoc[A]] =
     searchRaw("*:*")
 
-  def buildQuery(queryString: String, defaultField: LuceneField = LuceneField.none): Query =
-    new QueryParser(defaultField.entryName, decoder.analyzer).parse(queryString)
+  def buildQuery(queryString: String, defaultField: LuceneField = LuceneField.none): Task[Query] =
+    ZIO.attempt(new QueryParser(defaultField.entryName, decoder.analyzer).parse(queryString))
 
   def createWriter(autoCommitOnRelease: Boolean): ZIO[Scope, Throwable, IndexWriter] =
     ZIO.attempt {
@@ -149,8 +152,8 @@ object LuceneReader {
       luceneReader = makeFn(index, reader, searcher)
     } yield luceneReader).withFinalizer { index =>
       ZIO.attemptBlocking {
-        index.directory.close()
         index.reader.close()
+        index.directory.close()
       }.orDie
     }
 

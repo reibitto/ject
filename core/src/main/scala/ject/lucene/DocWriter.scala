@@ -11,7 +11,7 @@ trait DocWriter[A] {
   def add(doc: A): Task[Unit] =
     for {
       document <- docEncoder.encode(doc)
-      _        <- ZIO.attempt(writer.addDocument(document))
+      _        <- ZIO.attemptBlocking(writer.addDocument(document))
     } yield ()
 
   def addBulk(docs: A*): Task[Unit] = {
@@ -21,7 +21,7 @@ trait DocWriter[A] {
       documents <- ZIO.foreach(docs) { doc =>
                      docEncoder.encode(doc)
                    }
-      _ <- ZIO.attempt {
+      _ <- ZIO.attemptBlocking {
              writer.addDocuments(documents.asJava)
            }
     } yield ()

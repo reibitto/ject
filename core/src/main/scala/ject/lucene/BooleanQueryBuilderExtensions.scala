@@ -14,7 +14,7 @@ object BooleanQueryBuilderExtensions {
         operator: BooleanClause.Occur,
         boost: Float = 1.0f
     ): BooleanQuery.Builder = {
-      // `createPhraseQuery` can return null in certain cases. It seems like stopSets can cause that for
+      // `createPhraseQuery` can return null, e.g. when the query text is entirely stop words.
       val queryOpt = Option(builder.createPhraseQuery(field.entryName, queryText))
 
       queryOpt.foreach { query =>
@@ -30,7 +30,7 @@ object BooleanQueryBuilderExtensions {
         operator: BooleanClause.Occur,
         boost: Float = 1.0f
     ): BooleanQuery.Builder = {
-      // `createBooleanQuery` can return null in certain cases. It seems like stopSets can cause that for
+      // `createBooleanQuery` can return null, e.g. when the query text is entirely stop words.
       val queryOpt = Option(builder.createBooleanQuery(field.entryName, queryText))
 
       queryOpt.foreach { query =>

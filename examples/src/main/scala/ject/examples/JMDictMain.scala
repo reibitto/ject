@@ -18,18 +18,22 @@ object JMDictMain extends ZIOAppDefault {
 
   val dryRun: Boolean = false
 
-  def run: UIO[Unit] =
-    (for {
+  def run: Task[Unit] =
+    for {
       entries <- TermMetaBankIO.loadFrequencies(Paths.get("data/dictionary/bccwj-luw")).runCollect
       frequencies = Frequencies(entries.groupBy(_.term).map { case (k, v) =>
                       k -> v.map(_.toFrequencyEntry)
                     })
       _ <- printLine(s"Starting to index dictionary: JMDict")
       targetPath = Paths.get("data/dictionary/JMDict_e.xml")
-      _        <- targetPath.ensureDirectoryExists()
-      tempFile <- ZIO.attempt(File.createTempFile("JMDict", ""))
-      _        <- JMDictIO.download(tempFile.toPath).unless(targetPath.toFile.exists())
-      _        <- JMDictIO.normalize(tempFile.toPath, targetPath).unless(targetPath.toFile.exists())
+      _ <- targetPath.ensureDirectoryExists()
+      _ <- ZIO.unless(targetPath.toFile.exists()) {
+             ZIO.acquireReleaseWith(ZIO.attempt(File.createTempFile("JMDict", "")))(tempFile =>
+               ZIO.attempt(tempFile.delete()).ignore
+             ) { tempFile =>
+               JMDictIO.download(tempFile.toPath) *> JMDictIO.normalize(tempFile.toPath, targetPath)
+             }
+           }
       fileTime <- ZIO.attempt(Files.getLastModifiedTime(targetPath))
       _        <- printLine(s"Using JMDict file from $fileTime")
       luceneDirectory = Paths.get("data/lucene/word-ja")
@@ -59,8 +63,6 @@ object JMDictMain extends ZIOAppDefault {
                                 }.timed
       _ <- printLine(s"Indexed ${totalDocs.groupSeparated} entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
-    } yield ()).catchAllCause { t =>
-      ZIO.succeed(t.squash.printStackTrace())
-    }
+    } yield ()
 
 }

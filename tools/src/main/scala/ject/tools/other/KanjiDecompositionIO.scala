@@ -14,6 +14,7 @@ object KanjiDecompositionIO {
       .fromPath(file)
       .via(ZPipeline.utf8Decode)
       .via(ZPipeline.splitLines)
+      .filter(_.trim.nonEmpty)
       .map { line =>
         val tokens = line.split("\t")
         val kanji = tokens(0)

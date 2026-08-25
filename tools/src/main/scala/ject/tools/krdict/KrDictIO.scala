@@ -27,7 +27,8 @@ object KrDictIO {
             if (definitionLanguage == DefinitionLanguage.Japanese) entry.definitions.map(_.asText) else Seq.empty,
           definitionsKorean =
             if (definitionLanguage == DefinitionLanguage.Korean) entry.definitions.map(_.asText) else Seq.empty,
-          partsOfSpeech = entry.definitionTags ++ entry.termTags
+          tags = entry.termTags ++ entry.definitionTags,
+          partsOfSpeech = entry.inflection
         )
       }
 }

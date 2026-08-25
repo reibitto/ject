@@ -13,17 +13,17 @@ final case class WordWriter(writer: IndexWriter, docEncoder: DocEncoder[WordDoc]
 object WordWriter {
 
   def make(directory: Path, autoCommitOnRelease: Boolean = true): RIO[Scope, WordWriter] =
-    (for {
-      config <- ZIO.attempt(new IndexWriterConfig(WordDoc.docDecoder.analyzer))
-      index  <- ZIO.attempt(new MMapDirectory(directory))
-      writer <- ZIO.attempt(new IndexWriter(index, config))
-    } yield WordWriter(writer, WordDoc.docEncoder)).withFinalizer { writer =>
-      ZIO.attempt {
-        if (autoCommitOnRelease) {
-          writer.writer.commit()
-        }
+    for {
+      index <- ZIO.fromAutoCloseable(ZIO.attempt(new MMapDirectory(directory)))
+      config = new IndexWriterConfig(WordDoc.docDecoder.analyzer)
+      writer <- ZIO.acquireRelease(ZIO.attempt(new IndexWriter(index, config))) { writer =>
+                  ZIO.attemptBlocking {
+                    if (autoCommitOnRelease) {
+                      writer.commit()
+                    }
 
-        writer.writer.close()
-      }.orDie
-    }
+                    writer.close()
+                  }.orDie
+                }
+    } yield WordWriter(writer, WordDoc.docEncoder)
 }

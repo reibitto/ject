@@ -37,11 +37,11 @@ object SearchPattern {
     val text = searchText.trim
     val normalizedSearchText = text.replace("？", "?").replace("＊", "*").replace("～", "~").replace("｀", "`")
 
-    if (text.isSurroundedWith("\""))
+    if (text.length >= 2 && text.isSurroundedWith("\""))
       Exact(QueryParserUtil.escape(text.tail.init))
     else if (text.startsWith("\""))
       Exact(QueryParserUtil.escape(text.tail))
-    else if (normalizedSearchText.isSurroundedWith("`"))
+    else if (normalizedSearchText.length >= 2 && normalizedSearchText.isSurroundedWith("`"))
       Raw(normalizedSearchText.tail.init)
     else if (normalizedSearchText.startsWith("`"))
       Raw(normalizedSearchText.tail)
