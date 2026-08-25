@@ -77,7 +77,7 @@ object KanjidicIO {
             .getOrElse(throw new Exception(s"Kanji '$kanji' has no classical radical value"))
             .toInt,
           parts = radicals.values.filter(_.kanji.contains(kanji)).map(_.radical).toSeq,
-          components = decompositions.get(kanji).map(_.components).getOrElse(Set.empty).toSeq,
+          components = KanjiDecomposition.transitiveComponents(kanji, decompositions).toSeq,
           strokeCount = (n \ "misc" \ "stroke_count").map(_.text.toInt),
           frequency = (n \ "misc" \ "freq").headOption.map(_.text.toInt),
           jlpt = (n \ "misc" \ "jlpt").headOption.map(_.text.toInt),

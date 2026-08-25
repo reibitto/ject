@@ -9,14 +9,14 @@ import org.apache.lucene.search.IndexSearcher
 import org.apache.lucene.search.Query
 import org.apache.lucene.search.ScoreDoc
 import org.apache.lucene.search.Sort
-import org.apache.lucene.store.MMapDirectory
+import org.apache.lucene.store.Directory
 import zio.*
 import zio.stream.ZStream
 
 import java.nio.file.Path
 
 abstract class LuceneReader[A: DocDecoder] {
-  def directory: MMapDirectory
+  def directory: Directory
   def reader: DirectoryReader
   def searcher: IndexSearcher
 
@@ -142,19 +142,31 @@ abstract class LuceneReader[A: DocDecoder] {
 
 object LuceneReader {
 
+  /** Builds a reader on top of an already-acquired `Directory` (e.g. a
+    * `ByteBuffersDirectory` shared with a writer via
+    * `LuceneDirectory.inMemory`). The directory itself is not closed when the
+    * returned reader's scope ends — only the `DirectoryReader` opened on top of
+    * it — since the directory may still be in use elsewhere (its lifecycle is
+    * the caller's responsibility, e.g. via `LuceneDirectory`).
+    */
   def makeReader[A <: LuceneReader[?]](
-      directory: Path
-  )(makeFn: (MMapDirectory, DirectoryReader, IndexSearcher) => A): ZIO[Scope, Throwable, A] =
-    (for {
-      index    <- ZIO.attempt(new MMapDirectory(directory))
-      reader   <- ZIO.attempt(DirectoryReader.open(index))
+      directory: Directory
+  )(makeFn: (Directory, DirectoryReader, IndexSearcher) => A): ZIO[Scope, Throwable, A] =
+    for {
+      reader   <- ZIO.fromAutoCloseable(ZIO.attempt(DirectoryReader.open(directory)))
       searcher <- ZIO.attempt(new IndexSearcher(reader))
-      luceneReader = makeFn(index, reader, searcher)
-    } yield luceneReader).withFinalizer { index =>
-      ZIO.attemptBlocking {
-        index.reader.close()
-        index.directory.close()
-      }.orDie
-    }
+    } yield makeFn(directory, reader, searcher)
+
+  /** Builds a reader backed by files at `path` on disk, owning the underlying
+    * `MMapDirectory`'s lifecycle (closed when the returned reader's scope
+    * ends).
+    */
+  def makeReader[A <: LuceneReader[?]](
+      path: Path
+  )(makeFn: (Directory, DirectoryReader, IndexSearcher) => A): ZIO[Scope, Throwable, A] =
+    for {
+      directory <- LuceneDirectory.fromPath(path)
+      result    <- makeReader(directory)(makeFn)
+    } yield result
 
 }

@@ -14,14 +14,14 @@ import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.queries.function.FunctionScoreQuery
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
-import org.apache.lucene.store.MMapDirectory
+import org.apache.lucene.store.Directory
 import org.apache.lucene.util.QueryBuilder
 import zio.*
 import zio.stream.ZStream
 
 import java.nio.file.Path
 
-final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, searcher: IndexSearcher)
+final case class WordReader(directory: Directory, reader: DirectoryReader, searcher: IndexSearcher)
     extends LuceneReader[WordDoc] {
   private val builder = new QueryBuilder(WordDoc.docDecoder.analyzer)
 
@@ -49,89 +49,41 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
 
       (pattern, searchType) match {
         case (SearchPattern.Default(text), SearchType.Kanji) =>
-          val prefixScoreBoost = text.length match {
+          // KanjiTerm's analyzer folds width and kana script to one canonical form at index time (see
+          // WordField), so the query just needs the same folding applied before comparing against the raw term
+          // dictionary (TermQuery/PrefixQuery never run a field's analyzer on the query text themselves).
+          val t = JapaneseAnalyzers.normalize(text)
+
+          val prefixScoreBoost: Float = t.length match {
             case 1 => 10
             case 2 => 50
             case 3 => 100
             case _ => 1000
           }
 
-          Set(text, JapaneseText.toHiragana(text), JapaneseText.toKatakana(text)).map { t =>
-            val exactMatchBoost = if (text == t) 1.0f else 0.95f
-
-            booleanQuery.addPrefixQuery(
-              WordField.KanjiTerm,
-              t,
-              BooleanClause.Occur.SHOULD,
-              prefixScoreBoost * exactMatchBoost
-            )
-
-            booleanQuery.addPhraseQuery(builder)(
-              WordField.KanjiTermAnalyzed,
-              t,
-              BooleanClause.Occur.SHOULD,
-              5 * exactMatchBoost
-            )
-            booleanQuery.addBooleanQuery(builder)(
-              WordField.KanjiTerm,
-              t,
-              BooleanClause.Occur.SHOULD,
-              5 * exactMatchBoost
-            )
-            booleanQuery.addBooleanQuery(builder)(
-              WordField.KanjiTermAnalyzed,
-              t,
-              BooleanClause.Occur.SHOULD,
-              1 * exactMatchBoost
-            )
-            booleanQuery.addTermQuery(WordField.KanjiTermInflected, t, BooleanClause.Occur.SHOULD, 50 * exactMatchBoost)
-            booleanQuery.addTermQuery(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, 10_000 * exactMatchBoost)
-          }.head
+          booleanQuery.addPrefixQuery(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, prefixScoreBoost)
+          booleanQuery.addPhraseQuery(builder)(WordField.KanjiTermAnalyzed, t, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.KanjiTermAnalyzed, t, BooleanClause.Occur.SHOULD, 1)
+          booleanQuery.addTermQuery(WordField.KanjiTermInflected, t, BooleanClause.Occur.SHOULD, 50)
+          booleanQuery.addTermQuery(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, 10_000)
 
         case (SearchPattern.Default(text), SearchType.Reading) =>
-          val prefixScoreBoost = text.length match {
+          val t = JapaneseAnalyzers.normalize(text)
+
+          val prefixScoreBoost: Float = t.length match {
             case 1 => 10
             case 2 => 50
             case 3 => 100
             case _ => 1000
           }
 
-          Set(text, JapaneseText.toHiragana(text), JapaneseText.toKatakana(text)).map { t =>
-            val exactMatchBoost = if (text == t) 1.0f else 0.95f
-
-            booleanQuery.addPrefixQuery(
-              WordField.ReadingTerm,
-              t,
-              BooleanClause.Occur.SHOULD,
-              prefixScoreBoost * exactMatchBoost
-            )
-
-            booleanQuery.addPhraseQuery(builder)(
-              WordField.ReadingTermAnalyzed,
-              t,
-              BooleanClause.Occur.SHOULD,
-              5 * exactMatchBoost
-            )
-            booleanQuery.addBooleanQuery(builder)(
-              WordField.ReadingTerm,
-              t,
-              BooleanClause.Occur.SHOULD,
-              5 * exactMatchBoost
-            )
-            booleanQuery.addBooleanQuery(builder)(
-              WordField.ReadingTermAnalyzed,
-              t,
-              BooleanClause.Occur.SHOULD,
-              1 * exactMatchBoost
-            )
-            booleanQuery.addTermQuery(
-              WordField.ReadingTermInflected,
-              t,
-              BooleanClause.Occur.SHOULD,
-              50 * exactMatchBoost
-            )
-            booleanQuery.addTermQuery(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, 10_000 * exactMatchBoost)
-          }.head
+          booleanQuery.addPrefixQuery(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, prefixScoreBoost)
+          booleanQuery.addPhraseQuery(builder)(WordField.ReadingTermAnalyzed, t, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.ReadingTermAnalyzed, t, BooleanClause.Occur.SHOULD, 1)
+          booleanQuery.addTermQuery(WordField.ReadingTermInflected, t, BooleanClause.Occur.SHOULD, 50)
+          booleanQuery.addTermQuery(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, 10_000)
 
         case (SearchPattern.Exact(text), SearchType.Definition) =>
           booleanQuery.addPhraseQuery(builder)(WordField.Definition, text, BooleanClause.Occur.SHOULD)
@@ -209,5 +161,8 @@ object WordReader {
   }
 
   def make(directory: Path): ZIO[Scope, Throwable, WordReader] =
+    LuceneReader.makeReader(directory)(WordReader.apply)
+
+  def make(directory: Directory): ZIO[Scope, Throwable, WordReader] =
     LuceneReader.makeReader(directory)(WordReader.apply)
 }

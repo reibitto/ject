@@ -54,13 +54,16 @@ object WordDoc {
 
       doc.add(new StringField(WordField.Id.entryName, a.id, Field.Store.YES))
 
+      // TextField (not StringField) so the field's width-normalizing analyzer actually runs — StringField is
+      // always indexed as a single unanalyzed term regardless of which analyzer is configured for it.
+      // KeywordTokenizer still guarantees exactly one term per value, preserving exact-match semantics.
       a.hangulTerms.foreach { value =>
-        doc.add(new StringField(WordField.HangulTerm.entryName, value, Field.Store.YES))
+        doc.add(new TextField(WordField.HangulTerm.entryName, value, Field.Store.YES))
         doc.add(new TextField(WordField.HangulTermAnalyzed.entryName, value, Field.Store.NO))
       }
 
       a.hanjaTerms.foreach { value =>
-        doc.add(new StringField(WordField.HanjaTerm.entryName, value, Field.Store.YES))
+        doc.add(new TextField(WordField.HanjaTerm.entryName, value, Field.Store.YES))
         doc.add(new TextField(WordField.HanjaTermAnalyzed.entryName, value, Field.Store.NO))
       }
 

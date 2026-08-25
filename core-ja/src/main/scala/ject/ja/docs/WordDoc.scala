@@ -2,7 +2,6 @@ package ject.ja.docs
 
 import ject.ja.lucene.field.WordField
 import ject.ja.text.{Inflection, WordType}
-import ject.ja.JapaneseText
 import ject.lucene.{DocDecoder, DocEncoder}
 import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
@@ -53,13 +52,17 @@ object WordDoc {
 
                doc.add(new StringField(WordField.Id.entryName, a.id, Field.Store.YES))
 
+               // TextField (not StringField) so the field's width/kana-normalizing analyzer actually runs —
+               // StringField is always indexed as a single unanalyzed term regardless of which analyzer is
+               // configured for it. KeywordTokenizer still guarantees exactly one term per value, preserving
+               // exact-match semantics.
                a.kanjiTerms.foreach { value =>
-                 doc.add(new StringField(WordField.KanjiTerm.entryName, value, Field.Store.YES))
+                 doc.add(new TextField(WordField.KanjiTerm.entryName, value, Field.Store.YES))
                  doc.add(new TextField(WordField.KanjiTermAnalyzed.entryName, value, Field.Store.NO))
                }
 
                a.readingTerms.foreach { value =>
-                 doc.add(new StringField(WordField.ReadingTerm.entryName, value, Field.Store.YES))
+                 doc.add(new TextField(WordField.ReadingTerm.entryName, value, Field.Store.YES))
                  doc.add(new TextField(WordField.ReadingTermAnalyzed.entryName, value, Field.Store.NO))
                }
 
@@ -88,20 +91,20 @@ object WordDoc {
     } yield doc
 
   private def indexInflections(d: WordDoc, document: Document): Task[Unit] = {
+    // TextField, not StringField, so field's kana-normalizing analyzer runs at index time — see WordField.
+    // Previously this generated both the native-script and a forced-hiragana copy of every inflected form by
+    // hand; the analyzer now folds katakana to hiragana itself, so only one form needs to be indexed.
     def indexTerms(terms: Seq[String], field: WordField, wordType: WordType): Task[Unit] = {
       val allInflections = terms.flatMap { value =>
         Inflection.inflectAll(value, wordType).flatMap {
-          case (_, Right(chunk)) =>
-            (chunk ++ chunk.map(JapaneseText.toHiragana)).toChunk
-
-          case _ =>
-            Chunk.empty
+          case (_, Right(chunk)) => chunk.toChunk
+          case _                 => Chunk.empty
         }
       }.distinct
 
       ZIO.foreachDiscard(allInflections) { value =>
         ZIO.attempt {
-          document.add(new StringField(field.entryName, value, Field.Store.NO))
+          document.add(new TextField(field.entryName, value, Field.Store.NO))
         }
       }
     }

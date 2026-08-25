@@ -3,8 +3,8 @@ package ject.ko.lucene.field
 import enumeratum.Enum
 import ject.ja.lucene.JapaneseAnalyzers
 import ject.ko.lucene.KoreanAnalyzers
+import ject.lucene.{Analyzers, TextNormalization}
 import ject.lucene.field.LuceneField
-import ject.lucene.Analyzers
 import org.apache.lucene.analysis.Analyzer
 
 sealed abstract class WordField(val analyzer: Analyzer) extends LuceneField
@@ -12,10 +12,10 @@ sealed abstract class WordField(val analyzer: Analyzer) extends LuceneField
 object WordField extends Enum[WordField] {
   case object Id extends WordField(Analyzers.standard)
 
-  case object HangulTerm extends WordField(KoreanAnalyzers.korean)
+  case object HangulTerm extends WordField(TextNormalization.widthNormalizingAnalyzer)
   case object HangulTermAnalyzed extends WordField(KoreanAnalyzers.korean)
 
-  case object HanjaTerm extends WordField(Analyzers.standard)
+  case object HanjaTerm extends WordField(TextNormalization.widthNormalizingAnalyzer)
   case object HanjaTermAnalyzed extends WordField(Analyzers.standard)
 
   case object Pronunciation extends WordField(Analyzers.standard)
