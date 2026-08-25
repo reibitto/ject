@@ -129,6 +129,16 @@ def module(projectId: String, moduleFile: Option[String] = None): Project =
   Project(id = projectId, base = file(moduleFile.getOrElse(projectId)))
     .settings(Build.defaultSettings(projectId))
 
+// These are used to set the working directory for each module's forked `run` task, but sbt's
+// lintUnused check can't detect task-only usages, so it always flags them as unused.
+Global / excludeLintKeys ++= Set(
+  core / run / baseDirectory,
+  coreJapanese / run / baseDirectory,
+  coreKorean / run / baseDirectory,
+  tools / run / baseDirectory,
+  examples / run / baseDirectory
+)
+
 ThisBuild / organization := "com.github.reibitto"
 
 ThisBuild / publishTo := {
