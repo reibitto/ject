@@ -57,6 +57,30 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
       partsOfSpeech = Seq.empty,
       priority = 1.0,
       frequency = 80
+    ),
+    // Mirrors the real JMDict entry for たぐい (ent_seq 1596870), which bundles 4 alternate kanji forms into
+    // one entry. Paired with a lower-priority, single-kanji-form entry for the same word from another
+    // dictionary, this guards against a higher-priority entry being outranked purely because it has more
+    // alternate kanji/reading terms than a competing entry.
+    WordDoc(
+      id = "5-high-priority-many-alternates",
+      kanjiTerms = Seq("類い", "類", "比い", "比"),
+      readingTerms = Seq("たぐい"),
+      definitions = Seq("kind, sort, type"),
+      tags = Seq.empty,
+      partsOfSpeech = Seq.empty,
+      priority = 1.0,
+      frequency = 100
+    ),
+    WordDoc(
+      id = "6-low-priority-single-alternate",
+      kanjiTerms = Seq("類い"),
+      readingTerms = Seq("たぐい"),
+      definitions = Seq("kind, sort, type"),
+      tags = Seq.empty,
+      partsOfSpeech = Seq.empty,
+      priority = 0.6,
+      frequency = 100
     )
   )
 
@@ -119,6 +143,14 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
       },
       test("finds a katakana-only reading via its kanji spelling") {
         withSampleIndex(idsFound(_, "珈琲")).map(ids => assertTrue(ids.contains("4")))
+      },
+      test(
+        "ranks a higher-priority entry first even when it has more alternate kanji forms than a " +
+          "lower-priority competitor for the same word"
+      ) {
+        withSampleIndex(idsFound(_, "類い")).map { ids =>
+          assertTrue(ids.indexOf("5-high-priority-many-alternates") < ids.indexOf("6-low-priority-single-alternate"))
+        }
       },
       test("does not find anything for a query matching no entry") {
         withSampleIndex(idsFound(_, "存在しない架空の言葉")).map(ids => assertTrue(ids.isEmpty))

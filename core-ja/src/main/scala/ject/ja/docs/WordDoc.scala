@@ -45,6 +45,26 @@ object WordDoc {
       )
   }
 
+  // KanjiTerm/ReadingTerm (and their inflected counterparts) are keyword-like exact-match fields: one token
+  // per value via KeywordTokenizer, matched only with TermQuery/PrefixQuery whose relevance is entirely the
+  // hand-tuned BoostQuery weight per clause (see WordReader). Norms would otherwise apply BM25 field-length
+  // penalties based on how many alternate kanji/readings an entry happens to have (e.g. a JMDict entry
+  // bundling 4 kanji forms into one doc vs. a competing dictionary's single-form entry for the same word),
+  // which has nothing to do with actual relevance and can outweigh the dictionary-priority boost.
+  private val exactMatchStoredType: FieldType = {
+    val ft = new FieldType(TextField.TYPE_STORED)
+    ft.setOmitNorms(true)
+    ft.freeze()
+    ft
+  }
+
+  private val exactMatchNotStoredType: FieldType = {
+    val ft = new FieldType(TextField.TYPE_NOT_STORED)
+    ft.setOmitNorms(true)
+    ft.freeze()
+    ft
+  }
+
   def docEncoder(includeInflections: Boolean): DocEncoder[WordDoc] = (a: WordDoc) =>
     for {
       doc <- ZIO.attempt {
@@ -57,12 +77,12 @@ object WordDoc {
                // configured for it. KeywordTokenizer still guarantees exactly one term per value, preserving
                // exact-match semantics.
                a.kanjiTerms.foreach { value =>
-                 doc.add(new TextField(WordField.KanjiTerm.entryName, value, Field.Store.YES))
+                 doc.add(new Field(WordField.KanjiTerm.entryName, value, exactMatchStoredType))
                  doc.add(new TextField(WordField.KanjiTermAnalyzed.entryName, value, Field.Store.NO))
                }
 
                a.readingTerms.foreach { value =>
-                 doc.add(new TextField(WordField.ReadingTerm.entryName, value, Field.Store.YES))
+                 doc.add(new Field(WordField.ReadingTerm.entryName, value, exactMatchStoredType))
                  doc.add(new TextField(WordField.ReadingTermAnalyzed.entryName, value, Field.Store.NO))
                }
 
@@ -104,7 +124,7 @@ object WordDoc {
 
       ZIO.foreachDiscard(allInflections) { value =>
         ZIO.attempt {
-          document.add(new TextField(field.entryName, value, Field.Store.NO))
+          document.add(new Field(field.entryName, value, exactMatchNotStoredType))
         }
       }
     }
