@@ -91,5 +91,5 @@ object Suru {
     Map(NonPast.plain -> Transforms.identity) ++ conjugations.view.mapValues(_.forward)
 
   val deinflections: Map[Form, Transform] =
-    Map(NonPast.plain -> Transforms.identity) ++ conjugations.view.mapValues(_.backward)
+    Map(NonPast.plain -> Transforms(ensureSuffix("する"))) ++ conjugations.view.mapValues(_.backward)
 }

@@ -12,13 +12,21 @@ object Deinflection {
   private def filterPlausible(candidates: NonEmptyChunk[String]): Option[NonEmptyChunk[String]] =
     NonEmptyChunk.fromChunk(candidates.filter(JapaneseText.isPlausibleWord))
 
-  def deinflect(word: String): Map[(Form, WordType), NonEmptyChunk[String]] = {
-    val wordTypes: Seq[WordType] = Seq(WordType.VerbIchidan, WordType.VerbGodan)
+  // AdjectiveNa is deliberately excluded: its deinflections aren't implemented yet (see `deinflectionsFor`).
+  private val allDeinflectableWordTypes: Seq[WordType] =
+    Seq(
+      WordType.VerbIchidan,
+      WordType.VerbGodan,
+      WordType.VerbSuru,
+      WordType.VerbAru,
+      WordType.VerbIku,
+      WordType.AdjectiveI
+    )
 
-    wordTypes.map { wordType =>
+  def deinflect(word: String): Map[(Form, WordType), NonEmptyChunk[String]] =
+    allDeinflectableWordTypes.map { wordType =>
       deinflect(word, wordType).map { case (k, v) => (k, wordType) -> v }
     }.reduce(_ ++ _)
-  }
 
   def deinflect(word: String, wordType: WordType): Map[Form, NonEmptyChunk[String]] = {
     val deinflections = deinflectionsFor(wordType)

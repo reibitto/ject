@@ -3,6 +3,7 @@ package ject.examples
 import ject.ja.docs.WordDoc
 import ject.ja.entity.Frequencies
 import ject.ja.lucene.WordWriter
+import ject.ja.text.WordSearchStrategy
 import ject.tools.jmdict.JMDictIO
 import ject.tools.yomichan.TermMetaBankIO
 import ject.utils.IOExtensions.*
@@ -17,6 +18,7 @@ import java.nio.file.Paths
 object JMDictMain extends ZIOAppDefault {
 
   val dryRun: Boolean = false
+  val wordSearchStrategy: WordSearchStrategy = WordSearchStrategy.IndexInflections
 
   def run: Task[Unit] =
     for {
@@ -42,7 +44,7 @@ object JMDictMain extends ZIOAppDefault {
                                     index <- WordWriter
                                                .make(
                                                  luceneDirectory,
-                                                 WordDoc.docEncoder(includeInflections = true)
+                                                 WordDoc.docEncoder(wordSearchStrategy)
                                                )
                                     count <- JMDictIO
                                                .load(targetPath, frequencies)

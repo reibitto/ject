@@ -1,7 +1,7 @@
 package ject.ja.docs
 
 import ject.ja.lucene.field.WordField
-import ject.ja.text.{Inflection, WordType}
+import ject.ja.text.{Inflection, WordSearchStrategy, WordType}
 import ject.lucene.{DocDecoder, DocEncoder}
 import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
@@ -45,7 +45,7 @@ object WordDoc {
       )
   }
 
-  def docEncoder(includeInflections: Boolean): DocEncoder[WordDoc] = (a: WordDoc) =>
+  def docEncoder(strategy: WordSearchStrategy): DocEncoder[WordDoc] = (a: WordDoc) =>
     for {
       doc <- ZIO.attempt {
                val doc = new Document()
@@ -87,7 +87,7 @@ object WordDoc {
 
                doc
              }
-      _ <- indexInflections(a, doc).when(includeInflections)
+      _ <- indexInflections(a, doc).when(strategy == WordSearchStrategy.IndexInflections)
     } yield doc
 
   private def indexInflections(d: WordDoc, document: Document): Task[Unit] = {

@@ -1,6 +1,7 @@
 package ject.ja.lucene
 
 import ject.ja.docs.WordDoc
+import ject.ja.text.WordSearchStrategy
 import ject.lucene.{DocEncoder, DocWriter, LuceneDirectory}
 import org.apache.lucene.index.{IndexWriter, IndexWriterConfig}
 import org.apache.lucene.store.Directory
@@ -39,7 +40,7 @@ object WordWriter {
     make(directory, encoder, autoCommitOnRelease = true)
 
   def make(directory: Directory): ZIO[Scope, Throwable, WordWriter] =
-    make(directory, WordDoc.docEncoder(includeInflections = true), autoCommitOnRelease = true)
+    make(directory, WordDoc.docEncoder(WordSearchStrategy.IndexInflections), autoCommitOnRelease = true)
 
   /** Builds a writer backed by files at `directory` on disk, owning the
     * underlying `MMapDirectory`'s lifecycle (closed when this writer's scope
@@ -47,7 +48,7 @@ object WordWriter {
     */
   def make(
       directory: Path,
-      encoder: DocEncoder[WordDoc] = WordDoc.docEncoder(includeInflections = true),
+      encoder: DocEncoder[WordDoc] = WordDoc.docEncoder(WordSearchStrategy.IndexInflections),
       autoCommitOnRelease: Boolean = true
   ): ZIO[Scope, Throwable, WordWriter] =
     for {

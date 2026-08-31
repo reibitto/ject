@@ -49,5 +49,5 @@ object Aru {
     Map(NonPast.plain -> Transforms.identity) ++ conjugations.view.mapValues(_.forward)
 
   val deinflections: Map[Form, Transform] =
-    Map(NonPast.plain -> Transforms.identity) ++ conjugations.view.mapValues(_.backward)
+    Map(NonPast.plain -> Transforms(ensureSuffix("ある"))) ++ conjugations.view.mapValues(_.backward)
 }

@@ -4,6 +4,7 @@ import ject.ja.docs.WordDoc
 import ject.ja.lucene.field.WordField
 import ject.ja.lucene.WordReader.SearchType
 import ject.ja.JapaneseText
+import ject.ja.text.{Deinflection, WordSearchStrategy}
 import ject.lucene.field.LuceneField
 import ject.lucene.AnalyzerExtensions.*
 import ject.lucene.BooleanQueryBuilderExtensions.*
@@ -21,13 +22,20 @@ import zio.stream.ZStream
 
 import java.nio.file.Path
 
-final case class WordReader(directory: Directory, reader: DirectoryReader, searcher: IndexSearcher)
-    extends LuceneReader[WordDoc] {
+final case class WordReader(
+    directory: Directory,
+    reader: DirectoryReader,
+    searcher: IndexSearcher,
+    strategy: WordSearchStrategy = WordSearchStrategy.IndexInflections
+) extends LuceneReader[WordDoc] {
   private val builder = new QueryBuilder(WordDoc.docDecoder.analyzer)
 
   private val queryParser: QueryParser = new QueryParser(LuceneField.none.entryName, WordDoc.docDecoder.analyzer) {
     setAllowLeadingWildcard(true)
   }
+
+  private def deinflectedCandidates(t: String): Set[String] =
+    Deinflection.deinflect(t).values.flatMap(_.toChunk).toSet
 
   def search(pattern: SearchPattern): ZStream[Any, Throwable, ScoredDoc[WordDoc]] = {
     val searchType =
@@ -65,7 +73,17 @@ final case class WordReader(directory: Directory, reader: DirectoryReader, searc
           booleanQuery.addPhraseQuery(builder)(WordField.KanjiTermAnalyzed, t, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.KanjiTermAnalyzed, t, BooleanClause.Occur.SHOULD, 1)
-          booleanQuery.addTermQuery(WordField.KanjiTermInflected, t, BooleanClause.Occur.SHOULD, 50)
+
+          strategy match {
+            case WordSearchStrategy.IndexInflections =>
+              booleanQuery.addTermQuery(WordField.KanjiTermInflected, t, BooleanClause.Occur.SHOULD, 50)
+
+            case WordSearchStrategy.DeinflectQuery =>
+              deinflectedCandidates(t).foreach { candidate =>
+                booleanQuery.addTermQuery(WordField.KanjiTerm, candidate, BooleanClause.Occur.SHOULD, 50)
+              }
+          }
+
           booleanQuery.addTermQuery(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, 10_000)
 
         case (SearchPattern.Default(text), SearchType.Reading) =>
@@ -82,7 +100,17 @@ final case class WordReader(directory: Directory, reader: DirectoryReader, searc
           booleanQuery.addPhraseQuery(builder)(WordField.ReadingTermAnalyzed, t, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, 5)
           booleanQuery.addBooleanQuery(builder)(WordField.ReadingTermAnalyzed, t, BooleanClause.Occur.SHOULD, 1)
-          booleanQuery.addTermQuery(WordField.ReadingTermInflected, t, BooleanClause.Occur.SHOULD, 50)
+
+          strategy match {
+            case WordSearchStrategy.IndexInflections =>
+              booleanQuery.addTermQuery(WordField.ReadingTermInflected, t, BooleanClause.Occur.SHOULD, 50)
+
+            case WordSearchStrategy.DeinflectQuery =>
+              deinflectedCandidates(t).foreach { candidate =>
+                booleanQuery.addTermQuery(WordField.ReadingTerm, candidate, BooleanClause.Occur.SHOULD, 50)
+              }
+          }
+
           booleanQuery.addTermQuery(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, 10_000)
 
         case (SearchPattern.Exact(text), SearchType.Definition) =>
@@ -161,8 +189,14 @@ object WordReader {
   }
 
   def make(directory: Path): ZIO[Scope, Throwable, WordReader] =
-    LuceneReader.makeReader(directory)(WordReader.apply)
+    make(directory, WordSearchStrategy.IndexInflections)
+
+  def make(directory: Path, strategy: WordSearchStrategy): ZIO[Scope, Throwable, WordReader] =
+    LuceneReader.makeReader(directory)(WordReader(_, _, _, strategy))
 
   def make(directory: Directory): ZIO[Scope, Throwable, WordReader] =
-    LuceneReader.makeReader(directory)(WordReader.apply)
+    make(directory, WordSearchStrategy.IndexInflections)
+
+  def make(directory: Directory, strategy: WordSearchStrategy): ZIO[Scope, Throwable, WordReader] =
+    LuceneReader.makeReader(directory)(WordReader(_, _, _, strategy))
 }

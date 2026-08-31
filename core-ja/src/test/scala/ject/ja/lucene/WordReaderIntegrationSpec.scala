@@ -1,6 +1,7 @@
 package ject.ja.lucene
 
 import ject.ja.docs.WordDoc
+import ject.ja.text.WordSearchStrategy
 import ject.lucene.LuceneDirectory
 import ject.SearchPattern
 import zio.*
@@ -60,15 +61,21 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
     )
   )
 
-  private def withSampleIndex[A](f: WordReader => Task[A]): Task[A] =
+  private def withSampleIndex[A](
+      strategy: WordSearchStrategy = WordSearchStrategy.IndexInflections
+  )(f: WordReader => Task[A]): Task[A] =
     ZIO.scoped {
       for {
         // A ByteBuffersDirectory has no external location a second `Directory` value could reopen — the writer
         // and reader below must share this same instance to see each other's data (see LuceneDirectory.inMemory).
         directory <- LuceneDirectory.inMemory
-        _         <- ZIO.scoped(WordWriter.make(directory).flatMap(_.addBulk(sampleEntries*)))
-        reader    <- WordReader.make(directory)
-        result    <- f(reader)
+        _ <- ZIO.scoped(
+               WordWriter
+                 .make(directory, WordDoc.docEncoder(strategy))
+                 .flatMap(_.addBulk(sampleEntries*))
+             )
+        reader <- WordReader.make(directory, strategy)
+        result <- f(reader)
       } yield result
     }
 
@@ -78,50 +85,62 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
   def spec: Spec[TestEnvironment & Scope, Any] =
     suite("WordReader integration")(
       test("finds an entry by exact kanji") {
-        withSampleIndex(idsFound(_, "食べる")).map(ids => assertTrue(ids.contains("1")))
+        withSampleIndex()(idsFound(_, "食べる")).map(ids => assertTrue(ids.contains("1")))
       },
       test("finds an entry by exact reading, written in hiragana") {
-        withSampleIndex(idsFound(_, "たべる")).map(ids => assertTrue(ids.contains("1")))
+        withSampleIndex()(idsFound(_, "たべる")).map(ids => assertTrue(ids.contains("1")))
       },
       test("finds a hiragana reading via a katakana query") {
-        withSampleIndex(idsFound(_, "タベル")).map(ids => assertTrue(ids.contains("1")))
+        withSampleIndex()(idsFound(_, "タベル")).map(ids => assertTrue(ids.contains("1")))
       },
       test("finds a half-width-digit kanji term via a full-width-digit query") {
-        withSampleIndex(idsFound(_, "４日")).map(ids => assertTrue(ids.contains("2")))
+        withSampleIndex()(idsFound(_, "４日")).map(ids => assertTrue(ids.contains("2")))
       },
       test("finds the same entry via the original half-width-digit spelling") {
-        withSampleIndex(idsFound(_, "4日")).map(ids => assertTrue(ids.contains("2")))
+        withSampleIndex()(idsFound(_, "4日")).map(ids => assertTrue(ids.contains("2")))
       },
       test("finds a hiragana reading via a katakana query with long vowel marks") {
         // The dictionary entry is spelled with the vowel written out ("ぴいちくぱあちく"), not with a long vowel
         // mark, which is how it would naturally appear if transcribed from the katakana rendering
         // ("ピーチクパーチク") someone might actually type when searching for this mimetic word.
-        withSampleIndex(idsFound(_, "ピーチクパーチク")).map(ids => assertTrue(ids.contains("3")))
+        withSampleIndex()(idsFound(_, "ピーチクパーチク")).map(ids => assertTrue(ids.contains("3")))
       },
       test("finds an entry via a conjugated (inflected) form") {
-        withSampleIndex(idsFound(_, "食べた")).map(ids => assertTrue(ids.contains("1")))
+        withSampleIndex()(idsFound(_, "食べた")).map(ids => assertTrue(ids.contains("1")))
       },
       test("finds an entry via a kanji prefix search") {
-        withSampleIndex(idsFound(_, "食べ*")).map(ids => assertTrue(ids.contains("1")))
+        withSampleIndex()(idsFound(_, "食べ*")).map(ids => assertTrue(ids.contains("1")))
       },
       test("finds an entry via a kanji wildcard search") {
-        withSampleIndex(idsFound(_, "食?る")).map(ids => assertTrue(ids.contains("1")))
+        withSampleIndex()(idsFound(_, "食?る")).map(ids => assertTrue(ids.contains("1")))
       },
       test("finds a katakana-only reading (no hiragana form given) via the exact katakana query") {
-        withSampleIndex(idsFound(_, "コーヒー")).map(ids => assertTrue(ids.contains("4")))
+        withSampleIndex()(idsFound(_, "コーヒー")).map(ids => assertTrue(ids.contains("4")))
       },
       test("finds a katakana-only reading via its hiragana equivalent, with no hiragana form indexed at all") {
         // The dictionary never stores a hiragana reading for this entry — only "コーヒー". This only works
         // because normalization is applied consistently on both sides: the katakana reading folds to "こおひい"
         // at index time (via ReadingTerm's analyzer) and the hiragana query folds to the same "こおひい" at
         // query time, so they meet in the middle rather than one side needing to already match the other.
-        withSampleIndex(idsFound(_, "こおひい")).map(ids => assertTrue(ids.contains("4")))
+        withSampleIndex()(idsFound(_, "こおひい")).map(ids => assertTrue(ids.contains("4")))
       },
       test("finds a katakana-only reading via its kanji spelling") {
-        withSampleIndex(idsFound(_, "珈琲")).map(ids => assertTrue(ids.contains("4")))
+        withSampleIndex()(idsFound(_, "珈琲")).map(ids => assertTrue(ids.contains("4")))
       },
       test("does not find anything for a query matching no entry") {
-        withSampleIndex(idsFound(_, "存在しない架空の言葉")).map(ids => assertTrue(ids.isEmpty))
+        withSampleIndex()(idsFound(_, "存在しない架空の言葉")).map(ids => assertTrue(ids.isEmpty))
       }
-    )
+    ) +
+      suite("WordReader integration (DeinflectQuery strategy)")(
+        test("finds an entry via a conjugated (inflected) form, without indexing any inflected forms") {
+          withSampleIndex(WordSearchStrategy.DeinflectQuery)(idsFound(_, "食べた"))
+            .map(ids => assertTrue(ids.contains("1")))
+        },
+        test("still finds an entry by its exact dictionary-form kanji/reading") {
+          for {
+            byKanji   <- withSampleIndex(WordSearchStrategy.DeinflectQuery)(idsFound(_, "食べる"))
+            byReading <- withSampleIndex(WordSearchStrategy.DeinflectQuery)(idsFound(_, "たべる"))
+          } yield assertTrue(byKanji.contains("1"), byReading.contains("1"))
+        }
+      )
 }
