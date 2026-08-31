@@ -93,7 +93,7 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
         // A ByteBuffersDirectory has no external location a second `Directory` value could reopen — the writer
         // and reader below must share this same instance to see each other's data (see LuceneDirectory.inMemory).
         directory <- LuceneDirectory.inMemory
-        _ <- ZIO.scoped(
+        _         <- ZIO.scoped(
                WordWriter
                  .make(directory, WordDoc.docEncoder(strategy))
                  .flatMap(_.addBulk(sampleEntries*))
@@ -155,7 +155,7 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
         "ranks a higher-priority entry first even when it has more alternate kanji forms than a " +
           "lower-priority competitor for the same word"
       ) {
-        withSampleIndex(idsFound(_, "類い")).map { ids =>
+        withSampleIndex()(idsFound(_, "類い")).map { ids =>
           assertTrue(ids.indexOf("5-high-priority-many-alternates") < ids.indexOf("6-low-priority-single-alternate"))
         }
       },

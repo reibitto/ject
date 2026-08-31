@@ -3,8 +3,8 @@ package ject.ja.lucene
 import ject.ja.docs.WordDoc
 import ject.ja.lucene.field.WordField
 import ject.ja.lucene.WordReader.SearchType
-import ject.ja.JapaneseText
 import ject.ja.text.{Deinflection, WordSearchStrategy}
+import ject.ja.JapaneseText
 import ject.lucene.field.LuceneField
 import ject.lucene.AnalyzerExtensions.*
 import ject.lucene.BooleanQueryBuilderExtensions.*
