@@ -8,6 +8,7 @@ import zio.*
 import zio.test.*
 
 import java.nio.file.{Files, Paths}
+import scala.io.Source
 import scala.jdk.CollectionConverters.*
 
 /** End-to-end tests for `KanjiReader.searchByParts` against an in-memory index
@@ -46,39 +47,27 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
         .toMap
     }
 
-  // Scans kanjidic.xml for just freq/grade, which rankByParts uses as tiebreakers and the decomposition TSV
-  // has no equivalent of. Without them the test index can't tell a common kanji from an obscure variant that
-  // ties with it on score and stroke count. Line-based rather than XML-parsed since kanjidic2.xml has one
-  // element per line and <literal> always precedes <freq>/<grade>, making the most recent <literal> the
-  // unambiguous owner.
-  private def loadFrequenciesAndGrades(file: String): Task[Map[String, (Option[Int], Option[Int])]] =
+  // freq/grade are the commonness signals rankByParts tiebreaks on, and the decomposition TSV has no
+  // equivalent of them. Without them the test index can't tell a common kanji from an obscure variant that
+  // ties with it on score and stroke count. Extracted from kanjidic by KanjiFrequencyMain, since kanjidic
+  // itself lives under the gitignored data/dictionary and is too big to commit.
+  private def loadFrequenciesAndGrades(resource: String): Task[Map[String, (Option[Int], Option[Int])]] =
     ZIO.attempt {
-      val literalTag = "<literal>(.*)</literal>".r
-      val freqTag = "<freq>(\\d+)</freq>".r
-      val gradeTag = "<grade>(\\d+)</grade>".r
+      val stream = Option(getClass.getResourceAsStream(resource))
+        .getOrElse(throw new Exception(s"Missing test resource '$resource'. Regenerate it with KanjiFrequencyMain."))
 
-      val result = Map.newBuilder[String, (Option[Int], Option[Int])]
-      var currentKanji: Option[String] = None
-      var currentFreq: Option[Int] = None
-      var currentGrade: Option[Int] = None
+      val source = Source.fromInputStream(stream, "UTF-8")
 
-      def flush(): Unit = currentKanji.foreach(k => result += k -> (currentFreq, currentGrade))
-
-      Files.readAllLines(Paths.get(file)).asScala.foreach { line =>
-        line.trim match {
-          case literalTag(kanji) =>
-            flush()
-            currentKanji = Some(kanji)
-            currentFreq = None
-            currentGrade = None
-          case freqTag(freq)   => currentFreq = Some(freq.toInt)
-          case gradeTag(grade) => currentGrade = Some(grade.toInt)
-          case _               => ()
-        }
-      }
-      flush()
-
-      result.result()
+      try
+        source
+          .getLines()
+          .filter(_.trim.nonEmpty)
+          .map { line =>
+            val tokens = line.split("\t", -1)
+            tokens(0) -> (tokens(1).toIntOption, tokens(2).toIntOption)
+          }
+          .toMap
+      finally source.close()
     }
 
   private def kanjiDoc(
@@ -118,7 +107,7 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
     ZLayer.scoped {
       for {
         rows                 <- loadDecompositions("data/kanji-decomposition.tsv")
-        frequenciesAndGrades <- loadFrequenciesAndGrades("data/dictionary/kanjidic.xml")
+        frequenciesAndGrades <- loadFrequenciesAndGrades("/kanji-frequency.tsv")
         decompositions = rows.map { case (kanji, (_, decomposition)) => kanji -> decomposition }
         entries = rows.map { case (kanji, (strokeCount, _)) =>
                     kanjiDoc(kanji, strokeCount, decompositions, frequenciesAndGrades)

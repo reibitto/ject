@@ -8,9 +8,12 @@ import zio.stream.ZStream
 import zio.Console.printLine
 
 import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
 import javax.xml.parsers.SAXParserFactory
+import scala.jdk.CollectionConverters.*
 import scala.xml.factory.XMLLoader
 import scala.xml.Elem
 import scala.xml.SAXParser
@@ -45,6 +48,25 @@ object KanjidicIO {
       } yield length
     }
   }
+
+  /** Writes a `kanji\tfrequency\tgrade` TSV holding only the kanji that have at
+    * least one of the two. Used to keep the commonness signals that
+    * `KanjiReader` ranks on available to tests without committing all of
+    * kanjidic. Returns the number of rows written.
+    */
+  def exportFrequenciesAndGrades(input: Path, output: Path): RIO[Any, Long] =
+    for {
+      xml <- ZIO.attemptBlocking(xmlLoader.loadFile(input.toFile))
+      rows = (xml \ "character").flatMap { n =>
+               val frequency = (n \ "misc" \ "freq").headOption.map(_.text)
+               val grade = (n \ "misc" \ "grade").headOption.map(_.text)
+
+               Option.when(frequency.nonEmpty || grade.nonEmpty) {
+                 s"${(n \ "literal").text}\t${frequency.getOrElse("")}\t${grade.getOrElse("")}"
+               }
+             }
+      _ <- ZIO.attemptBlocking(Files.write(output, rows.asJava, StandardCharsets.UTF_8))
+    } yield rows.size.toLong
 
   def load(
       file: Path,
