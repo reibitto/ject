@@ -17,15 +17,15 @@ object YomichanMain extends ZIOAppDefault {
 
   final case class DictionaryInfo(name: String, priority: Double, shouldSanitize: Boolean)
 
-  def run: UIO[Unit] = {
+  def run: Task[Unit] = {
     val dictionaries = Seq(
       DictionaryInfo("sanseido", 0.8, shouldSanitize = true),
       DictionaryInfo("koujien", 0.7, shouldSanitize = true),
       DictionaryInfo("daijisen", 0.6, shouldSanitize = true),
-      DictionaryInfo("pixiv", 0.5, shouldSanitize = true)
+      DictionaryInfo("pixiv-light", 0.5, shouldSanitize = true)
     )
 
-    (for {
+    for {
       entries <- TermMetaBankIO.loadFrequencies(Paths.get("data/dictionary/bccwj-luw")).runCollect
       frequencies = Frequencies(entries.groupBy(_.term).map { case (k, v) =>
                       k -> v.map(_.toFrequencyEntry)
@@ -34,8 +34,8 @@ object YomichanMain extends ZIOAppDefault {
              val targetPath = Paths.get(s"data/dictionary/${dictionary.name}")
 
              for {
-               _                      <- printLine(s"Starting to index dictionary: ${dictionary.name}")
-               luceneDirectory        <- ZIO.succeed(Paths.get("data/lucene/word-ja"))
+               _ <- printLine(s"Starting to index dictionary: ${dictionary.name}")
+               luceneDirectory = Paths.get("data/lucene/word-ja")
                (timeTaken, totalDocs) <-
                  ZIO.scoped {
                    for {
@@ -56,7 +56,7 @@ object YomichanMain extends ZIOAppDefault {
 
                                           if (lines.length > 1)
                                             (lines
-                                              .drop(if (dictionary.name == "pixiv") 0 else 1)
+                                              .drop(if (dictionary.name.startsWith("pixiv")) 0 else 1)
                                               .mkString("\n")
                                               .trim +: e.definitions.tail.map(_.asText))
                                               .map(_.trim)
@@ -109,9 +109,7 @@ object YomichanMain extends ZIOAppDefault {
                _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
              } yield ()
            }
-    } yield ()).catchAllCause { t =>
-      ZIO.succeed(t.squash.printStackTrace())
-    }
+    } yield ()
   }
 
 }

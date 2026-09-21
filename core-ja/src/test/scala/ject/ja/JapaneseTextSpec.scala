@@ -14,6 +14,17 @@ object JapaneseTextSpec extends ZIOSpecDefault {
           JapaneseText.toHiragana("けしゴム") == "けしごむ"
         )
       },
+      test("convert to hiragana expands the katakana long vowel mark based on the preceding vowel") {
+        assertTrue(
+          JapaneseText.toHiragana("ピーチクパーチク") == "ぴいちくぱあちく",
+          JapaneseText.toHiragana("コーヒー") == "こおひい",
+          JapaneseText.toHiragana("ケーキ") == "けえき",
+          JapaneseText.toHiragana("ラーメン") == "らあめん"
+        )
+      },
+      test("convert to hiragana leaves a leading or otherwise unresolvable ー untouched") {
+        assertTrue(JapaneseText.toHiragana("ー") == "ー")
+      },
       test("convert to katakana") {
         assertTrue(
           JapaneseText.toKatakana("にほんご") == "ニホンゴ",

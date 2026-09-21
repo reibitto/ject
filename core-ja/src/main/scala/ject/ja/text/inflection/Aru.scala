@@ -1,48 +1,53 @@
 package ject.ja.text.inflection
 
+import ject.ja.text.{ReversibleTransform, SuffixConjugator, Transforms}
 import ject.ja.text.Form
 import ject.ja.text.SubForm.*
 import ject.ja.text.Transformation.*
-import ject.ja.text.Transforms
 
 object Aru {
 
-  val inflections: Map[Form, Transform] = Map(
+  private val conjugate = SuffixConjugator(stemOf("ある", allowEmptyStem = true), "ある")
+
+  private val conjugations: Map[Form, ReversibleTransform] = Map(
     // Plain
-    NonPast.plain -> Transforms.identity,
-    Past.plain -> attach("あった"),
-    Te.plain -> attach("あって"),
-    Conditional.plain -> attach("あったら"),
-    Provisional.plain -> attach("あれば"),
-    Volitional.plain -> attach("あろう"),
-    Alternative.plain -> attach("あったり"),
-    Sou.plain -> attach("ありそう"),
+    Past.plain -> conjugate("あった"),
+    Te.plain -> conjugate("あって"),
+    Conditional.plain -> conjugate("あったら"),
+    Provisional.plain -> conjugate("あれば"),
+    Volitional.plain -> conjugate("あろう"),
+    Alternative.plain -> conjugate("あったり"),
+    Sou.plain -> conjugate("ありそう"),
     // Polite
-    NonPast.polite -> attach("あります"),
-    Past.polite -> attach("ありました"),
-    Te.polite -> attach("ありまして"),
-    Conditional.polite -> attach("ありましたら"),
-    Provisional.polite -> attach("ありますなら"),
-    Volitional.polite -> attach("ありましょう"),
-    Alternative.polite -> attach("ありましたり"),
+    NonPast.polite -> conjugate("あります"),
+    Past.polite -> conjugate("ありました"),
+    Te.polite -> conjugate("ありまして"),
+    Conditional.polite -> conjugate("ありましたら"),
+    Provisional.polite -> conjugate("ありますなら"),
+    Volitional.polite -> conjugate("ありましょう"),
+    Alternative.polite -> conjugate("ありましたり"),
     // Negative
-    NonPast.negative -> attach("ない"),
-    Past.negative -> attach("なかった"),
-    Te.negative -> attach("なくて"),
-    Conditional.negative -> attach("なかったら"),
-    Provisional.negative -> attach("なければ"),
-    Volitional.negative -> attach("あるまい"),
-    Alternative.negative -> attach("なかったり"),
-    Sou.negative -> attach("なさそう"),
+    NonPast.negative -> conjugate("ない"),
+    Past.negative -> conjugate("なかった"),
+    Te.negative -> conjugate("なくて"),
+    Conditional.negative -> conjugate("なかったら"),
+    Provisional.negative -> conjugate("なければ"),
+    Volitional.negative -> conjugate("あるまい"),
+    Alternative.negative -> conjugate("なかったり"),
+    Sou.negative -> conjugate("なさそう"),
     // Polite negative
-    NonPast.polite.negative -> attach("ありません"),
-    Past.polite.negative -> attach("ありませんでした"),
-    Te.polite.negative -> attach("ありませんで"),
-    Conditional.polite.negative -> attach("ありませんでしたら"),
-    Provisional.polite.negative -> attach("ありませんなら"),
-    Volitional.polite.negative -> attach("ありますまい"),
-    Alternative.polite.negative -> attach("ありませんでしたり")
+    NonPast.polite.negative -> conjugate("ありません"),
+    Past.polite.negative -> conjugate("ありませんでした"),
+    Te.polite.negative -> conjugate("ありませんで"),
+    Conditional.polite.negative -> conjugate("ありませんでしたら"),
+    Provisional.polite.negative -> conjugate("ありませんなら"),
+    Volitional.polite.negative -> conjugate("ありますまい"),
+    Alternative.polite.negative -> conjugate("ありませんでしたり")
   )
 
-  val deinflections: Map[Form, Transform] = Map.empty // TODO: Implement
+  val inflections: Map[Form, Transform] =
+    Map(NonPast.plain -> Transforms.identity) ++ conjugations.view.mapValues(_.forward)
+
+  val deinflections: Map[Form, Transform] =
+    Map(NonPast.plain -> Transforms(ensureSuffix("ある"))) ++ conjugations.view.mapValues(_.backward)
 }

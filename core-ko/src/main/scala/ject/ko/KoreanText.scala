@@ -19,6 +19,5 @@ object KoreanText {
       (c >= 0x3038 && c <= 0x303b) ||
       (c >= 0x3400 && c <= 0x4dbf) ||
       (c >= 0x4e00 && c <= 0x9fff) ||
-      (c >= 0xf900 && c <= 0xfaff) ||
-      (c >= 0x20000 && c <= 0xe0000)
+      (c >= 0xf900 && c <= 0xfaff)
 }

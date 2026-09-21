@@ -72,15 +72,16 @@ object JMDictIO {
       java.lang.System.setProperty("jdk.xml.totalEntitySizeLimit", "0")
 
       for {
-        xml <- ZIO.attempt(xmlLoader.loadFile(file.toFile))
+        xml <- ZIO.attemptBlocking(xmlLoader.loadFile(file.toFile))
         entryNodes = xml \ "entry"
       } yield entryNodes.iterator.map { n =>
         val kanjiTerms = (n \ "k_ele" \ "keb").map(_.text)
         val readingTerms = (n \ "r_ele" \ "reb").map(_.text)
         val frequencyEntry = frequencies.find(kanjiTerms, readingTerms)
+        val entSeq = (n \ "ent_seq").map(_.text).headOption.getOrElse(throw new Exception("Entry has no ent_seq"))
 
         WordDoc(
-          id = s"jmdict/${(n \ "ent_seq").map(_.text).head}",
+          id = s"jmdict/$entSeq",
           kanjiTerms = kanjiTerms,
           readingTerms = readingTerms,
           definitions = (n \ "sense").map(s => (s \ "gloss").map(_.text).mkString("; ")),

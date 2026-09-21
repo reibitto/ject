@@ -1,8 +1,7 @@
 package ject.ja.docs
 
 import ject.ja.lucene.field.WordField
-import ject.ja.text.{Inflection, WordType}
-import ject.ja.JapaneseText
+import ject.ja.text.{Inflection, WordSearchStrategy, WordType}
 import ject.lucene.{DocDecoder, DocEncoder}
 import ject.lucene.field.LuceneField
 import org.apache.lucene.analysis.Analyzer
@@ -46,20 +45,39 @@ object WordDoc {
       )
   }
 
-  def docEncoder(includeInflections: Boolean): DocEncoder[WordDoc] = (a: WordDoc) =>
+  // Norms are omitted because relevance for these fields comes entirely from WordReader's per-clause
+  // BoostQuery weights. Otherwise BM25 field-length penalties would punish an entry for bundling several
+  // alternate kanji/readings into one doc, which can outweigh the dictionary-priority boost.
+  private val exactMatchStoredType: FieldType = {
+    val ft = new FieldType(TextField.TYPE_STORED)
+    ft.setOmitNorms(true)
+    ft.freeze()
+    ft
+  }
+
+  private val exactMatchNotStoredType: FieldType = {
+    val ft = new FieldType(TextField.TYPE_NOT_STORED)
+    ft.setOmitNorms(true)
+    ft.freeze()
+    ft
+  }
+
+  def docEncoder(strategy: WordSearchStrategy): DocEncoder[WordDoc] = (a: WordDoc) =>
     for {
       doc <- ZIO.attempt {
                val doc = new Document()
 
                doc.add(new StringField(WordField.Id.entryName, a.id, Field.Store.YES))
 
+               // TextField, not StringField, so the field's width/kana-normalizing analyzer actually runs.
+               // KeywordTokenizer still guarantees one term per value, preserving exact-match semantics.
                a.kanjiTerms.foreach { value =>
-                 doc.add(new StringField(WordField.KanjiTerm.entryName, value, Field.Store.YES))
+                 doc.add(new Field(WordField.KanjiTerm.entryName, value, exactMatchStoredType))
                  doc.add(new TextField(WordField.KanjiTermAnalyzed.entryName, value, Field.Store.NO))
                }
 
                a.readingTerms.foreach { value =>
-                 doc.add(new StringField(WordField.ReadingTerm.entryName, value, Field.Store.YES))
+                 doc.add(new Field(WordField.ReadingTerm.entryName, value, exactMatchStoredType))
                  doc.add(new TextField(WordField.ReadingTermAnalyzed.entryName, value, Field.Store.NO))
                }
 
@@ -84,24 +102,23 @@ object WordDoc {
 
                doc
              }
-      _ <- indexInflections(a, doc).when(includeInflections)
+      _ <- indexInflections(a, doc).when(strategy == WordSearchStrategy.IndexInflections)
     } yield doc
 
   private def indexInflections(d: WordDoc, document: Document): Task[Unit] = {
+    // TextField, not StringField, so the field's kana-normalizing analyzer runs at index time (see
+    // WordField). The analyzer folds katakana to hiragana, so only one form of each inflection is indexed.
     def indexTerms(terms: Seq[String], field: WordField, wordType: WordType): Task[Unit] = {
       val allInflections = terms.flatMap { value =>
         Inflection.inflectAll(value, wordType).flatMap {
-          case (_, Right(chunk)) =>
-            (chunk ++ chunk.map(JapaneseText.toHiragana)).toChunk
-
-          case _ =>
-            Chunk.empty
+          case (_, Right(chunk)) => chunk.toChunk
+          case _                 => Chunk.empty
         }
       }.distinct
 
       ZIO.foreachDiscard(allInflections) { value =>
         ZIO.attempt {
-          document.add(new StringField(field.entryName, value, Field.Store.NO))
+          document.add(new Field(field.entryName, value, exactMatchNotStoredType))
         }
       }
     }

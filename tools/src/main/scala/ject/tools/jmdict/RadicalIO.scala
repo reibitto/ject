@@ -13,6 +13,7 @@ object RadicalIO {
       .fromPath(file)
       .via(ZPipeline.utf8Decode)
       .via(ZPipeline.splitLines)
+      .filter(_.trim.nonEmpty)
       .zipWithIndex
       .map { case (line, index) =>
         val tokens = line.split("\t")

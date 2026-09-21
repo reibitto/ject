@@ -13,10 +13,16 @@ object AnalyzerExtensions {
       val buffer = new mutable.ArrayDeque[String](initialSize = 8)
       val stream = self.tokenStream("", text)
       val attr = stream.addAttribute(classOf[CharTermAttribute])
-      stream.reset()
 
-      while (stream.incrementToken())
-        buffer.addOne(attr.toString)
+      try {
+        stream.reset()
+
+        while (stream.incrementToken())
+          buffer.addOne(attr.toString)
+
+        stream.end()
+      } finally
+        stream.close()
 
       buffer.toSeq
     }

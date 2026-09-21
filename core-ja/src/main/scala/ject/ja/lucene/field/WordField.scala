@@ -11,13 +11,13 @@ sealed abstract class WordField(val analyzer: Analyzer) extends LuceneField
 object WordField extends Enum[WordField] {
   case object Id extends WordField(Analyzers.standard)
 
-  case object KanjiTerm extends WordField(Analyzers.standard)
+  case object KanjiTerm extends WordField(JapaneseAnalyzers.kanaNormalizing)
   case object KanjiTermAnalyzed extends WordField(JapaneseAnalyzers.japanese)
-  case object KanjiTermInflected extends WordField(Analyzers.standard)
+  case object KanjiTermInflected extends WordField(JapaneseAnalyzers.kanaNormalizing)
 
-  case object ReadingTerm extends WordField(Analyzers.standard)
+  case object ReadingTerm extends WordField(JapaneseAnalyzers.kanaNormalizing)
   case object ReadingTermAnalyzed extends WordField(JapaneseAnalyzers.japanese)
-  case object ReadingTermInflected extends WordField(Analyzers.standard)
+  case object ReadingTermInflected extends WordField(JapaneseAnalyzers.kanaNormalizing)
 
   case object Definition extends WordField(Analyzers.english)
   case object DefinitionOther extends WordField(Analyzers.standard)

@@ -2,3 +2,4 @@
 -Xmx4g
 -XX:MaxMetaspaceSize=1g
 -XX:MaxInlineLevel=20
+-Dsbt.io.implicit.relative.glob.conversion=allow

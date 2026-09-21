@@ -3,6 +3,7 @@ package ject.ja.lucene
 import ject.ja.docs.WordDoc
 import ject.ja.lucene.field.WordField
 import ject.ja.lucene.WordReader.SearchType
+import ject.ja.text.{Deinflection, WordSearchStrategy}
 import ject.ja.JapaneseText
 import ject.lucene.field.LuceneField
 import ject.lucene.AnalyzerExtensions.*
@@ -14,20 +15,27 @@ import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.queries.function.FunctionScoreQuery
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
-import org.apache.lucene.store.MMapDirectory
+import org.apache.lucene.store.Directory
 import org.apache.lucene.util.QueryBuilder
 import zio.*
 import zio.stream.ZStream
 
 import java.nio.file.Path
 
-final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, searcher: IndexSearcher)
-    extends LuceneReader[WordDoc] {
+final case class WordReader(
+    directory: Directory,
+    reader: DirectoryReader,
+    searcher: IndexSearcher,
+    strategy: WordSearchStrategy = WordSearchStrategy.IndexInflections
+) extends LuceneReader[WordDoc] {
   private val builder = new QueryBuilder(WordDoc.docDecoder.analyzer)
 
   private val queryParser: QueryParser = new QueryParser(LuceneField.none.entryName, WordDoc.docDecoder.analyzer) {
     setAllowLeadingWildcard(true)
   }
+
+  private def deinflectedCandidates(t: String): Set[String] =
+    Deinflection.deinflect(t).values.flatMap(_.toChunk).toSet
 
   def search(pattern: SearchPattern): ZStream[Any, Throwable, ScoredDoc[WordDoc]] = {
     val searchType =
@@ -49,89 +57,61 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
 
       (pattern, searchType) match {
         case (SearchPattern.Default(text), SearchType.Kanji) =>
-          val prefixScoreBoost = text.length match {
+          // KanjiTerm's analyzer folds width and kana script to one canonical form at index time (see
+          // WordField), so the query just needs the same folding applied before comparing against the raw term
+          // dictionary (TermQuery/PrefixQuery never run a field's analyzer on the query text themselves).
+          val t = JapaneseAnalyzers.normalize(text)
+
+          val prefixScoreBoost: Float = t.length match {
             case 1 => 10
             case 2 => 50
             case 3 => 100
             case _ => 1000
           }
 
-          Set(text, JapaneseText.toHiragana(text), JapaneseText.toKatakana(text)).map { t =>
-            val exactMatchBoost = if (text == t) 1.0f else 0.95f
+          booleanQuery.addPrefixQuery(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, prefixScoreBoost)
+          booleanQuery.addPhraseQuery(builder)(WordField.KanjiTermAnalyzed, t, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.KanjiTermAnalyzed, t, BooleanClause.Occur.SHOULD, 1)
 
-            booleanQuery.addPrefixQuery(
-              WordField.KanjiTerm,
-              t,
-              BooleanClause.Occur.SHOULD,
-              prefixScoreBoost * exactMatchBoost
-            )
+          strategy match {
+            case WordSearchStrategy.IndexInflections =>
+              booleanQuery.addTermQuery(WordField.KanjiTermInflected, t, BooleanClause.Occur.SHOULD, 50)
 
-            booleanQuery.addPhraseQuery(builder)(
-              WordField.KanjiTermAnalyzed,
-              t,
-              BooleanClause.Occur.SHOULD,
-              5 * exactMatchBoost
-            )
-            booleanQuery.addBooleanQuery(builder)(
-              WordField.KanjiTerm,
-              t,
-              BooleanClause.Occur.SHOULD,
-              5 * exactMatchBoost
-            )
-            booleanQuery.addBooleanQuery(builder)(
-              WordField.KanjiTermAnalyzed,
-              t,
-              BooleanClause.Occur.SHOULD,
-              1 * exactMatchBoost
-            )
-            booleanQuery.addTermQuery(WordField.KanjiTermInflected, t, BooleanClause.Occur.SHOULD, 50 * exactMatchBoost)
-            booleanQuery.addTermQuery(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, 10_000 * exactMatchBoost)
-          }.head
+            case WordSearchStrategy.DeinflectQuery =>
+              deinflectedCandidates(t).foreach { candidate =>
+                booleanQuery.addTermQuery(WordField.KanjiTerm, candidate, BooleanClause.Occur.SHOULD, 50)
+              }
+          }
+
+          booleanQuery.addTermQuery(WordField.KanjiTerm, t, BooleanClause.Occur.SHOULD, 10_000)
 
         case (SearchPattern.Default(text), SearchType.Reading) =>
-          val prefixScoreBoost = text.length match {
+          val t = JapaneseAnalyzers.normalize(text)
+
+          val prefixScoreBoost: Float = t.length match {
             case 1 => 10
             case 2 => 50
             case 3 => 100
             case _ => 1000
           }
 
-          Set(text, JapaneseText.toHiragana(text), JapaneseText.toKatakana(text)).map { t =>
-            val exactMatchBoost = if (text == t) 1.0f else 0.95f
+          booleanQuery.addPrefixQuery(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, prefixScoreBoost)
+          booleanQuery.addPhraseQuery(builder)(WordField.ReadingTermAnalyzed, t, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, 5)
+          booleanQuery.addBooleanQuery(builder)(WordField.ReadingTermAnalyzed, t, BooleanClause.Occur.SHOULD, 1)
 
-            booleanQuery.addPrefixQuery(
-              WordField.ReadingTerm,
-              t,
-              BooleanClause.Occur.SHOULD,
-              prefixScoreBoost * exactMatchBoost
-            )
+          strategy match {
+            case WordSearchStrategy.IndexInflections =>
+              booleanQuery.addTermQuery(WordField.ReadingTermInflected, t, BooleanClause.Occur.SHOULD, 50)
 
-            booleanQuery.addPhraseQuery(builder)(
-              WordField.ReadingTermAnalyzed,
-              t,
-              BooleanClause.Occur.SHOULD,
-              5 * exactMatchBoost
-            )
-            booleanQuery.addBooleanQuery(builder)(
-              WordField.ReadingTerm,
-              t,
-              BooleanClause.Occur.SHOULD,
-              5 * exactMatchBoost
-            )
-            booleanQuery.addBooleanQuery(builder)(
-              WordField.ReadingTermAnalyzed,
-              t,
-              BooleanClause.Occur.SHOULD,
-              1 * exactMatchBoost
-            )
-            booleanQuery.addTermQuery(
-              WordField.ReadingTermInflected,
-              t,
-              BooleanClause.Occur.SHOULD,
-              50 * exactMatchBoost
-            )
-            booleanQuery.addTermQuery(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, 10_000 * exactMatchBoost)
-          }.head
+            case WordSearchStrategy.DeinflectQuery =>
+              deinflectedCandidates(t).foreach { candidate =>
+                booleanQuery.addTermQuery(WordField.ReadingTerm, candidate, BooleanClause.Occur.SHOULD, 50)
+              }
+          }
+
+          booleanQuery.addTermQuery(WordField.ReadingTerm, t, BooleanClause.Occur.SHOULD, 10_000)
 
         case (SearchPattern.Exact(text), SearchType.Definition) =>
           booleanQuery.addPhraseQuery(builder)(WordField.Definition, text, BooleanClause.Occur.SHOULD)
@@ -146,7 +126,7 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
         case (SearchPattern.Prefix(text), SearchType.Definition) =>
           val tokens = WordField.Definition.analyzer.tokensFor(text)
 
-          tokens.init.foreach { token =>
+          tokens.dropRight(1).foreach { token =>
             booleanQuery.addTermQuery(WordField.Definition, token, BooleanClause.Occur.SHOULD)
           }
 
@@ -209,5 +189,14 @@ object WordReader {
   }
 
   def make(directory: Path): ZIO[Scope, Throwable, WordReader] =
-    LuceneReader.makeReader(directory)(WordReader.apply)
+    make(directory, WordSearchStrategy.IndexInflections)
+
+  def make(directory: Path, strategy: WordSearchStrategy): ZIO[Scope, Throwable, WordReader] =
+    LuceneReader.makeReader(directory)(WordReader(_, _, _, strategy))
+
+  def make(directory: Directory): ZIO[Scope, Throwable, WordReader] =
+    make(directory, WordSearchStrategy.IndexInflections)
+
+  def make(directory: Directory, strategy: WordSearchStrategy): ZIO[Scope, Throwable, WordReader] =
+    LuceneReader.makeReader(directory)(WordReader(_, _, _, strategy))
 }

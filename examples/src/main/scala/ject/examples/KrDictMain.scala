@@ -13,14 +13,12 @@ object KrDictMain extends ZIOAppDefault {
 
   val dryRun: Boolean = false
 
-  def run: UIO[Unit] =
-    (for {
+  def run: Task[Unit] =
+    for {
       _ <- printLine(s"Starting to index dictionary: KrDict")
       targetPath = Paths.get("data/dictionary/krdict-ja")
       definitionLanguage = DefinitionLanguage.Japanese
-      // targetPath = Paths.get("data/dictionary/naver-kr-jp")
-      // definitionLanguage = DefinitionLanguage.Japanese
-      luceneDirectory        <- ZIO.succeed(Paths.get("data/lucene/word-ko"))
+      luceneDirectory = Paths.get("data/lucene/word-ko")
       (timeTaken, totalDocs) <- ZIO.scoped {
                                   for {
                                     index <- WordWriter.make(luceneDirectory)
@@ -43,8 +41,6 @@ object KrDictMain extends ZIOAppDefault {
                                 }.timed
       _ <- printLine(s"Indexed ${totalDocs.groupSeparated} entries (completed in ${timeTaken.render})")
       _ <- printLine(s"Index directory is located at ${luceneDirectory.toFile.getCanonicalPath}")
-    } yield ()).catchAllCause { t =>
-      ZIO.succeed(t.squash.printStackTrace())
-    }
+    } yield ()
 
 }

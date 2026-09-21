@@ -9,8 +9,8 @@ object Sanitizer {
 
   def sanitizeForDictionary(dicitonaryId: String)(text: String) =
     dicitonaryId match {
-      case "pixiv" => sanitizePixiv(text)
-      case _       => sanitize(text)
+      case "pixiv" | "pixiv-light" => sanitizePixiv(text)
+      case _                       => sanitize(text)
     }
 
   def sanitizePixiv(text: String): String =

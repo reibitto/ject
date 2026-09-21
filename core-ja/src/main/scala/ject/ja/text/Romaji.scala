@@ -1,4 +1,4 @@
-package ject.ja.text.ja
+package ject.ja.text
 
 import scala.annotation.tailrec
 
@@ -286,7 +286,7 @@ object Romaji {
   def getMora(s: String, i: Int): (String, Int) = {
     @tailrec
     def loop(n: Int): (String, Int) =
-      if (n <= 0) ("", 1)
+      if (n <= 0) (s.substring(i, i + 1), 1)
       else
         table.get(s.substring(i, i + n)) match {
           case Some(mora) => (mora, n)

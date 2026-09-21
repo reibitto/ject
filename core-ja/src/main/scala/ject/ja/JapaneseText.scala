@@ -1,5 +1,7 @@
 package ject.ja
 
+import ject.ja.text.Syllabary
+
 object JapaneseText {
 
   def isHiragana(c: Char): Boolean =
@@ -29,6 +31,29 @@ object JapaneseText {
 
   def isJapanese(c: Char): Boolean = isKana(c) || isKanji(c)
 
+  // Small kana that can never legally start a word in standard Japanese orthography (they only ever modify
+  // the preceding mora, e.g. きゃ, かった). A word beginning with one of these is never valid.
+  private val invalidWordInitialKana: Set[Char] =
+    Set(
+      'ぁ', 'ぃ', 'ぅ', 'ぇ', 'ぉ', 'っ', 'ゃ', 'ゅ', 'ょ', 'ゎ', 'ァ', 'ィ', 'ゥ', 'ェ', 'ォ', 'ッ', 'ャ', 'ュ', 'ョ', 'ヮ'
+    )
+
+  /** A cheap, dictionary-free sanity check for whether `word` could plausibly
+    * be a real Japanese word: it must be non-empty and must not begin with a
+    * kana that can only ever modify a preceding mora. This can't confirm a word
+    * actually exists (that requires a dictionary lookup), but it can cheaply
+    * reject a reconstruction bug that left a dangling small-tsu (or similar) at
+    * the front of a word.
+    *
+    * Deliberately does not require every character to be kana/kanji: slang
+    * verbs and expressions genuinely mix in Latin letters or digits and still
+    * conjugate normally, e.g. "うpする" ("to upload", from "up" + する) conjugates
+    * as ordinary suru-verbs do (うpした, うpして, ...). Rejecting non-Japanese
+    * characters outright would silently discard those.
+    */
+  def isPlausibleWord(word: String): Boolean =
+    word.nonEmpty && !invalidWordInitialKana.contains(word.head)
+
   def hasDakuten(c: Char): Boolean =
     c match {
       case 'が' | 'ぎ' | 'ぐ' | 'げ' | 'ご' | 'ざ' | 'じ' | 'ず' | 'ぜ' | 'ぞ' | 'だ' | 'ぢ' | 'づ' | 'で' | 'ど' | 'ば' | 'び' | 'ぶ' |
@@ -46,8 +71,37 @@ object JapaneseText {
       case c                               => c
     }
 
-  def toHiragana(s: String): String =
-    s.map(toHiragana)
+  /** Converts every katakana character in `s` to hiragana, expanding the long
+    * vowel mark (ー) into the vowel it represents, based on the preceding mora's
+    * dan. Hiragana orthography has no equivalent to ー and repeats the vowel
+    * instead, e.g. "ピーチクパーチク" corresponds to "ぴいちくぱあちく". A plain per-character
+    * conversion would leave ー untouched and fail to match such entries.
+    */
+  def toHiragana(s: String): String = {
+    val sb = new StringBuilder(s.length)
+
+    s.foreach {
+      case 'ー' =>
+        sb.lastOption.flatMap(Syllabary.danOf) match {
+          case Some(dan) => sb.append(vowelOf(dan))
+          case None      => sb.append('ー')
+        }
+
+      case c =>
+        sb.append(toHiragana(c))
+    }
+
+    sb.toString()
+  }
+
+  private def vowelOf(dan: Syllabary.Dan): Char =
+    dan match {
+      case Syllabary.Dan.A => 'あ'
+      case Syllabary.Dan.I => 'い'
+      case Syllabary.Dan.U => 'う'
+      case Syllabary.Dan.E => 'え'
+      case Syllabary.Dan.O => 'お'
+    }
 
   def toKatakana(c: Char): Char =
     c match {

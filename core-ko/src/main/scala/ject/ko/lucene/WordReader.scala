@@ -13,14 +13,14 @@ import ject.SearchPattern
 import org.apache.lucene.index.DirectoryReader
 import org.apache.lucene.queryparser.classic.QueryParser
 import org.apache.lucene.search.*
-import org.apache.lucene.store.MMapDirectory
+import org.apache.lucene.store.Directory
 import org.apache.lucene.util.QueryBuilder
 import zio.*
 import zio.stream.ZStream
 
 import java.nio.file.Path
 
-final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, searcher: IndexSearcher)
+final case class WordReader(directory: Directory, reader: DirectoryReader, searcher: IndexSearcher)
     extends LuceneReader[WordDoc] {
   private val builder = new QueryBuilder(WordDoc.docDecoder.analyzer)
 
@@ -72,7 +72,7 @@ final case class WordReader(directory: MMapDirectory, reader: DirectoryReader, s
         case (SearchPattern.Prefix(text), SearchType.Definition) =>
           val tokens = WordField.DefinitionEnglish.analyzer.tokensFor(text)
 
-          tokens.init.foreach { token =>
+          tokens.dropRight(1).foreach { token =>
             booleanQuery.addTermQuery(WordField.DefinitionEnglish, token, BooleanClause.Occur.SHOULD)
           }
 
@@ -111,6 +111,9 @@ object WordReader {
   }
 
   def make(directory: Path): ZIO[Scope, Throwable, WordReader] =
+    LuceneReader.makeReader(directory)(WordReader.apply)
+
+  def make(directory: Directory): ZIO[Scope, Throwable, WordReader] =
     LuceneReader.makeReader(directory)(WordReader.apply)
 
 }

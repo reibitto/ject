@@ -47,6 +47,14 @@ lazy val root = project
         "examples/runMain ject.examples.YomichanMain",
         "Use custom Yomichan dictionaries to create Lucene indexes"
       ),
+      UsefulTask(
+        "examples/runMain ject.examples.KrDictMain",
+        "Import kr-dict Korean -> English/Japanese dictionary"
+      ),
+      UsefulTask(
+        "examples/runMain ject.examples.ImportAllMain",
+        "Import all dictionaries in sequence"
+      ),
       UsefulTask("fmt", "Run scalafmt on the entire project")
     )
   )
@@ -72,6 +80,7 @@ lazy val coreJapanese = module("ject-ja", Some("core-ja"))
   .settings(
     fork := true,
     run / baseDirectory := file("."),
+    Test / baseDirectory := file("."),
     libraryDependencies ++= Seq(
       "org.apache.lucene" % "lucene-analysis-kuromoji" % V.lucene
     )
@@ -120,6 +129,17 @@ lazy val examples = module("examples")
 def module(projectId: String, moduleFile: Option[String] = None): Project =
   Project(id = projectId, base = file(moduleFile.getOrElse(projectId)))
     .settings(Build.defaultSettings(projectId))
+
+// These are used to set the working directory for each module's forked `run` task, but sbt's
+// lintUnused check can't detect task-only usages, so it always flags them as unused.
+Global / excludeLintKeys ++= Set(
+  core / run / baseDirectory,
+  coreJapanese / run / baseDirectory,
+  coreJapanese / Test / baseDirectory,
+  coreKorean / run / baseDirectory,
+  tools / run / baseDirectory,
+  examples / run / baseDirectory
+)
 
 ThisBuild / organization := "com.github.reibitto"
 
