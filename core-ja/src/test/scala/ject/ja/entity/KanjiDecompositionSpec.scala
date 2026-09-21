@@ -17,8 +17,8 @@ object KanjiDecompositionSpec extends ZIOSpecDefault {
         assertTrue(KanjiDecomposition.transitiveComponents("果", decompositions) == Set("田", "木"))
       },
       test("recursively expands nested decompositions, not just the direct level") {
-        // 昭 -> 日, 召; 召 -> 刀, 口. Both the direct components (日, 召) and 召's own components (刀, 口)
-        // are included — 召 is itself a real, findable kanji, so it stays alongside what it further expands to.
+        // 昭 -> 日, 召; 召 -> 刀, 口. 召 is itself a real, findable kanji, so it stays in the result alongside
+        // the components it expands to.
         assertTrue(KanjiDecomposition.transitiveComponents("昭", decompositions) == Set("日", "召", "刀", "口"))
       },
       test("returns an empty set for a kanji with no known decomposition") {

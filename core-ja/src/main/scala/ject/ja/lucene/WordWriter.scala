@@ -13,10 +13,9 @@ final case class WordWriter(writer: IndexWriter, docEncoder: DocEncoder[WordDoc]
 
 object WordWriter {
 
-  /** Builds a writer on top of an already-acquired `Directory` (e.g. a
-    * `ByteBuffersDirectory` shared with a reader via `LuceneDirectory.inMemory`
-    * — the directory itself is not closed when this writer's scope ends, since
-    * it may still be in use elsewhere).
+  /** Builds a writer on top of an already-acquired `Directory`, e.g. one shared
+    * with a reader via `LuceneDirectory.inMemory`. The directory isn't closed
+    * when this writer's scope ends, since it may still be in use elsewhere.
     */
   def make(
       directory: Directory,

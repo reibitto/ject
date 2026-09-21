@@ -10,21 +10,17 @@ import zio.test.*
 import java.nio.file.{Files, Paths}
 import scala.jdk.CollectionConverters.*
 
-/** End-to-end tests for `KanjiReader.searchByParts` against a real, in-memory
-  * Lucene index built from the actual `data/kanji-decomposition.tsv` file, the
-  * same file `KanjiDecompositionIO.load` reads in production (see
-  * `KanjidicMain`), rather than a small handwritten sample. A handful of
-  * entries is nowhere near enough to judge search quality: with only 20-30
-  * candidates in the index, almost anything that matches at all ends up looking
-  * like a good result. Loading the real ~20,000-entry decomposition graph gives
-  * every kanji its real, full set of competing candidates, so a kanji that
-  * merely happens to share one part with the query has plenty of (correctly)
-  * more-relevant competitors to be outranked by.
+/** End-to-end tests for `KanjiReader.searchByParts` against an in-memory index
+  * built from the real `data/kanji-decomposition.tsv`, rather than a
+  * handwritten sample. With only 20-30 candidates indexed, almost anything that
+  * matches at all looks like a good result. The full ~20,000-entry graph gives
+  * every kanji its real set of competitors, so a kanji sharing one incidental
+  * part has plenty of more-relevant results to be outranked by.
   */
 object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
 
-  // strokeCount is carried alongside each decomposition purely so the test index can populate KanjiDoc's real
-  // stroke count (a sort tiebreaker below relevance) instead of a placeholder that would tie every candidate.
+  // strokeCount is carried alongside each decomposition so the test index can populate KanjiDoc's real stroke
+  // count (a sort tiebreaker) instead of a placeholder that would tie every candidate.
   private def loadDecompositions(file: String): Task[Map[String, (Int, KanjiDecomposition)]] =
     ZIO.attempt {
       Files
@@ -50,12 +46,11 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
         .toMap
     }
 
-  // A minimal, dependency-free scan of kanjidic.xml for just `freq`/`grade` — real "how common is this
-  // kanji" signals that `rankByParts` uses as a tiebreaker below relevance, and which the decomposition TSV
-  // has no equivalent of. Without these, the test index can't tell a common kanji apart from an obscure
-  // variant that happens to tie with it on score and stroke count. Line-based rather than a real XML parser
-  // since kanjidic2.xml already has one element per line and `<literal>` always precedes `<freq>`/`<grade>`
-  // within an entry, making a tag's *most recently seen* `<literal>` an unambiguous owner.
+  // Scans kanjidic.xml for just freq/grade, which rankByParts uses as tiebreakers and the decomposition TSV
+  // has no equivalent of. Without them the test index can't tell a common kanji from an obscure variant that
+  // ties with it on score and stroke count. Line-based rather than XML-parsed since kanjidic2.xml has one
+  // element per line and <literal> always precedes <freq>/<grade>, making the most recent <literal> the
+  // unambiguous owner.
   private def loadFrequenciesAndGrades(file: String): Task[Map[String, (Option[Int], Option[Int])]] =
     ZIO.attempt {
       val literalTag = "<literal>(.*)</literal>".r
@@ -116,9 +111,8 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
   private val lookalikeMap: Task[Map[String, Seq[String]]] =
     ZIO.succeed(Map("冫" -> Seq("氵")))
 
-  /** Built once and shared across every test in this suite (via
-    * `provideLayerShared` below) rather than per-test, since indexing is an
-    * expensive operation.
+  /** Built once and shared across the suite via `provideLayerShared`, since
+    * indexing is expensive.
     */
   private val kanjiReaderLayer: ZLayer[Any, Throwable, KanjiReader] =
     ZLayer.scoped {
@@ -138,9 +132,9 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
   private def kanjiFound(query: String): ZIO[KanjiReader, Throwable, List[String]] =
     ZIO.serviceWithZIO[KanjiReader](_.searchByParts(query).runCollect.map(_.toList.map(_.doc.kanji)))
 
-  /** A kanji doesn't need to be the #1 result to be a good result, but it
-    * should reliably show up near the top, not be buried somewhere a real user
-    * would never scroll to.
+  /** A kanji doesn't need to be the #1 result to be a good one, but it should
+    * reliably show up near the top rather than somewhere nobody would scroll
+    * to.
     */
   private val defaultTopN = 5
 
@@ -152,10 +146,9 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
       test("finds 瑞 via its direct components 山王")(ranksNear("山王", "瑞")),
       test("finds 瑞 via all three of its direct components 山王而")(ranksNear("山王而", "瑞")),
       test("finds 和 via 利口, where 利 is not itself a component of 和 but shares 和's actual component 禾") {
-        // 利 is also, unhelpfully, a literal component of many other real kanji (唎, 梨, ...), which used to
-        // crowd 和 far down the results by matching both 利 itself *and* (redundantly) all of 利's own
-        // subcomponents. It's still reasonable for those to rank above 和 — they're exact matches on both
-        // typed characters — but 和 should be right behind them, not buried dozens of results down.
+        // 利 is also a literal component of many other kanji (唎, 梨, ...), which used to crowd 和 far down
+        // the results by matching both 利 itself and, redundantly, all of 利's own subcomponents. Those are
+        // exact matches on both typed characters, so ranking above 和 is fine, but 和 should be right behind.
         ranksNear("利口", "和")
       },
       test("finds 昨 via its direct components 日作, where 作 shares 昨's actual component 乍")(
@@ -193,9 +186,9 @@ object KanjiReaderIntegrationSpec extends ZIOSpecDefault {
       ),
       test("finds 詩 via its direct components 言寺")(ranksNear("言寺", "詩")),
       test("finds 詩 via 言土, where 土 is a component two levels deep (詩 -> 寺 -> 土)") {
-        // A slightly wider window than usual: several real kanji genuinely match 言 and 土 more precisely
-        // than 詩 does (e.g. 詿 = 言 + 圭, and 圭 itself is just two 土 stacked, with no other components at
-        // all), so 詩 — which also carries 寺's other part 寸 — fairly ranks a bit further down than 5th.
+        // A wider window than usual: several kanji match 言 and 土 more precisely than 詩 does (e.g. 詿 = 言 +
+        // 圭, and 圭 is just two stacked 土 with nothing else), so 詩, which also carries 寺's other part 寸,
+        // fairly ranks below 5th.
         ranksNear("言土", "詩", topN = 10)
       },
       test("finds 怒 via 又心, where 又 is a component one level deep via 怒's direct component 奴 (奴 -> 又, 女)")(

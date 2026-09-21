@@ -142,12 +142,10 @@ abstract class LuceneReader[A: DocDecoder] {
 
 object LuceneReader {
 
-  /** Builds a reader on top of an already-acquired `Directory` (e.g. a
-    * `ByteBuffersDirectory` shared with a writer via
-    * `LuceneDirectory.inMemory`). The directory itself is not closed when the
-    * returned reader's scope ends — only the `DirectoryReader` opened on top of
-    * it — since the directory may still be in use elsewhere (its lifecycle is
-    * the caller's responsibility, e.g. via `LuceneDirectory`).
+  /** Builds a reader on top of an already-acquired `Directory`, e.g. one shared
+    * with a writer via `LuceneDirectory.inMemory`. Only the `DirectoryReader`
+    * is closed when the returned reader's scope ends; the directory may still
+    * be in use elsewhere, so its lifecycle stays the caller's responsibility.
     */
   def makeReader[A <: LuceneReader[?]](
       directory: Directory

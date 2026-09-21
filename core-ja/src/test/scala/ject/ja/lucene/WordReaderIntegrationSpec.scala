@@ -7,11 +7,9 @@ import ject.SearchPattern
 import zio.*
 import zio.test.*
 
-/** End-to-end tests against a real, in-memory Lucene index
-  * (`ByteBuffersDirectory` via `LuceneDirectory.inMemory`) built from a small
-  * hand-written sample dictionary, rather than assuming
-  * WordWriter/WordReader/WordField wiring is correct. This exercises the exact
-  * same WordWriter/WordReader code path production does, just backed by memory
+/** End-to-end tests against an in-memory Lucene index built from a small sample
+  * dictionary, rather than assuming the WordWriter/WordReader/WordField wiring
+  * is correct. Exercises the same code path as production, backed by memory
   * instead of disk.
   */
 object WordReaderIntegrationSpec extends ZIOSpecDefault {
@@ -47,8 +45,8 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
       priority = 1.0,
       frequency = 10
     ),
-    // Mirrors a real JMDict entry: the only reading given is katakana ("コーヒー"), with no hiragana
-    // alternative — loanwords are conventionally read in katakana, so there's nothing else to fall back on.
+    // Mirrors a real JMDict entry whose only reading is katakana ("コーヒー"), with no hiragana alternative,
+    // as is conventional for loanwords.
     WordDoc(
       id = "4",
       kanjiTerms = Seq("珈琲"),
@@ -59,10 +57,9 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
       priority = 1.0,
       frequency = 80
     ),
-    // Mirrors the real JMDict entry for たぐい (ent_seq 1596870), which bundles 4 alternate kanji forms into
-    // one entry. Paired with a lower-priority, single-kanji-form entry for the same word from another
-    // dictionary, this guards against a higher-priority entry being outranked purely because it has more
-    // alternate kanji/reading terms than a competing entry.
+    // Mirrors the real JMDict entry for たぐい (ent_seq 1596870), which bundles 4 alternate kanji forms.
+    // Paired with the lower-priority single-form entry below, this guards against a higher-priority entry
+    // being outranked purely for having more alternate terms.
     WordDoc(
       id = "5-high-priority-many-alternates",
       kanjiTerms = Seq("類い", "類", "比い", "比"),
@@ -90,8 +87,8 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
   )(f: WordReader => Task[A]): Task[A] =
     ZIO.scoped {
       for {
-        // A ByteBuffersDirectory has no external location a second `Directory` value could reopen — the writer
-        // and reader below must share this same instance to see each other's data (see LuceneDirectory.inMemory).
+        // The writer and reader below must share this same instance to see each other's data (see
+        // LuceneDirectory.inMemory).
         directory <- LuceneDirectory.inMemory
         _         <- ZIO.scoped(
                WordWriter
@@ -124,9 +121,8 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
         withSampleIndex()(idsFound(_, "4日")).map(ids => assertTrue(ids.contains("2")))
       },
       test("finds a hiragana reading via a katakana query with long vowel marks") {
-        // The dictionary entry is spelled with the vowel written out ("ぴいちくぱあちく"), not with a long vowel
-        // mark, which is how it would naturally appear if transcribed from the katakana rendering
-        // ("ピーチクパーチク") someone might actually type when searching for this mimetic word.
+        // The entry spells the vowel out ("ぴいちくぱあちく") rather than using a long vowel mark, but someone
+        // searching for this mimetic word would likely type the katakana rendering ("ピーチクパーチク").
         withSampleIndex()(idsFound(_, "ピーチクパーチク")).map(ids => assertTrue(ids.contains("3")))
       },
       test("finds an entry via a conjugated (inflected) form") {
@@ -142,10 +138,9 @@ object WordReaderIntegrationSpec extends ZIOSpecDefault {
         withSampleIndex()(idsFound(_, "コーヒー")).map(ids => assertTrue(ids.contains("4")))
       },
       test("finds a katakana-only reading via its hiragana equivalent, with no hiragana form indexed at all") {
-        // The dictionary never stores a hiragana reading for this entry — only "コーヒー". This only works
-        // because normalization is applied consistently on both sides: the katakana reading folds to "こおひい"
-        // at index time (via ReadingTerm's analyzer) and the hiragana query folds to the same "こおひい" at
-        // query time, so they meet in the middle rather than one side needing to already match the other.
+        // No hiragana reading is stored for this entry, only "コーヒー". It works because normalization is
+        // applied on both sides: the reading folds to "こおひい" at index time and the query folds to the same
+        // "こおひい" at query time, so they meet in the middle.
         withSampleIndex()(idsFound(_, "こおひい")).map(ids => assertTrue(ids.contains("4")))
       },
       test("finds a katakana-only reading via its kanji spelling") {

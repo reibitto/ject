@@ -9,17 +9,13 @@ import org.apache.lucene.analysis.Analyzer
 object JapaneseAnalyzers {
   lazy val japanese: JapaneseAnalyzer = new JapaneseAnalyzer()
 
-  /** An analyzer for exact-match term fields (via `TextField`, not
-    * `StringField` — see `ject.lucene.TextNormalization` for why) that fold
-    * width and kana script differences into one canonical term:
-    * `KeywordTokenizer` (never splits its input, preserving exact-match
-    * semantics) -> `CJKWidthFilter` (full/half-width folding) ->
-    * `KanaNormalizingFilter` (katakana -> hiragana, long vowel mark aware).
+  /** Folds width and kana script differences into one canonical term:
+    * `KeywordTokenizer` -> `CJKWidthFilter` -> `KanaNormalizingFilter`
+    * (katakana -> hiragana, long vowel mark aware). For exact-match term fields
+    * declared as `TextField` (see `ject.lucene.TextNormalization` for why).
     *
-    * Using this instead of manually generating and indexing/searching
-    * hiragana/katakana/width variants means the term dictionary only ever holds
-    * one entry per distinct word, and a query only has to be folded the same
-    * way to find it.
+    * Keeps one term per distinct word instead of indexing every
+    * hiragana/katakana/width variant.
     */
   lazy val kanaNormalizing: Analyzer = new Analyzer {
     override def createComponents(fieldName: String): Analyzer.TokenStreamComponents = {
@@ -30,12 +26,10 @@ object JapaneseAnalyzers {
     }
   }
 
-  /** Applies the same width+kana folding as `kanaNormalizing` to a single
-    * string outside of an indexing context. Needed because `TermQuery`,
-    * `PrefixQuery`, and `WildcardQuery` compare against the raw term bytes
-    * directly and never run a field's analyzer on the query text — so query
-    * text has to be folded explicitly to match terms indexed via
-    * `kanaNormalizing`.
+  /** Applies the same folding as `kanaNormalizing` to a single string outside
+    * of an indexing context. `TermQuery`, `PrefixQuery`, and `WildcardQuery`
+    * compare raw term bytes and never run a field's analyzer, so query text has
+    * to be folded explicitly.
     */
   def normalize(text: String): String =
     kanaNormalizing.tokensFor(text).headOption.getOrElse(text)

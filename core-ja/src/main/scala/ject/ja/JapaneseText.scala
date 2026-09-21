@@ -71,12 +71,10 @@ object JapaneseText {
       case c                               => c
     }
 
-  /** Converts every katakana character in `s` to hiragana, expanding the
-    * katakana long vowel mark (ー) into the actual hiragana vowel it represents,
-    * based on the preceding mora's vowel (dan). This matters because hiragana
-    * orthography has no equivalent to ー — it's normally written out by
-    * repeating the vowel, e.g. the mimetic word "ピーチクパーチク" corresponds to the
-    * dictionary form "ぴいちくぱあちく", not "ぴーちくぱーちく". A plain per-character
+  /** Converts every katakana character in `s` to hiragana, expanding the long
+    * vowel mark (ー) into the vowel it represents, based on the preceding mora's
+    * dan. Hiragana orthography has no equivalent to ー and repeats the vowel
+    * instead, e.g. "ピーチクパーチク" corresponds to "ぴいちくぱあちく". A plain per-character
     * conversion would leave ー untouched and fail to match such entries.
     */
   def toHiragana(s: String): String = {

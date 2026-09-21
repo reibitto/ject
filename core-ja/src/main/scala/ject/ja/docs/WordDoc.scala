@@ -45,12 +45,9 @@ object WordDoc {
       )
   }
 
-  // KanjiTerm/ReadingTerm (and their inflected counterparts) are keyword-like exact-match fields: one token
-  // per value via KeywordTokenizer, matched only with TermQuery/PrefixQuery whose relevance is entirely the
-  // hand-tuned BoostQuery weight per clause (see WordReader). Norms would otherwise apply BM25 field-length
-  // penalties based on how many alternate kanji/readings an entry happens to have (e.g. a JMDict entry
-  // bundling 4 kanji forms into one doc vs. a competing dictionary's single-form entry for the same word),
-  // which has nothing to do with actual relevance and can outweigh the dictionary-priority boost.
+  // Norms are omitted because relevance for these fields comes entirely from WordReader's per-clause
+  // BoostQuery weights. Otherwise BM25 field-length penalties would punish an entry for bundling several
+  // alternate kanji/readings into one doc, which can outweigh the dictionary-priority boost.
   private val exactMatchStoredType: FieldType = {
     val ft = new FieldType(TextField.TYPE_STORED)
     ft.setOmitNorms(true)
@@ -72,10 +69,8 @@ object WordDoc {
 
                doc.add(new StringField(WordField.Id.entryName, a.id, Field.Store.YES))
 
-               // TextField (not StringField) so the field's width/kana-normalizing analyzer actually runs —
-               // StringField is always indexed as a single unanalyzed term regardless of which analyzer is
-               // configured for it. KeywordTokenizer still guarantees exactly one term per value, preserving
-               // exact-match semantics.
+               // TextField, not StringField, so the field's width/kana-normalizing analyzer actually runs.
+               // KeywordTokenizer still guarantees one term per value, preserving exact-match semantics.
                a.kanjiTerms.foreach { value =>
                  doc.add(new Field(WordField.KanjiTerm.entryName, value, exactMatchStoredType))
                  doc.add(new TextField(WordField.KanjiTermAnalyzed.entryName, value, Field.Store.NO))
@@ -111,9 +106,8 @@ object WordDoc {
     } yield doc
 
   private def indexInflections(d: WordDoc, document: Document): Task[Unit] = {
-    // TextField, not StringField, so field's kana-normalizing analyzer runs at index time — see WordField.
-    // Previously this generated both the native-script and a forced-hiragana copy of every inflected form by
-    // hand; the analyzer now folds katakana to hiragana itself, so only one form needs to be indexed.
+    // TextField, not StringField, so the field's kana-normalizing analyzer runs at index time (see
+    // WordField). The analyzer folds katakana to hiragana, so only one form of each inflection is indexed.
     def indexTerms(terms: Seq[String], field: WordField, wordType: WordType): Task[Unit] = {
       val allInflections = terms.flatMap { value =>
         Inflection.inflectAll(value, wordType).flatMap {
