@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 
 object Build {
-  val ScalaVersion = "2.13.18"
+  val ScalaVersion = "3.9.0"
 
   lazy val ScalacOptions = Seq(
     "-encoding",
