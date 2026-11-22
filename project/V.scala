@@ -15,5 +15,5 @@ object V {
 
   val zio = "2.1.27"
 
-  val zioProcess = "0.8.1"
+  val zioProcess = "0.8.2"
 }
